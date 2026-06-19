@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" style="background:#0f0f0f;">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ManClub in Siberia</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js" defer></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{--bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#242424;--accent:#c9a84c;--accent2:#e8c97a;--text:#f0ece4;--text2:#a09a90;--text3:#6a6460;--border:rgba(201,168,76,0.15);--red:#e05555;}
@@ -93,10 +93,10 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .hero-greeting{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
 .hero-name{font-size:20px;font-weight:700;color:var(--text);margin-bottom:3px;}
 .hero-level{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(201,168,76,0.12);border:0.5px solid rgba(201,168,76,0.3);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--accent2);font-weight:500;}
-.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
-.stat-card{background:var(--bg3);border-radius:12px;padding:12px 14px;border:0.5px solid var(--border);}
-.stat-val{font-size:20px;font-weight:700;color:var(--text);}
-.stat-label{font-size:11px;color:var(--text2);margin-top:2px;}
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.stat-card{background:var(--bg3);border-radius:10px;padding:8px 10px;border:0.5px solid var(--border);}
+.stat-val{font-size:14px;font-weight:700;color:var(--text);}
+.stat-label{font-size:9px;color:var(--text2);margin-top:1px;}
 /* DAY PICKER */
 .day-picker{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
 .day-picker::-webkit-scrollbar{display:none;}
