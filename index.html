@@ -948,6 +948,7 @@ var SPHERES=[
   {id:'career',icon:'🚀',name:'Карьера',color:'rgba(59,130,246,0.15)',q:'Доволен профессиональным путём?',desc:'Работа, дело, реализация',opts:['Занимаюсь любимым делом','Работа есть, но нет роста','Хочу изменить путь','Только начинаю'],lessons:['Найти своё призвание','Карьерный трекинг','Как стать незаменимым','Переговоры о зарплате','Запуск своего дела']},
   {id:'self',icon:'📚',name:'Саморазвитие',color:'rgba(168,85,247,0.15)',q:'Активно ли работаешь над собой?',desc:'Знания, навыки, привычки',opts:['Постоянно учусь и расту','Иногда, когда есть время','Хочу, но не знаю с чего','Давно ничего не делал'],lessons:['Система привычек','Скорочтение и обучение','Фокус и продуктивность','Эмоциональный интеллект','Менторинг и наставники']},
   {id:'env',icon:'🤝',name:'Окружение',color:'rgba(249,115,22,0.15)',q:'Вдохновляет ли тебя окружение?',desc:'Друзья, наставники, сообщество',opts:['Окружение заряжает энергией','Есть несколько таких людей','Окружение тянет вниз','Нет близкого круга'],lessons:['Сила окружения','Как находить менторов','Нетворкинг без фальши','Токсичные связи: выход','Сообщество как актив']},
+  {id:'style',icon:'👔',name:'Стиль',color:'rgba(20,184,166,0.15)',noQuiz:true,lessons:['Основы мужского гардероба','Подбор размера и посадки','Стиль для разных случаев','Уход за собой','Аксессуары и детали']},
 ];
 var SCORES=[9,6,4,2];
 var DAYS_RU=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
@@ -1118,27 +1119,28 @@ function launchApp(){
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var el=document.getElementById(id);if(el){el.classList.add('active');el.scrollTop=0;}}
 
 // QUIZ
+var QUIZ_SPHERES=SPHERES.filter(function(s){return !s.noQuiz;});
 function startQuiz(){curQ=0;answers={};showScreen('ob-quiz');renderQ();}
 function renderQ(){
-  var s=SPHERES[curQ];
-  document.getElementById('q-label').textContent='Вопрос '+(curQ+1)+' из 6';
+  var s=QUIZ_SPHERES[curQ];
+  document.getElementById('q-label').textContent='Вопрос '+(curQ+1)+' из '+QUIZ_SPHERES.length;
   document.getElementById('q-sname').textContent=s.name;
   document.getElementById('q-badge').textContent=s.icon+' '+s.name;
   document.getElementById('q-text').textContent=s.q;
   document.getElementById('q-desc').textContent=s.desc;
-  document.getElementById('q-fill').style.width=((curQ+1)/6*100)+'%';
+  document.getElementById('q-fill').style.width=((curQ+1)/QUIZ_SPHERES.length*100)+'%';
   var c=document.getElementById('q-options');c.innerHTML='';
   s.opts.forEach(function(opt,i){
     var d=document.createElement('div');d.className='quiz-opt';
     d.innerHTML='<div class="opt-check"></div><div class="opt-text">'+opt+'</div>';
-    d.onclick=function(){answers[s.id]=i;c.querySelectorAll('.quiz-opt').forEach(function(o,j){o.classList.toggle('selected',j===i);o.querySelector('.opt-check').textContent=j===i?'✓':'';});setTimeout(function(){curQ++;if(curQ<SPHERES.length)renderQ();else showResult();},380);};
+    d.onclick=function(){answers[s.id]=i;c.querySelectorAll('.quiz-opt').forEach(function(o,j){o.classList.toggle('selected',j===i);o.querySelector('.opt-check').textContent=j===i?'✓':'';});setTimeout(function(){curQ++;if(curQ<QUIZ_SPHERES.length)renderQ();else showResult();},380);};
     c.appendChild(d);
   });
 }
 function showResult(){
   showScreen('ob-result');
   var c=document.getElementById('result-bars');c.innerHTML='';
-  SPHERES.forEach(function(s){var score=answers[s.id]!==undefined?SCORES[answers[s.id]]:5;var row=document.createElement('div');row.className='sphere-bar-row';row.innerHTML='<span class="sphere-bar-icon">'+s.icon+'</span><span class="sphere-bar-label">'+s.name+'</span><div class="sphere-bar-track"><div class="sphere-bar-fill" style="width:0%" data-w="'+(score*10)+'%"></div></div><span class="sphere-bar-val">'+score+'/10</span>';c.appendChild(row);});
+  QUIZ_SPHERES.forEach(function(s){var score=answers[s.id]!==undefined?SCORES[answers[s.id]]:5;var row=document.createElement('div');row.className='sphere-bar-row';row.innerHTML='<span class="sphere-bar-icon">'+s.icon+'</span><span class="sphere-bar-label">'+s.name+'</span><div class="sphere-bar-track"><div class="sphere-bar-fill" style="width:0%" data-w="'+(score*10)+'%"></div></div><span class="sphere-bar-val">'+score+'/10</span>';c.appendChild(row);});
   setTimeout(function(){c.querySelectorAll('.sphere-bar-fill').forEach(function(el){el.style.width=el.dataset.w;});},100);
 }
 function finishReg(){
@@ -1568,8 +1570,10 @@ function buildSphereList(){
   var c=document.getElementById('sphere-list');c.innerHTML='';
   SPHERES.forEach(function(s,i){
     var score=answers[s.id]!==undefined?SCORES[answers[s.id]]:5;
+    var subText=s.noQuiz?(s.lessons.length+' уроков'):(s.lessons.length+' уроков · Оценка '+score+'/10');
+    var progressBar=s.noQuiz?'':'<div class="sphere-card-progress"><div class="sphere-card-bar" style="width:'+(score*10)+'%"></div></div>';
     var card=document.createElement('div');card.className='sphere-card';
-    card.innerHTML='<div class="sphere-card-icon" style="background:'+s.color+'">'+s.icon+'</div><div class="sphere-card-info"><div class="sphere-card-title">'+s.name+'</div><div class="sphere-card-sub">'+s.lessons.length+' уроков · Оценка '+score+'/10</div><div class="sphere-card-progress"><div class="sphere-card-bar" style="width:'+(score*10)+'%"></div></div></div><div style="font-size:18px;color:var(--text3)">›</div>';
+    card.innerHTML='<div class="sphere-card-icon" style="background:'+s.color+'">'+s.icon+'</div><div class="sphere-card-info"><div class="sphere-card-title">'+s.name+'</div><div class="sphere-card-sub">'+subText+'</div>'+progressBar+'</div><div style="font-size:18px;color:var(--text3)">›</div>';
     (function(idx){card.onclick=function(){openLessonDetail(idx);};})(i);c.appendChild(card);
   });
 }
