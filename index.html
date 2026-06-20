@@ -203,6 +203,33 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--accent);cursor:pointer;margin-bottom:16px;}
 /* САМОПОЗНАНИЕ */
 .self-tools{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
+/* HABITS */
+.habit-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px 4px;}
+.habit-stat-card{background:var(--bg3);border-radius:10px;padding:10px 12px;border:0.5px solid var(--border);text-align:center;}
+.habit-stat-val{font-size:18px;font-weight:700;color:var(--accent2);}
+.habit-stat-label{font-size:10px;color:var(--text2);margin-top:1px;}
+.habit-active-card{margin:12px 16px;background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:0.5px solid rgba(201,168,76,0.35);border-radius:16px;padding:16px;}
+.habit-active-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.habit-active-name{font-size:15px;font-weight:700;color:var(--text);}
+.habit-active-day{font-size:12px;color:var(--accent2);margin-top:2px;}
+.habit-streak-badge{background:rgba(201,168,76,0.18);border-radius:20px;padding:5px 11px;font-size:12px;color:var(--accent2);font-weight:600;white-space:nowrap;}
+.habit-progress-track{height:8px;background:var(--bg2);border-radius:5px;overflow:hidden;margin-bottom:12px;}
+.habit-progress-fill{height:100%;background:var(--accent);border-radius:5px;transition:width 0.3s;}
+.habit-check-btn{width:100%;padding:12px;border-radius:11px;background-color:var(--accent);color:#1a0f00;font-size:14px;font-weight:700;text-align:center;cursor:pointer;border:none;}
+.habit-check-btn.done{background-color:var(--bg3);color:var(--accent2);border:0.5px solid rgba(201,168,76,0.4);}
+.habit-active-stop{text-align:center;font-size:11px;color:var(--text3);margin-top:10px;cursor:pointer;}
+.habit-list-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 16px 16px;}
+.habit-card{background:var(--bg3);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;border:0.5px solid var(--border);}
+.habit-card:active{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.05);}
+.habit-card-icon{font-size:26px;margin-bottom:8px;}
+.habit-card-name{font-size:12px;color:var(--text);font-weight:600;line-height:1.3;}
+.habit-add-custom{margin:0 16px 16px;padding:14px;border-radius:14px;border:0.5px dashed rgba(201,168,76,0.4);background:var(--bg3);text-align:center;cursor:pointer;font-size:13px;color:var(--text3);}
+.habit-badges-row{display:flex;gap:8px;padding:0 16px 16px;flex-wrap:wrap;}
+.habit-badge-chip{display:flex;align-items:center;gap:5px;background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:6px 11px;font-size:11px;color:var(--text2);}
+.habit-badge-chip.earned{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.1);color:var(--accent2);}
+.duration-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.duration-chip{flex:1;min-width:70px;padding:11px 8px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);text-align:center;cursor:pointer;font-size:13px;color:var(--text2);}
+.duration-chip.selected{border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.12);color:var(--accent2);font-weight:600;}
 .self-tool-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:20px 14px;cursor:pointer;text-align:center;}
 .self-tool-card:active{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.05);}
 .self-tool-icon{font-size:36px;margin-bottom:10px;}
@@ -550,7 +577,36 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <!-- ПРИВЫЧКИ (заглушка) -->
   <div class="app-screen" id="s-habits">
     <div class="topbar"><div><div class="topbar-logo">🔁 Привычки</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
-    <div class="generic-stub"><div class="generic-stub-icon">🚧</div><div class="generic-stub-text">Геймифицированные курсы по смене привычек<br>скоро появятся здесь.</div></div>
+    <div class="habit-stats-row">
+      <div class="habit-stat-card"><div class="habit-stat-val" id="habit-total-points">0</div><div class="habit-stat-label">Баллов</div></div>
+      <div class="habit-stat-card"><div class="habit-stat-val" id="habit-total-badges">0</div><div class="habit-stat-label">Бейджей</div></div>
+    </div>
+    <div id="habit-active-list"></div>
+    <div class="section-title" style="margin:8px 16px 6px;">Выбери привычку</div>
+    <div class="habit-list-grid" id="habit-catalog-grid"></div>
+    <div class="habit-add-custom" onclick="openCustomHabitModal()">➕ Добавить свою привычку</div>
+    <div class="section-title" style="margin:0 16px 6px;">Бейджи</div>
+    <div class="habit-badges-row" id="habit-badges-row"></div>
+  </div>
+
+  <!-- MODAL: выбор срока привычки -->
+  <div class="modal-overlay" id="habit-duration-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="habit-duration-title">Выбери срок</div>
+      <div class="duration-chip-row" id="habit-duration-chips"></div>
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeHabitDurationModal()">Отмена</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="startHabitCourse()">Начать →</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: своя привычка -->
+  <div class="modal-overlay" id="custom-habit-modal">
+    <div class="modal-box">
+      <div class="modal-title">Своя привычка</div>
+      <input class="modal-input" id="custom-habit-name" placeholder="Название привычки">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Срок курса (дней)</div>
+      <input class="modal-input" id="custom-habit-days" type="number" placeholder="Например, 21" min="1" max="365">
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeCustomHabitModal()">Отмена</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveCustomHabit()">Создать →</button></div>
+    </div>
   </div>
 
   <!-- ЧЕЛЛЕНДЖИ (заглушка) -->
@@ -960,6 +1016,31 @@ var CONTACTS_KEY='mp_contacts_v1';
 var SCHEDULES_KEY='mp_schedules_v1';
 var FINANCE_KEY='mp_finance_v1';
 var PERSONAL_DATA_KEY='mp_personal_data_v1';
+var HABITS_KEY='mp_habits_v1';
+var habitsData={active:[],points:0,earnedBadges:[]}; // active: [{id,catalogId,name,icon,totalDays,doneDates:[],startedAt,lastCheckDate}]
+var HABIT_CATALOG=[
+  {id:'cold_shower',icon:'🧊',name:'Холодный душ',durations:[7,14,21]},
+  {id:'early_rise',icon:'🌅',name:'Ранний подъём',durations:[7,21,30]},
+  {id:'reading',icon:'📚',name:'Чтение 20 минут',durations:[14,21,30]},
+  {id:'meditation',icon:'🧘',name:'Медитация',durations:[7,21]},
+  {id:'water',icon:'💧',name:'2 литра воды',durations:[7,21,30]},
+  {id:'no_phone_night',icon:'📱',name:'Без телефона перед сном',durations:[7,14,21]},
+  {id:'morning_workout',icon:'🏋️',name:'Утренняя зарядка',durations:[7,21,30]},
+  {id:'gratitude',icon:'✍️',name:'Дневник благодарности',durations:[14,21]},
+  {id:'no_smoking',icon:'🚭',name:'Без сигарет',durations:[21,30,60]},
+  {id:'no_sugar',icon:'🍬',name:'Без сахара',durations:[7,14,21]},
+  {id:'steps',icon:'🚶',name:'10000 шагов',durations:[7,21,30]},
+  {id:'sleep_schedule',icon:'💤',name:'Сон по графику',durations:[7,21,30]}
+];
+var HABIT_BADGES=[
+  {id:'first3',icon:'🔥',label:'3 дня',need:3},
+  {id:'first7',icon:'⭐',label:'7 дней',need:7},
+  {id:'streak21',icon:'💎',label:'21 день',need:21},
+  {id:'streak30',icon:'👑',label:'30 дней',need:30}
+];
+var pendingHabitCatalogItem=null;
+var pendingHabitDuration=null;
+
 var personalData={city:'',interests:[],pets:''};
 var INTERESTS=[
   {id:'sport',icon:'🏋️',label:'Спорт'},{id:'travel',icon:'✈️',label:'Путешествия'},{id:'books',icon:'📚',label:'Книги'},{id:'games',icon:'🎮',label:'Игры'},{id:'music',icon:'🎵',label:'Музыка'},{id:'cooking',icon:'🍳',label:'Кулинария'},{id:'auto',icon:'🚗',label:'Авто'},{id:'invest',icon:'📈',label:'Инвестиции'},{id:'art',icon:'🎨',label:'Творчество'},{id:'outdoor',icon:'🏔️',label:'Активный отдых'},{id:'tasting',icon:'🍷',label:'Дегустации'},{id:'fishing',icon:'🎯',label:'Охота/рыбалка'},
@@ -1030,9 +1111,9 @@ function loadFromStorage(cb){
   } else cb(null);
 }
 function clearStorage(){
-  try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(JOURNAL_KEY);localStorage.removeItem(POSITIVITY_KEY);localStorage.removeItem(CONTACTS_KEY);localStorage.removeItem(SCHEDULES_KEY);localStorage.removeItem(FINANCE_KEY);localStorage.removeItem(PERSONAL_DATA_KEY);}catch(e){}
+  try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(JOURNAL_KEY);localStorage.removeItem(POSITIVITY_KEY);localStorage.removeItem(CONTACTS_KEY);localStorage.removeItem(SCHEDULES_KEY);localStorage.removeItem(FINANCE_KEY);localStorage.removeItem(PERSONAL_DATA_KEY);localStorage.removeItem(HABITS_KEY);}catch(e){}
   var tg=window.Telegram&&window.Telegram.WebApp;
-  if(tg&&tg.CloudStorage){['STORAGE_KEY','JOURNAL_KEY','POSITIVITY_KEY','CONTACTS_KEY','SCHEDULES_KEY','FINANCE_KEY','PERSONAL_DATA_KEY'].forEach(function(k){tg.CloudStorage.removeItem(window[k],function(){});});}
+  if(tg&&tg.CloudStorage){['STORAGE_KEY','JOURNAL_KEY','POSITIVITY_KEY','CONTACTS_KEY','SCHEDULES_KEY','FINANCE_KEY','PERSONAL_DATA_KEY','HABITS_KEY'].forEach(function(k){tg.CloudStorage.removeItem(window[k],function(){});});}
 }
 // Unified loader: reads each data key from localStorage first (instant), and from
 // CloudStorage in background to repair data if localStorage was cleared/empty.
@@ -1042,7 +1123,8 @@ function loadAllData(){
             ['CONTACTS_KEY',CONTACTS_KEY,function(v){contacts=v;}],
             ['SCHEDULES_KEY',SCHEDULES_KEY,function(v){schedules=v;}],
             ['FINANCE_KEY',FINANCE_KEY,function(v){financeRecords=v;}],
-            ['PERSONAL_DATA_KEY',PERSONAL_DATA_KEY,function(v){personalData=v;}]];
+            ['PERSONAL_DATA_KEY',PERSONAL_DATA_KEY,function(v){personalData=v;}],
+            ['HABITS_KEY',HABITS_KEY,function(v){habitsData=v;}]];
   var tg=window.Telegram&&window.Telegram.WebApp;
   keys.forEach(function(k){
     var lsVal=null;try{lsVal=localStorage.getItem(k[1]);}catch(e){}
@@ -1072,6 +1154,7 @@ function saveContactsStore(){persistKey(CONTACTS_KEY,contacts);}
 function saveSchedulesStore(){persistKey(SCHEDULES_KEY,schedules);}
 function saveFinanceStore(){persistKey(FINANCE_KEY,financeRecords);}
 function savePersonalDataStore(){persistKey(PERSONAL_DATA_KEY,personalData);}
+function saveHabitsStore(){persistKey(HABITS_KEY,habitsData);}
 function persistKey(key,value){
   var json=JSON.stringify(value);
   try{localStorage.setItem(key,json);}catch(e){}
@@ -1502,6 +1585,7 @@ function openSelfTool(tool){
   document.getElementById('nav-self').classList.add('active');
   if(tool==='morning')renderMorningEntries();
   else if(tool==='positivity')renderPositivityEntries();
+  else if(tool==='habits')renderHabitsScreen();
 }
 function saveMorning(){
   var text=document.getElementById('morning-input').value.trim();if(!text)return;
@@ -1539,6 +1623,162 @@ function renderPositivityEntries(){
 }
 function fmtDate(d){return d.getDate()+' '+MONTHS_RU[d.getMonth()]+' '+d.getFullYear();}
 function fmtTime(d){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+
+// HABITS
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function daysBetween(isoA,isoB){
+  var a=new Date(isoA+'T00:00:00'),b=new Date(isoB+'T00:00:00');
+  return Math.round((b-a)/86400000);
+}
+function calcStreak(habit){
+  if(!habit.doneDates||!habit.doneDates.length)return 0;
+  var sorted=habit.doneDates.slice().sort();
+  var streak=1;
+  for(var i=sorted.length-1;i>0;i--){
+    if(daysBetween(sorted[i-1],sorted[i])===1)streak++;
+    else break;
+  }
+  // streak only counts if it's still alive (last done date is today or yesterday)
+  var last=sorted[sorted.length-1];
+  var gap=daysBetween(last,todayStr());
+  if(gap>1)return 0;
+  return streak;
+}
+function renderHabitsScreen(){
+  document.getElementById('habit-total-points').textContent=habitsData.points||0;
+  document.getElementById('habit-total-badges').textContent=(habitsData.earnedBadges||[]).length;
+  renderActiveHabits();
+  renderHabitCatalog();
+  renderHabitBadges();
+}
+function renderActiveHabits(){
+  var wrap=document.getElementById('habit-active-list');wrap.innerHTML='';
+  (habitsData.active||[]).forEach(function(h){
+    var streak=calcStreak(h);
+    var doneCount=(h.doneDates||[]).length;
+    var doneToday=(h.doneDates||[]).indexOf(todayStr())>=0;
+    var pct=Math.min(100,Math.round(doneCount/h.totalDays*100));
+    var card=document.createElement('div');card.className='habit-active-card';
+    card.innerHTML='<div class="habit-active-top"><div><div class="habit-active-name">'+h.icon+' '+h.name+'</div><div class="habit-active-day">День '+doneCount+' из '+h.totalDays+'</div></div>'+(streak>0?'<div class="habit-streak-badge">🔥 '+streak+'</div>':'')+'</div>'+
+      '<div class="habit-progress-track"><div class="habit-progress-fill" style="width:'+pct+'%"></div></div>'+
+      '<button class="habit-check-btn'+(doneToday?' done':'')+'" data-id="'+h.id+'">'+(doneToday?'✓ Отмечено сегодня':'Отметить выполнено сегодня')+'</button>'+
+      '<div class="habit-active-stop" data-id="'+h.id+'">Завершить курс досрочно</div>';
+    card.querySelector('.habit-check-btn').onclick=function(){if(!doneToday)checkInHabit(this.dataset.id);};
+    card.querySelector('.habit-active-stop').onclick=function(){stopHabit(this.dataset.id);};
+    wrap.appendChild(card);
+  });
+}
+function renderHabitCatalog(){
+  var grid=document.getElementById('habit-catalog-grid');grid.innerHTML='';
+  HABIT_CATALOG.forEach(function(item){
+    var alreadyActive=(habitsData.active||[]).some(function(h){return h.catalogId===item.id;});
+    if(alreadyActive)return;
+    var card=document.createElement('div');card.className='habit-card';
+    card.innerHTML='<div class="habit-card-icon">'+item.icon+'</div><div class="habit-card-name">'+item.name+'</div>';
+    card.onclick=function(){openHabitDurationModal(item);};
+    grid.appendChild(card);
+  });
+}
+function renderHabitBadges(){
+  var wrap=document.getElementById('habit-badges-row');wrap.innerHTML='';
+  HABIT_BADGES.forEach(function(b){
+    var earned=(habitsData.earnedBadges||[]).indexOf(b.id)>=0;
+    var chip=document.createElement('div');chip.className='habit-badge-chip'+(earned?' earned':'');
+    chip.innerHTML=b.icon+' '+b.label;
+    wrap.appendChild(chip);
+  });
+}
+function openHabitDurationModal(catalogItem){
+  pendingHabitCatalogItem=catalogItem;
+  pendingHabitDuration=catalogItem.durations[0];
+  document.getElementById('habit-duration-title').textContent=catalogItem.icon+' '+catalogItem.name;
+  var chipsWrap=document.getElementById('habit-duration-chips');chipsWrap.innerHTML='';
+  catalogItem.durations.forEach(function(d){
+    var chip=document.createElement('div');chip.className='duration-chip'+(d===pendingHabitDuration?' selected':'');
+    chip.textContent=d+' дн.';
+    chip.onclick=function(){
+      pendingHabitDuration=d;
+      chipsWrap.querySelectorAll('.duration-chip').forEach(function(c){c.classList.remove('selected');});
+      chip.classList.add('selected');
+    };
+    chipsWrap.appendChild(chip);
+  });
+  document.getElementById('habit-duration-modal').classList.add('active');
+}
+function closeHabitDurationModal(){document.getElementById('habit-duration-modal').classList.remove('active');pendingHabitCatalogItem=null;}
+function startHabitCourse(){
+  if(!pendingHabitCatalogItem)return;
+  var item=pendingHabitCatalogItem;
+  habitsData.active=habitsData.active||[];
+  habitsData.active.push({
+    id:'habit_'+Date.now()+'_'+Math.floor(Math.random()*1000),
+    catalogId:item.id,
+    name:item.name,
+    icon:item.icon,
+    totalDays:pendingHabitDuration,
+    doneDates:[],
+    startedAt:Date.now()
+  });
+  saveHabitsStore();
+  closeHabitDurationModal();
+  renderHabitsScreen();
+  showToast('Курс начат! Удачи 💪');
+}
+function checkInHabit(id){
+  var h=(habitsData.active||[]).find(function(x){return x.id===id;});
+  if(!h)return;
+  h.doneDates=h.doneDates||[];
+  var today=todayStr();
+  if(h.doneDates.indexOf(today)>=0)return;
+  h.doneDates.push(today);
+  habitsData.points=(habitsData.points||0)+10;
+  var streak=calcStreak(h);
+  HABIT_BADGES.forEach(function(b){
+    if(streak>=b.need&&(habitsData.earnedBadges||[]).indexOf(b.id)<0){
+      habitsData.earnedBadges=habitsData.earnedBadges||[];
+      habitsData.earnedBadges.push(b.id);
+      habitsData.points+=25;
+      showToast('Новый бейдж: '+b.icon+' '+b.label+'!');
+    }
+  });
+  if(h.doneDates.length>=h.totalDays){
+    habitsData.points+=50;
+    habitsData.active=habitsData.active.filter(function(x){return x.id!==id;});
+    showToast('Курс завершён! +50 бонусных баллов 🎉');
+  }
+  saveHabitsStore();
+  renderHabitsScreen();
+}
+function stopHabit(id){
+  habitsData.active=(habitsData.active||[]).filter(function(x){return x.id!==id;});
+  saveHabitsStore();
+  renderHabitsScreen();
+}
+function openCustomHabitModal(){
+  document.getElementById('custom-habit-name').value='';
+  document.getElementById('custom-habit-days').value='';
+  document.getElementById('custom-habit-modal').classList.add('active');
+}
+function closeCustomHabitModal(){document.getElementById('custom-habit-modal').classList.remove('active');}
+function saveCustomHabit(){
+  var name=document.getElementById('custom-habit-name').value.trim();
+  var days=parseInt(document.getElementById('custom-habit-days').value,10);
+  if(!name||!days||days<1){showToast('Заполни название и срок');return;}
+  habitsData.active=habitsData.active||[];
+  habitsData.active.push({
+    id:'habit_'+Date.now()+'_'+Math.floor(Math.random()*1000),
+    catalogId:'custom',
+    name:name,
+    icon:'🎯',
+    totalDays:days,
+    doneDates:[],
+    startedAt:Date.now()
+  });
+  saveHabitsStore();
+  closeCustomHabitModal();
+  renderHabitsScreen();
+  showToast('Курс начат! Удачи 💪');
+}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // CHATS
