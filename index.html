@@ -969,7 +969,7 @@ var INTERESTS=[
   {id:'guitar',icon:'🎸',label:'Гитара'},{id:'piano',icon:'🎹',label:'Пианино'},{id:'vocal',icon:'🎤',label:'Вокал'},{id:'dj',icon:'🎧',label:'DJ-сеты'},{id:'dance',icon:'🕺',label:'Танцы'},{id:'theatre',icon:'🎭',label:'Театр'},{id:'painting',icon:'🖌️',label:'Рисование'},{id:'architecture',icon:'📐',label:'Архитектура'},{id:'plants',icon:'🪴',label:'Растения/сад'},{id:'animals',icon:'🐕',label:'Животные'},
   {id:'camping',icon:'⛺',label:'Кемпинг'},{id:'hiking',icon:'🏕️',label:'Туризм'},{id:'watersport',icon:'🚤',label:'Водный спорт'},{id:'aviation',icon:'✈️',label:'Авиация'},{id:'yachting',icon:'⛵',label:'Яхтинг'},{id:'beer',icon:'🍺',label:'Крафтовое пиво'},{id:'coffee',icon:'☕',label:'Кофе'},{id:'whiskey',icon:'🥃',label:'Виски'},{id:'gastronomy',icon:'🍕',label:'Гастрономия'},{id:'diy',icon:'🛠️',label:'Рукоделие/DIY'}
 ];
-var curQ=0,answers={},selectedDay=0,editingIdx=null,netTab='men',newContactType='men',currentChatId=null,pendingTemplate=null;
+var curQ=0,answers={},selectedDay=0,editingIdx=null,netTab='men',newContactType='men',currentChatId=null,pendingTemplate=null,pendingStartParam=null;
 var contactFilters={role:null,city:null,hasBday:false,hasNote:false};
 var PIN_LIMIT=10;
 var userData={first:'',last:'',fullName:'',initials:'МП'};
@@ -1093,6 +1093,7 @@ document.addEventListener('focusin',function(e){
 window.addEventListener('load',function(){
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(tg){tg.ready();tg.expand();}
+  pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;
   loadFromStorage(function(saved){
     document.getElementById('splash').style.display='none';
     if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();}
@@ -1102,6 +1103,13 @@ window.addEventListener('load',function(){
     }
   });
 });
+function handleStartParam(){
+  if(pendingStartParam==='new_contact'){
+    pendingStartParam=null;
+    switchTab('net');
+    openContactModal();
+  }
+}
 function applyUserData(data){
   userData=data;
   document.getElementById('profile-ava').textContent=data.initials;
@@ -1115,6 +1123,7 @@ function launchApp(){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('main-app').classList.add('active');
   renderCalendar();renderSchedule();buildSphereList();buildChatList();renderContacts();
+  handleStartParam();
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var el=document.getElementById(id);if(el){el.classList.add('active');el.scrollTop=0;}}
 
@@ -1649,6 +1658,15 @@ function matchesSearch(ct,query){
   return haystack.indexOf(q)>=0;
 }
 function renderContacts(){
+  // Self-heal legacy contacts created before the ID system existed — without
+  // a stable id, edit/pin/delete buttons silently do nothing.
+  var idsFixed=false;
+  ['men','women'].forEach(function(cat){
+    contacts[cat].forEach(function(ct){
+      if(!ct.id){ct.id='ct_'+Date.now()+'_'+Math.floor(Math.random()*100000);idsFixed=true;}
+    });
+  });
+  if(idsFixed)saveContactsStore();
   var list=document.getElementById('net-list');list.innerHTML='';
   document.getElementById('men-count').textContent=contacts.men.length+' контакт'+(contacts.men.length===1?'':'а');
   document.getElementById('women-count').textContent=contacts.women.length+' контакт'+(contacts.women.length===1?'':'а');
