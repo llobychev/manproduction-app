@@ -230,8 +230,25 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .duration-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .duration-chip{flex:1;min-width:70px;padding:11px 8px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);text-align:center;cursor:pointer;font-size:13px;color:var(--text2);}
 .duration-chip.selected{border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.12);color:var(--accent2);font-weight:600;}
+/* CHALLENGES */
+.challenge-card{margin:0 16px 12px;background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:16px;}
+.challenge-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.challenge-card-title{font-size:15px;font-weight:700;color:var(--text);}
+.challenge-card-meta{font-size:11px;color:var(--text3);margin-top:3px;}
+.challenge-points-badge{background:rgba(201,168,76,0.15);color:var(--accent2);border-radius:14px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap;}
+.challenge-card-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px;}
+.challenge-join-btn{width:100%;padding:11px;border-radius:11px;background-color:var(--accent);color:#1a0f00;font-size:13px;font-weight:700;text-align:center;cursor:pointer;border:none;}
+.challenge-progress-wrap{margin-bottom:10px;}
+.challenge-progress-track{height:8px;background:var(--bg2);border-radius:5px;overflow:hidden;margin-bottom:6px;}
+.challenge-progress-fill{height:100%;background:var(--accent);border-radius:5px;}
+.challenge-progress-label{font-size:11px;color:var(--accent2);}
+.challenge-check-btn{width:100%;padding:11px;border-radius:11px;background-color:var(--accent);color:#1a0f00;font-size:13px;font-weight:700;text-align:center;cursor:pointer;border:none;}
+.challenge-check-btn.done{background-color:var(--bg2);color:var(--accent2);border:0.5px solid rgba(201,168,76,0.4);}
+.challenge-leaderboard-link{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--accent2);margin-top:10px;cursor:pointer;}
 .self-tool-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:20px 14px;cursor:pointer;text-align:center;}
 .self-tool-card:active{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.05);}
+.self-tool-card-wide{background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:0.5px solid rgba(201,168,76,0.35);border-radius:16px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px;}
+.self-tool-card-wide:active{background:rgba(201,168,76,0.1);}
 .self-tool-icon{font-size:36px;margin-bottom:10px;}
 .self-tool-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
 .self-tool-desc{font-size:11px;color:var(--text3);line-height:1.4;}
@@ -545,6 +562,11 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <!-- САМОПОЗНАНИЕ -->
   <div class="app-screen" id="s-self">
     <div class="topbar"><div><div class="topbar-logo">Самопознание</div><div class="topbar-sub">Инструменты роста</div></div></div>
+    <div class="self-tool-card-wide" onclick="openSelfTool('challenges')" style="margin:16px 16px 0;">
+      <div class="self-tool-icon" style="font-size:28px;">🏆</div>
+      <div style="flex:1;text-align:left;"><div class="self-tool-name">Челленджи</div><div class="self-tool-desc">Соревнуйся с другими участниками клуба</div></div>
+      <div style="font-size:18px;color:var(--text3);">›</div>
+    </div>
     <div class="self-tools">
       <div class="self-tool-card" onclick="openSelfTool('morning')">
         <div class="self-tool-icon">🌅</div>
@@ -560,11 +582,6 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
         <div class="self-tool-icon">🔁</div>
         <div class="self-tool-name">Привычки</div>
         <div class="self-tool-desc">Смена привычек в игре</div>
-      </div>
-      <div class="self-tool-card" onclick="openSelfTool('challenges')">
-        <div class="self-tool-icon">🏆</div>
-        <div class="self-tool-name">Челленджи</div>
-        <div class="self-tool-desc">Вызовы для роста</div>
       </div>
       <div class="self-tool-card" onclick="openSelfTool('flow')">
         <div class="self-tool-icon">🌊</div>
@@ -612,7 +629,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <!-- ЧЕЛЛЕНДЖИ (заглушка) -->
   <div class="app-screen" id="s-challenges">
     <div class="topbar"><div><div class="topbar-logo">🏆 Челленджи</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
-    <div class="generic-stub"><div class="generic-stub-icon">🚧</div><div class="generic-stub-text">Вызовы и челленджи для роста<br>скоро появятся здесь.</div></div>
+    <div id="challenges-list-wrap"></div>
   </div>
 
   <!-- FLOW (заглушка) -->
@@ -1018,6 +1035,9 @@ var FINANCE_KEY='mp_finance_v1';
 var PERSONAL_DATA_KEY='mp_personal_data_v1';
 var HABITS_KEY='mp_habits_v1';
 var habitsData={active:[],points:0,earnedBadges:[]}; // active: [{id,catalogId,name,icon,totalDays,doneDates:[],startedAt,lastCheckDate}]
+var CHALLENGES_PROGRESS_KEY='mp_challenges_progress_v1';
+var challengesProgress={}; // {challengeId: {joinedAt, doneDates:[]}}
+var challengesCatalog=[]; // loaded from Firestore (admin-authored)
 var HABIT_CATALOG=[
   {id:'cold_shower',icon:'🧊',name:'Холодный душ',durations:[7,14,21]},
   {id:'early_rise',icon:'🌅',name:'Ранний подъём',durations:[7,21,30]},
@@ -1111,9 +1131,9 @@ function loadFromStorage(cb){
   } else cb(null);
 }
 function clearStorage(){
-  try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(JOURNAL_KEY);localStorage.removeItem(POSITIVITY_KEY);localStorage.removeItem(CONTACTS_KEY);localStorage.removeItem(SCHEDULES_KEY);localStorage.removeItem(FINANCE_KEY);localStorage.removeItem(PERSONAL_DATA_KEY);localStorage.removeItem(HABITS_KEY);}catch(e){}
+  try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(JOURNAL_KEY);localStorage.removeItem(POSITIVITY_KEY);localStorage.removeItem(CONTACTS_KEY);localStorage.removeItem(SCHEDULES_KEY);localStorage.removeItem(FINANCE_KEY);localStorage.removeItem(PERSONAL_DATA_KEY);localStorage.removeItem(HABITS_KEY);localStorage.removeItem(CHALLENGES_PROGRESS_KEY);}catch(e){}
   var tg=window.Telegram&&window.Telegram.WebApp;
-  if(tg&&tg.CloudStorage){['STORAGE_KEY','JOURNAL_KEY','POSITIVITY_KEY','CONTACTS_KEY','SCHEDULES_KEY','FINANCE_KEY','PERSONAL_DATA_KEY','HABITS_KEY'].forEach(function(k){tg.CloudStorage.removeItem(window[k],function(){});});}
+  if(tg&&tg.CloudStorage){['STORAGE_KEY','JOURNAL_KEY','POSITIVITY_KEY','CONTACTS_KEY','SCHEDULES_KEY','FINANCE_KEY','PERSONAL_DATA_KEY','HABITS_KEY','CHALLENGES_PROGRESS_KEY'].forEach(function(k){tg.CloudStorage.removeItem(window[k],function(){});});}
 }
 // Unified loader: reads each data key from localStorage first (instant), and from
 // CloudStorage in background to repair data if localStorage was cleared/empty.
@@ -1124,7 +1144,8 @@ function loadAllData(){
             ['SCHEDULES_KEY',SCHEDULES_KEY,function(v){schedules=v;}],
             ['FINANCE_KEY',FINANCE_KEY,function(v){financeRecords=v;}],
             ['PERSONAL_DATA_KEY',PERSONAL_DATA_KEY,function(v){personalData=v;}],
-            ['HABITS_KEY',HABITS_KEY,function(v){habitsData=v;}]];
+            ['HABITS_KEY',HABITS_KEY,function(v){habitsData=v;}],
+            ['CHALLENGES_PROGRESS_KEY',CHALLENGES_PROGRESS_KEY,function(v){challengesProgress=v;}]];
   var tg=window.Telegram&&window.Telegram.WebApp;
   keys.forEach(function(k){
     var lsVal=null;try{lsVal=localStorage.getItem(k[1]);}catch(e){}
@@ -1155,6 +1176,7 @@ function saveSchedulesStore(){persistKey(SCHEDULES_KEY,schedules);}
 function saveFinanceStore(){persistKey(FINANCE_KEY,financeRecords);}
 function savePersonalDataStore(){persistKey(PERSONAL_DATA_KEY,personalData);}
 function saveHabitsStore(){persistKey(HABITS_KEY,habitsData);}
+function saveChallengesProgress(){persistKey(CHALLENGES_PROGRESS_KEY,challengesProgress);}
 function persistKey(key,value){
   var json=JSON.stringify(value);
   try{localStorage.setItem(key,json);}catch(e){}
@@ -1586,6 +1608,7 @@ function openSelfTool(tool){
   if(tool==='morning')renderMorningEntries();
   else if(tool==='positivity')renderPositivityEntries();
   else if(tool==='habits')renderHabitsScreen();
+  else if(tool==='challenges')renderChallengesScreen();
 }
 function saveMorning(){
   var text=document.getElementById('morning-input').value.trim();if(!text)return;
@@ -1780,6 +1803,90 @@ function saveCustomHabit(){
   showToast('Курс начат! Удачи 💪');
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// CHALLENGES (Stage 2: browse admin-authored challenges, solo participation)
+function loadChallengesCatalog(cb){
+  if(!fbDb){if(cb)cb();return;}
+  fbDb.collection('challenges').orderBy('createdAt','desc').get().then(function(snap){
+    challengesCatalog=[];
+    snap.forEach(function(doc){var d=doc.data();d._id=doc.id;challengesCatalog.push(d);});
+    if(cb)cb();
+  }).catch(function(err){
+    console.warn('Failed to load challenges',err);
+    if(cb)cb();
+  });
+}
+function renderChallengesScreen(){
+  var wrap=document.getElementById('challenges-list-wrap');
+  wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Загрузка...</div>';
+  loadChallengesCatalog(function(){renderChallengesList();});
+}
+function challengeStreakFor(progress){
+  if(!progress||!progress.doneDates||!progress.doneDates.length)return 0;
+  var sorted=progress.doneDates.slice().sort();
+  var streak=1;
+  for(var i=sorted.length-1;i>0;i--){
+    if(daysBetween(sorted[i-1],sorted[i])===1)streak++;
+    else break;
+  }
+  var last=sorted[sorted.length-1];
+  if(daysBetween(last,todayStr())>1)return 0;
+  return streak;
+}
+function renderChallengesList(){
+  var wrap=document.getElementById('challenges-list-wrap');wrap.innerHTML='';
+  if(!challengesCatalog.length){
+    wrap.innerHTML='<div class="generic-stub"><div class="generic-stub-icon">🏆</div><div class="generic-stub-text">Пока нет активных челленджей от клуба.<br>Загляни позже!</div></div>';
+    return;
+  }
+  challengesCatalog.forEach(function(c){
+    var progress=challengesProgress[c._id];
+    var joined=!!progress;
+    var doneCount=joined?(progress.doneDates||[]).length:0;
+    var doneToday=joined&&(progress.doneDates||[]).indexOf(todayStr())>=0;
+    var pct=joined?Math.min(100,Math.round(doneCount/c.durationDays*100)):0;
+    var card=document.createElement('div');card.className='challenge-card';
+    var body='<div class="challenge-card-top"><div><div class="challenge-card-title">🏆 '+esc(c.title||'')+'</div><div class="challenge-card-meta">'+(c.durationDays||0)+' дней</div></div><div class="challenge-points-badge">+'+(c.points||0)+'</div></div>'+
+      '<div class="challenge-card-desc">'+esc(c.description||'')+'</div>';
+    if(joined){
+      body+='<div class="challenge-progress-wrap"><div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:'+pct+'%"></div></div><div class="challenge-progress-label">День '+doneCount+' из '+c.durationDays+(challengeStreakFor(progress)>0?' · 🔥 '+challengeStreakFor(progress):'')+'</div></div>'+
+        '<button class="challenge-check-btn'+(doneToday?' done':'')+'" data-id="'+c._id+'">'+(doneToday?'✓ Отмечено сегодня':'Отметить выполнено сегодня')+'</button>';
+    } else {
+      body+='<button class="challenge-join-btn" data-id="'+c._id+'">Присоединиться</button>';
+    }
+    card.innerHTML=body;
+    if(joined){
+      var btn=card.querySelector('.challenge-check-btn');
+      if(!doneToday)btn.onclick=function(){checkInChallenge(this.dataset.id);};
+    } else {
+      card.querySelector('.challenge-join-btn').onclick=function(){joinChallenge(this.dataset.id);};
+    }
+    wrap.appendChild(card);
+  });
+}
+function joinChallenge(challengeId){
+  challengesProgress[challengeId]={joinedAt:Date.now(),doneDates:[]};
+  saveChallengesProgress();
+  renderChallengesList();
+  showToast('Ты в челлендже! Удачи 🏆');
+}
+function checkInChallenge(challengeId){
+  var progress=challengesProgress[challengeId];
+  if(!progress)return;
+  var today=todayStr();
+  if((progress.doneDates||[]).indexOf(today)>=0)return;
+  progress.doneDates=progress.doneDates||[];
+  progress.doneDates.push(today);
+  var c=challengesCatalog.find(function(x){return x._id===challengeId;});
+  habitsData.points=(habitsData.points||0)+10;
+  if(c&&progress.doneDates.length>=c.durationDays){
+    habitsData.points+=(c.points||0);
+    showToast('Челлендж завершён! +'+(c.points||0)+' баллов 🎉');
+  }
+  saveChallengesProgress();
+  saveHabitsStore();
+  renderChallengesList();
+}
 
 // CHATS
 function buildChatList(){
