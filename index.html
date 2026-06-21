@@ -978,13 +978,15 @@ var firebaseConfig={
 };
 var fbDb=null;
 var fbStorage=null;
-try{
-  if(window.firebase){
-    firebase.initializeApp(firebaseConfig);
-    fbDb=firebase.firestore();
-    fbStorage=firebase.storage();
-  }
-}catch(e){console.warn('Firebase init failed',e);}
+function initFirebase(){
+  try{
+    if(window.firebase&&!fbDb){
+      firebase.initializeApp(firebaseConfig);
+      fbDb=firebase.firestore();
+      fbStorage=firebase.storage();
+    }
+  }catch(e){console.warn('Firebase init failed',e);}
+}
 
 function getTgUserId(){
   var tg=window.Telegram&&window.Telegram.WebApp;
@@ -1251,6 +1253,7 @@ document.addEventListener('focusin',function(e){
 });
 
 window.addEventListener('load',function(){
+  initFirebase();
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(tg){tg.ready();tg.expand();}
   pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;
