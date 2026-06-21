@@ -626,10 +626,62 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     </div>
   </div>
 
+  <!-- MODAL: создать команду -->
+  <div class="modal-overlay" id="create-team-modal">
+    <div class="modal-box">
+      <div class="modal-title">Новая команда</div>
+      <input class="modal-input" id="create-team-name" placeholder="Название команды">
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeCreateTeamModal()">Отмена</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="confirmCreateTeam()">Создать →</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: войти по коду -->
+  <div class="modal-overlay" id="join-team-modal">
+    <div class="modal-box">
+      <div class="modal-title">Войти по коду</div>
+      <input class="modal-input" id="join-team-code" placeholder="Код приглашения" style="text-transform:uppercase;">
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeJoinTeamModal()">Отмена</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="confirmJoinTeamByCode()">Войти →</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: пригласить из контактов -->
+  <div class="modal-overlay" id="invite-contacts-modal">
+    <div class="modal-box">
+      <div class="modal-title">Пригласить из контактов</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Отправь код команды контакту через Telegram — приглашение нужно передать вручную, мы откроем чат с ним.</div>
+      <div class="contact-pick-list" id="invite-contacts-list" style="display:block;max-height:320px;"></div>
+      <div class="modal-btns"><button class="btn-cancel" style="flex:1;" onclick="closeInviteFromContacts()">Закрыть</button></div>
+    </div>
+  </div>
+
   <!-- ЧЕЛЛЕНДЖИ (заглушка) -->
   <div class="app-screen" id="s-challenges">
     <div class="topbar"><div><div class="topbar-logo">🏆 Челленджи</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
     <div id="challenges-list-wrap"></div>
+  </div>
+
+  <!-- TEAM HUB: create or join a team for a specific challenge -->
+  <div class="app-screen" id="s-team-hub">
+    <div class="topbar"><div><div class="topbar-logo">👥 Командный режим</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('challenges')">← Челленджи</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div class="rel-item" onclick="openCreateTeamModal()"><div class="rel-icon">➕</div><div class="rel-name">Создать команду</div><div class="rel-arrow">›</div></div>
+      <div class="rel-item" onclick="openJoinTeamModal()"><div class="rel-icon">🔑</div><div class="rel-name">Войти по коду</div><div class="rel-arrow">›</div></div>
+    </div>
+  </div>
+
+  <!-- TEAM DETAIL: roster, invite code, invite from contacts -->
+  <div class="app-screen" id="s-team-detail">
+    <div class="topbar"><div><div class="topbar-logo" id="team-detail-title">Команда</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('challenges')">← Челленджи</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div class="habit-stat-card" style="margin-bottom:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Код приглашения</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent2);letter-spacing:0.1em;" id="team-invite-code">——</div>
+      </div>
+      <div class="section-title">Участники</div>
+      <div id="team-members-list"></div>
+      <div class="contact-pick-btn" onclick="openInviteFromContacts()" style="margin-top:8px;">👥 Пригласить из контактов</div>
+      <div class="habit-active-stop" id="team-leave-btn" style="margin-top:14px;">Покинуть команду</div>
+    </div>
   </div>
 
   <!-- FLOW (заглушка) -->
@@ -1036,7 +1088,10 @@ var PERSONAL_DATA_KEY='mp_personal_data_v1';
 var HABITS_KEY='mp_habits_v1';
 var habitsData={active:[],points:0,earnedBadges:[]}; // active: [{id,catalogId,name,icon,totalDays,doneDates:[],startedAt,lastCheckDate}]
 var CHALLENGES_PROGRESS_KEY='mp_challenges_progress_v1';
-var challengesProgress={}; // {challengeId: {joinedAt, doneDates:[]}}
+var challengesProgress={}; // {challengeId: {joinedAt, doneDates:[], teamId, teamName}}
+var activeTeamHubChallengeId=null;
+var activeTeamDetailChallengeId=null;
+var activeTeamDetailTeamId=null;
 var challengesCatalog=[]; // loaded from Firestore (admin-authored)
 var HABIT_CATALOG=[
   {id:'cold_shower',icon:'🧊',name:'Холодный душ',durations:[7,14,21]},
@@ -1845,21 +1900,38 @@ function renderChallengesList(){
     var doneCount=joined?(progress.doneDates||[]).length:0;
     var doneToday=joined&&(progress.doneDates||[]).indexOf(todayStr())>=0;
     var pct=joined?Math.min(100,Math.round(doneCount/c.durationDays*100)):0;
+    var type=c.type||'solo';
     var card=document.createElement('div');card.className='challenge-card';
-    var body='<div class="challenge-card-top"><div><div class="challenge-card-title">🏆 '+esc(c.title||'')+'</div><div class="challenge-card-meta">'+(c.durationDays||0)+' дней</div></div><div class="challenge-points-badge">+'+(c.points||0)+'</div></div>'+
+    var typeLabel=type==='solo'?'Соло':type==='team'?'Командный':'Соло + Командный';
+    var body='<div class="challenge-card-top"><div><div class="challenge-card-title">🏆 '+esc(c.title||'')+'</div><div class="challenge-card-meta">'+(c.durationDays||0)+' дней · '+typeLabel+'</div></div><div class="challenge-points-badge">+'+(c.points||0)+'</div></div>'+
       '<div class="challenge-card-desc">'+esc(c.description||'')+'</div>';
     if(joined){
-      body+='<div class="challenge-progress-wrap"><div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:'+pct+'%"></div></div><div class="challenge-progress-label">День '+doneCount+' из '+c.durationDays+(challengeStreakFor(progress)>0?' · 🔥 '+challengeStreakFor(progress):'')+'</div></div>'+
+      var teamLine=progress.teamId?'<div class="challenge-card-meta" style="margin-bottom:8px;">👥 Команда: '+esc(progress.teamName||'')+'</div>':'';
+      body+=teamLine+'<div class="challenge-progress-wrap"><div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:'+pct+'%"></div></div><div class="challenge-progress-label">День '+doneCount+' из '+c.durationDays+(challengeStreakFor(progress)>0?' · 🔥 '+challengeStreakFor(progress):'')+'</div></div>'+
         '<button class="challenge-check-btn'+(doneToday?' done':'')+'" data-id="'+c._id+'">'+(doneToday?'✓ Отмечено сегодня':'Отметить выполнено сегодня')+'</button>';
-    } else {
-      body+='<button class="challenge-join-btn" data-id="'+c._id+'">Присоединиться</button>';
+      if(progress.teamId){
+        body+='<div class="challenge-leaderboard-link" data-id="'+c._id+'" data-act="team">👥 Моя команда ›</div>';
+      }
+    } else if(type==='solo'){
+      body+='<button class="challenge-join-btn" data-id="'+c._id+'" data-act="solo">Присоединиться</button>';
+    } else if(type==='team'){
+      body+='<button class="challenge-join-btn" data-id="'+c._id+'" data-act="teamhub">Командный режим</button>';
+    } else { // both
+      body+='<div style="display:flex;gap:8px;"><button class="challenge-join-btn" data-id="'+c._id+'" data-act="solo" style="flex:1;">Соло</button><button class="challenge-join-btn" data-id="'+c._id+'" data-act="teamhub" style="flex:1;background-color:var(--bg2);color:var(--accent2);border:0.5px solid rgba(201,168,76,0.4);">Команда</button></div>';
     }
     card.innerHTML=body;
     if(joined){
       var btn=card.querySelector('.challenge-check-btn');
       if(!doneToday)btn.onclick=function(){checkInChallenge(this.dataset.id);};
+      var teamLink=card.querySelector('[data-act="team"]');
+      if(teamLink)teamLink.onclick=function(){openTeamScreen(this.dataset.id);};
     } else {
-      card.querySelector('.challenge-join-btn').onclick=function(){joinChallenge(this.dataset.id);};
+      card.querySelectorAll('.challenge-join-btn').forEach(function(btn){
+        btn.onclick=function(){
+          if(this.dataset.act==='solo')joinChallenge(this.dataset.id);
+          else openTeamHub(this.dataset.id);
+        };
+      });
     }
     wrap.appendChild(card);
   });
@@ -1879,6 +1951,11 @@ function checkInChallenge(challengeId){
   progress.doneDates.push(today);
   var c=challengesCatalog.find(function(x){return x._id===challengeId;});
   habitsData.points=(habitsData.points||0)+10;
+  if(progress.teamId&&fbDb){
+    fbDb.collection('challenges').doc(challengeId).collection('teams').doc(progress.teamId)
+      .collection('members').doc(getTgUserId()).set({doneCount:progress.doneDates.length,lastCheckIn:Date.now()},{merge:true})
+      .catch(function(err){console.warn('Failed to sync team progress',err);});
+  }
   if(c&&progress.doneDates.length>=c.durationDays){
     habitsData.points+=(c.points||0);
     showToast('Челлендж завершён! +'+(c.points||0)+' баллов 🎉');
@@ -1887,6 +1964,157 @@ function checkInChallenge(challengeId){
   saveHabitsStore();
   renderChallengesList();
 }
+
+// TEAMS (Stage 3): per-challenge teams, captain role, invite by code or club contacts
+function openTeamHub(challengeId){
+  activeTeamHubChallengeId=challengeId;
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-team-hub').classList.add('active');
+}
+function genInviteCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code='';
+  for(var i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+function openCreateTeamModal(){
+  document.getElementById('create-team-name').value='';
+  document.getElementById('create-team-modal').classList.add('active');
+}
+function closeCreateTeamModal(){document.getElementById('create-team-modal').classList.remove('active');}
+function confirmCreateTeam(){
+  var name=document.getElementById('create-team-name').value.trim();
+  if(!name){showToast('Введи название команды');return;}
+  if(!fbDb){showToast('Нет подключения к базе');return;}
+  var challengeId=activeTeamHubChallengeId;
+  var uid=getTgUserId();
+  var inviteCode=genInviteCode();
+  var teamRef=fbDb.collection('challenges').doc(challengeId).collection('teams').doc();
+  teamRef.set({
+    name:name,
+    captainId:uid,
+    captainName:(userData&&userData.fullName)||'',
+    inviteCode:inviteCode,
+    createdAt:Date.now()
+  }).then(function(){
+    return teamRef.collection('members').doc(uid).set({userId:uid,userName:(userData&&userData.fullName)||'',isCaptain:true,doneCount:0,joinedAt:Date.now()});
+  }).then(function(){
+    challengesProgress[challengeId]=challengesProgress[challengeId]||{joinedAt:Date.now(),doneDates:[]};
+    challengesProgress[challengeId].teamId=teamRef.id;
+    challengesProgress[challengeId].teamName=name;
+    saveChallengesProgress();
+    closeCreateTeamModal();
+    openTeamScreen(challengeId,teamRef.id);
+    showToast('Команда создана! 🎉');
+  }).catch(function(err){console.warn(err);showToast('Не удалось создать команду');});
+}
+function openJoinTeamModal(){
+  document.getElementById('join-team-code').value='';
+  document.getElementById('join-team-modal').classList.add('active');
+}
+function closeJoinTeamModal(){document.getElementById('join-team-modal').classList.remove('active');}
+function confirmJoinTeamByCode(){
+  var code=document.getElementById('join-team-code').value.trim().toUpperCase();
+  if(!code){showToast('Введи код приглашения');return;}
+  if(!fbDb){showToast('Нет подключения к базе');return;}
+  var challengeId=activeTeamHubChallengeId;
+  fbDb.collection('challenges').doc(challengeId).collection('teams').where('inviteCode','==',code).limit(1).get().then(function(snap){
+    if(snap.empty){showToast('Команда с таким кодом не найдена');return;}
+    var teamDoc=snap.docs[0];
+    var uid=getTgUserId();
+    teamDoc.ref.collection('members').doc(uid).set({userId:uid,userName:(userData&&userData.fullName)||'',isCaptain:false,doneCount:0,joinedAt:Date.now()}).then(function(){
+      challengesProgress[challengeId]=challengesProgress[challengeId]||{joinedAt:Date.now(),doneDates:[]};
+      challengesProgress[challengeId].teamId=teamDoc.id;
+      challengesProgress[challengeId].teamName=teamDoc.data().name;
+      saveChallengesProgress();
+      closeJoinTeamModal();
+      openTeamScreen(challengeId,teamDoc.id);
+      showToast('Ты в команде «'+teamDoc.data().name+'»! 🎉');
+    }).catch(function(err){console.warn(err);showToast('Не удалось присоединиться');});
+  }).catch(function(err){console.warn(err);showToast('Ошибка поиска команды');});
+}
+function openTeamScreen(challengeId,teamId){
+  activeTeamDetailChallengeId=challengeId;
+  activeTeamDetailTeamId=teamId||(challengesProgress[challengeId]&&challengesProgress[challengeId].teamId);
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-team-detail').classList.add('active');
+  loadTeamDetail();
+}
+function loadTeamDetail(){
+  if(!fbDb)return;
+  var challengeId=activeTeamDetailChallengeId,teamId=activeTeamDetailTeamId;
+  fbDb.collection('challenges').doc(challengeId).collection('teams').doc(teamId).get().then(function(teamDoc){
+    if(!teamDoc.exists)return;
+    var team=teamDoc.data();
+    document.getElementById('team-detail-title').textContent='👥 '+team.name;
+    document.getElementById('team-invite-code').textContent=team.inviteCode;
+    var myUid=getTgUserId();
+    var isCaptain=team.captainId===myUid;
+    var leaveBtn=document.getElementById('team-leave-btn');
+    leaveBtn.textContent=isCaptain?'Удалить команду':'Покинуть команду';
+    leaveBtn.onclick=function(){isCaptain?deleteTeam():leaveTeam();};
+    return teamDoc.ref.collection('members').get().then(function(snap){
+      var wrap=document.getElementById('team-members-list');wrap.innerHTML='';
+      snap.forEach(function(m){
+        var data=m.data();
+        var initials=(data.userName||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+        var row=document.createElement('div');row.className='user-row';
+        row.innerHTML='<div class="user-ava">'+initials+'</div><div class="user-info"><div class="user-name">'+esc(data.userName||'Без имени')+(data.isCaptain?' 👑':'')+'</div><div class="user-role-label">'+(data.doneCount||0)+' отметок</div></div>';
+        if(isCaptain&&!data.isCaptain){
+          var kickBtn=document.createElement('div');kickBtn.className='icon-btn';kickBtn.textContent='✕';kickBtn.style.cursor='pointer';
+          kickBtn.onclick=function(){kickMember(m.id);};
+          row.appendChild(kickBtn);
+        }
+        wrap.appendChild(row);
+      });
+    });
+  }).catch(function(err){console.warn(err);showToast('Не удалось загрузить команду');});
+}
+function kickMember(memberUid){
+  fbDb.collection('challenges').doc(activeTeamDetailChallengeId).collection('teams').doc(activeTeamDetailTeamId)
+    .collection('members').doc(memberUid).delete().then(function(){
+      showToast('Участник исключён');loadTeamDetail();
+    }).catch(function(err){console.warn(err);showToast('Ошибка');});
+}
+function leaveTeam(){
+  var challengeId=activeTeamDetailChallengeId,teamId=activeTeamDetailTeamId,uid=getTgUserId();
+  fbDb.collection('challenges').doc(challengeId).collection('teams').doc(teamId).collection('members').doc(uid).delete().then(function(){
+    if(challengesProgress[challengeId]){delete challengesProgress[challengeId].teamId;delete challengesProgress[challengeId].teamName;saveChallengesProgress();}
+    showToast('Ты покинул команду');
+    switchTab('challenges');renderChallengesList();
+  }).catch(function(err){console.warn(err);showToast('Ошибка');});
+}
+function deleteTeam(){
+  var challengeId=activeTeamDetailChallengeId,teamId=activeTeamDetailTeamId;
+  fbDb.collection('challenges').doc(challengeId).collection('teams').doc(teamId).delete().then(function(){
+    if(challengesProgress[challengeId]){delete challengesProgress[challengeId].teamId;delete challengesProgress[challengeId].teamName;saveChallengesProgress();}
+    showToast('Команда удалена');
+    switchTab('challenges');renderChallengesList();
+  }).catch(function(err){console.warn(err);showToast('Ошибка');});
+}
+function openInviteFromContacts(){
+  var wrap=document.getElementById('invite-contacts-list');wrap.innerHTML='';
+  var all=contacts.men.concat(contacts.women);
+  if(!all.length){wrap.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;">Нет сохранённых контактов клуба</div>';}
+  else{
+    all.forEach(function(ct){
+      if(!ct.tg)return; // can only deep-link to people with a known Telegram username
+      var initials=ct.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+      var item=document.createElement('div');item.className='contact-pick-item';
+      item.innerHTML='<div class="contact-pick-ava">'+initials+'</div><div class="contact-pick-name">'+esc(ct.name)+'</div>';
+      item.onclick=function(){
+        var tg=window.Telegram&&window.Telegram.WebApp;
+        var code=document.getElementById('team-invite-code').textContent;
+        var text=encodeURIComponent('Присоединяйся к моей команде в ManClub! Код приглашения: '+code);
+        var url='https://t.me/'+ct.tg+'?text='+text;
+        if(tg&&tg.openTelegramLink)tg.openTelegramLink(url);else window.open(url,'_blank');
+      };
+      wrap.appendChild(item);
+    });
+  }
+  document.getElementById('invite-contacts-modal').classList.add('active');
+}
+function closeInviteFromContacts(){document.getElementById('invite-contacts-modal').classList.remove('active');}
 
 // CHATS
 function buildChatList(){
