@@ -576,6 +576,16 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div style="flex:1;text-align:left;"><div class="self-tool-name">Челленджи</div><div class="self-tool-desc">Соревнуйся с другими участниками клуба</div></div>
       <div style="font-size:18px;color:var(--text3);">›</div>
     </div>
+    <div class="self-tool-card-wide" onclick="openSelfTool('mindset')" style="margin:10px 16px 0;">
+      <div class="self-tool-icon" style="font-size:28px;">🧠</div>
+      <div style="flex:1;text-align:left;"><div class="self-tool-name">Мышление</div><div class="self-tool-desc">Работа с установками</div></div>
+      <div style="font-size:18px;color:var(--text3);">›</div>
+    </div>
+    <div class="self-tool-card-wide" onclick="openSelfTool('myreality')" style="margin:10px 16px 0;">
+      <div class="self-tool-icon" style="font-size:28px;">🌐</div>
+      <div style="flex:1;text-align:left;"><div class="self-tool-name">Моя реальность</div><div class="self-tool-desc">Скоро здесь</div></div>
+      <div style="font-size:18px;color:var(--text3);">›</div>
+    </div>
     <div class="self-tools">
       <div class="self-tool-card" onclick="openSelfTool('morning')">
         <div class="self-tool-icon">🌅</div>
@@ -697,6 +707,28 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen" id="s-flow">
     <div class="topbar"><div><div class="topbar-logo">🌊 Flow</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
     <div class="generic-stub"><div class="generic-stub-icon">🚧</div><div class="generic-stub-text">Геймификация для входа в поток<br>скоро появится здесь.</div></div>
+  </div>
+
+  <!-- МЫШЛЕНИЕ -->
+  <div class="app-screen" id="s-mindset">
+    <div class="topbar"><div><div class="topbar-logo">🧠 Мышление</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
+    <div class="self-tool-card-wide" onclick="openSelfTool('mindset-beliefs')" style="margin:16px 16px 0;">
+      <div class="self-tool-icon" style="font-size:28px;">🪞</div>
+      <div style="flex:1;text-align:left;"><div class="self-tool-name">Установки</div><div class="self-tool-desc">Работа с убеждениями</div></div>
+      <div style="font-size:18px;color:var(--text3);">›</div>
+    </div>
+  </div>
+
+  <!-- УСТАНОВКИ (заглушка) -->
+  <div class="app-screen" id="s-mindset-beliefs">
+    <div class="topbar"><div><div class="topbar-logo">🪞 Установки</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('mindset')">← Мышление</div></div></div>
+    <div class="generic-stub"><div class="generic-stub-icon">🚧</div><div class="generic-stub-text">Работа с установками и убеждениями<br>скоро появится здесь.</div></div>
+  </div>
+
+  <!-- МОЯ РЕАЛЬНОСТЬ (заглушка) -->
+  <div class="app-screen" id="s-myreality">
+    <div class="topbar"><div><div class="topbar-logo">🌐 Моя реальность</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
+    <div class="generic-stub"><div class="generic-stub-icon">🚧</div><div class="generic-stub-text">Раздел скоро появится здесь.</div></div>
   </div>
 
   <!-- LEADERBOARD (общий рейтинг клуба) -->
