@@ -245,6 +245,15 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .challenge-check-btn{width:100%;padding:11px;border-radius:11px;background-color:var(--accent);color:#1a0f00;font-size:13px;font-weight:700;text-align:center;cursor:pointer;border:none;}
 .challenge-check-btn.done{background-color:var(--bg2);color:var(--accent2);border:0.5px solid rgba(201,168,76,0.4);}
 .challenge-leaderboard-link{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--accent2);margin-top:10px;cursor:pointer;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:0.5px solid var(--border);}
+.lb-rank{width:28px;font-size:14px;font-weight:700;color:var(--text3);text-align:center;flex-shrink:0;}
+.lb-rank.top1{color:#ffd54a;}
+.lb-rank.top2{color:#c0c0c0;}
+.lb-rank.top3{color:#cd7f32;}
+.lb-ava{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--accent2);font-weight:700;flex-shrink:0;}
+.lb-name{flex:1;font-size:13px;color:var(--text);}
+.lb-name.me{color:var(--accent2);font-weight:700;}
+.lb-points{font-size:13px;font-weight:700;color:var(--accent2);}
 .self-tool-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:20px 14px;cursor:pointer;text-align:center;}
 .self-tool-card:active{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.05);}
 .self-tool-card-wide{background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:0.5px solid rgba(201,168,76,0.35);border-radius:16px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px;}
@@ -519,7 +528,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen active" id="s-home">
     <div class="topbar"><div><div class="topbar-logo">ManClub in Siberia</div><div class="topbar-sub">Мужской клуб</div></div><div class="topbar-actions"><div class="topbar-icon-btn" onclick="switchTab('news')">📰<div class="nav-badge"></div></div><div class="topbar-icon-btn" onclick="switchTab('chat')">💬<div class="nav-badge"></div></div></div></div>
     <div class="content">
-      <div class="stats-row" style="margin-top:16px;"><div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Баллов</div></div><div class="stat-card"><div class="stat-val">—</div><div class="stat-label">В рейтинге</div></div></div>
+      <div class="stats-row" style="margin-top:16px;"><div class="stat-card"><div class="stat-val" id="home-points-val">0</div><div class="stat-label">Баллов</div></div><div class="stat-card" onclick="openLeaderboard()" style="cursor:pointer;"><div class="stat-val" id="home-rank-val">—</div><div class="stat-label">В рейтинге</div></div></div>
       <div class="home-widget-stub"><div class="home-widget-stub-icon">🏆</div><div class="home-widget-stub-text">Скоро тут будут ваши активные челленджи и привычки</div></div>
       <div class="home-widget-stub"><div class="home-widget-stub-icon">🧩</div><div class="home-widget-stub-text">Скоро здесь можно будет добавлять и убирать виджеты главной страницы</div></div>
       <div class="section-title" id="sched-title">Расписание дня</div>
@@ -688,6 +697,18 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen" id="s-flow">
     <div class="topbar"><div><div class="topbar-logo">🌊 Flow</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
     <div class="generic-stub"><div class="generic-stub-icon">🚧</div><div class="generic-stub-text">Геймификация для входа в поток<br>скоро появится здесь.</div></div>
+  </div>
+
+  <!-- LEADERBOARD (общий рейтинг клуба) -->
+  <div class="app-screen" id="s-leaderboard">
+    <div class="topbar"><div><div class="topbar-logo">🏅 Рейтинг клуба</div><div class="topbar-sub" style="cursor:pointer" id="leaderboard-back" onclick="switchTab('home')">← Главная</div></div></div>
+    <div id="leaderboard-list-wrap"></div>
+  </div>
+
+  <!-- CHALLENGE LEADERBOARD (рейтинг внутри конкретного челленджа) -->
+  <div class="app-screen" id="s-challenge-leaderboard">
+    <div class="topbar"><div><div class="topbar-logo" id="challenge-leaderboard-title">Рейтинг челленджа</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('challenges')">← Челленджи</div></div></div>
+    <div id="challenge-leaderboard-list-wrap"></div>
   </div>
 
   <!-- УТРЕННИЕ МЫСЛИ -->
@@ -1233,6 +1254,90 @@ function saveSchedulesStore(){persistKey(SCHEDULES_KEY,schedules);}
 function saveFinanceStore(){persistKey(FINANCE_KEY,financeRecords);}
 function savePersonalDataStore(){persistKey(PERSONAL_DATA_KEY,personalData);}
 function saveHabitsStore(){persistKey(HABITS_KEY,habitsData);}
+// LEADERBOARD: mirrors each user's total points to a shared Firestore collection
+// so the club-wide ranking can be built from real other-members data.
+function syncLeaderboardPoints(){
+  if(!fbDb)return;
+  var uid=getTgUserId();
+  fbDb.collection('leaderboard').doc(uid).set({
+    userId:uid,
+    userName:(userData&&userData.fullName)||'',
+    points:habitsData.points||0,
+    updatedAt:Date.now()
+  },{merge:true}).then(function(){
+    updateHomeRankDisplay();
+  }).catch(function(err){console.warn('Leaderboard sync failed',err);});
+}
+function updateHomeRankDisplay(){
+  document.getElementById('home-points-val').textContent=habitsData.points||0;
+  if(!fbDb)return;
+  fbDb.collection('leaderboard').orderBy('points','desc').get().then(function(snap){
+    var uid=getTgUserId();
+    var rank=null;
+    var i=1;
+    snap.forEach(function(doc){
+      if(doc.id===uid)rank=i;
+      i++;
+    });
+    document.getElementById('home-rank-val').textContent=rank?('#'+rank):'—';
+  }).catch(function(err){console.warn(err);});
+}
+function openLeaderboard(){
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-leaderboard').classList.add('active');
+  renderLeaderboard();
+}
+function renderLeaderboard(){
+  var wrap=document.getElementById('leaderboard-list-wrap');
+  wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Загрузка...</div>';
+  if(!fbDb){wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Рейтинг недоступен</div>';return;}
+  var myUid=getTgUserId();
+  fbDb.collection('leaderboard').orderBy('points','desc').limit(100).get().then(function(snap){
+    wrap.innerHTML='';
+    if(snap.empty){wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Рейтинг пока пуст</div>';return;}
+    var i=1;
+    snap.forEach(function(doc){
+      var d=doc.data();
+      var isMe=doc.id===myUid;
+      var initials=(d.userName||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+      var rankClass=i===1?'top1':i===2?'top2':i===3?'top3':'';
+      var medal=i===1?'🥇':i===2?'🥈':i===3?'🥉':i;
+      var row=document.createElement('div');row.className='lb-row';
+      row.innerHTML='<div class="lb-rank '+rankClass+'">'+medal+'</div><div class="lb-ava">'+initials+'</div><div class="lb-name'+(isMe?' me':'')+'">'+esc(d.userName||'Без имени')+(isMe?' (ты)':'')+'</div><div class="lb-points">'+(d.points||0)+'</div>';
+      wrap.appendChild(row);
+      i++;
+    });
+  }).catch(function(err){console.warn(err);wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Не удалось загрузить рейтинг</div>';});
+}
+function openChallengeLeaderboard(challengeId){
+  var c=challengesCatalog.find(function(x){return x._id===challengeId;});
+  document.getElementById('challenge-leaderboard-title').textContent='🏅 '+(c?c.title:'Рейтинг челленджа');
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-challenge-leaderboard').classList.add('active');
+  renderChallengeLeaderboard(challengeId);
+}
+function renderChallengeLeaderboard(challengeId){
+  var wrap=document.getElementById('challenge-leaderboard-list-wrap');
+  wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Загрузка...</div>';
+  if(!fbDb){wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Рейтинг недоступен</div>';return;}
+  var myUid=getTgUserId();
+  fbDb.collection('challenge_progress').where('challengeId','==',challengeId).orderBy('doneCount','desc').limit(100).get().then(function(snap){
+    wrap.innerHTML='';
+    if(snap.empty){wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Пока никто не участвует</div>';return;}
+    var i=1;
+    snap.forEach(function(doc){
+      var d=doc.data();
+      var isMe=d.userId===myUid;
+      var initials=(d.userName||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+      var rankClass=i===1?'top1':i===2?'top2':i===3?'top3':'';
+      var medal=i===1?'🥇':i===2?'🥈':i===3?'🥉':i;
+      var row=document.createElement('div');row.className='lb-row';
+      row.innerHTML='<div class="lb-rank '+rankClass+'">'+medal+'</div><div class="lb-ava">'+initials+'</div><div class="lb-name'+(isMe?' me':'')+'">'+esc(d.userName||'Без имени')+(isMe?' (ты)':'')+'</div><div class="lb-points">'+(d.doneCount||0)+' дн.</div>';
+      wrap.appendChild(row);
+      i++;
+    });
+  }).catch(function(err){console.warn(err);wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Не удалось загрузить рейтинг</div>';});
+}
 function saveChallengesProgress(){persistKey(CHALLENGES_PROGRESS_KEY,challengesProgress);}
 function persistKey(key,value){
   var json=JSON.stringify(value);
@@ -1286,6 +1391,7 @@ function launchApp(){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('main-app').classList.add('active');
   renderCalendar();renderSchedule();buildSphereList();buildChatList();renderContacts();
+  syncLeaderboardPoints();
   handleStartParam();
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var el=document.getElementById(id);if(el){el.classList.add('active');el.scrollTop=0;}}
@@ -1800,7 +1906,7 @@ function startHabitCourse(){
     doneDates:[],
     startedAt:Date.now()
   });
-  saveHabitsStore();
+  saveHabitsStore();syncLeaderboardPoints();
   closeHabitDurationModal();
   renderHabitsScreen();
   showToast('Курс начат! Удачи 💪');
@@ -1827,12 +1933,12 @@ function checkInHabit(id){
     habitsData.active=habitsData.active.filter(function(x){return x.id!==id;});
     showToast('Курс завершён! +50 бонусных баллов 🎉');
   }
-  saveHabitsStore();
+  saveHabitsStore();syncLeaderboardPoints();
   renderHabitsScreen();
 }
 function stopHabit(id){
   habitsData.active=(habitsData.active||[]).filter(function(x){return x.id!==id;});
-  saveHabitsStore();
+  saveHabitsStore();syncLeaderboardPoints();
   renderHabitsScreen();
 }
 function openCustomHabitModal(){
@@ -1855,7 +1961,7 @@ function saveCustomHabit(){
     doneDates:[],
     startedAt:Date.now()
   });
-  saveHabitsStore();
+  saveHabitsStore();syncLeaderboardPoints();
   closeCustomHabitModal();
   renderHabitsScreen();
   showToast('Курс начат! Удачи 💪');
@@ -1911,7 +2017,8 @@ function renderChallengesList(){
     if(joined){
       var teamLine=progress.teamId?'<div class="challenge-card-meta" style="margin-bottom:8px;">👥 Команда: '+esc(progress.teamName||'')+'</div>':'';
       body+=teamLine+'<div class="challenge-progress-wrap"><div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:'+pct+'%"></div></div><div class="challenge-progress-label">День '+doneCount+' из '+c.durationDays+(challengeStreakFor(progress)>0?' · 🔥 '+challengeStreakFor(progress):'')+'</div></div>'+
-        '<button class="challenge-check-btn'+(doneToday?' done':'')+'" data-id="'+c._id+'">'+(doneToday?'✓ Отмечено сегодня':'Отметить выполнено сегодня')+'</button>';
+        '<button class="challenge-check-btn'+(doneToday?' done':'')+'" data-id="'+c._id+'">'+(doneToday?'✓ Отмечено сегодня':'Отметить выполнено сегодня')+'</button>'+
+        '<div class="challenge-leaderboard-link" data-id="'+c._id+'" data-act="leaderboard">🏅 Рейтинг челленджа ›</div>';
       if(progress.teamId){
         body+='<div class="challenge-leaderboard-link" data-id="'+c._id+'" data-act="team">👥 Моя команда ›</div>';
       }
@@ -1928,6 +2035,8 @@ function renderChallengesList(){
       if(!doneToday)btn.onclick=function(){checkInChallenge(this.dataset.id);};
       var teamLink=card.querySelector('[data-act="team"]');
       if(teamLink)teamLink.onclick=function(){openTeamScreen(this.dataset.id);};
+      var lbLink=card.querySelector('[data-act="leaderboard"]');
+      if(lbLink)lbLink.onclick=function(){openChallengeLeaderboard(this.dataset.id);};
     } else {
       card.querySelectorAll('.challenge-join-btn').forEach(function(btn){
         btn.onclick=function(){
@@ -1954,6 +2063,16 @@ function checkInChallenge(challengeId){
   progress.doneDates.push(today);
   var c=challengesCatalog.find(function(x){return x._id===challengeId;});
   habitsData.points=(habitsData.points||0)+10;
+  if(fbDb){
+    var uid=getTgUserId();
+    fbDb.collection('challenge_progress').doc(challengeId+'_'+uid).set({
+      challengeId:challengeId,
+      userId:uid,
+      userName:(userData&&userData.fullName)||'',
+      doneCount:progress.doneDates.length,
+      updatedAt:Date.now()
+    },{merge:true}).catch(function(err){console.warn('Failed to sync challenge progress',err);});
+  }
   if(progress.teamId&&fbDb){
     fbDb.collection('challenges').doc(challengeId).collection('teams').doc(progress.teamId)
       .collection('members').doc(getTgUserId()).set({doneCount:progress.doneDates.length,lastCheckIn:Date.now()},{merge:true})
@@ -1964,7 +2083,7 @@ function checkInChallenge(challengeId){
     showToast('Челлендж завершён! +'+(c.points||0)+' баллов 🎉');
   }
   saveChallengesProgress();
-  saveHabitsStore();
+  saveHabitsStore();syncLeaderboardPoints();
   renderChallengesList();
 }
 
