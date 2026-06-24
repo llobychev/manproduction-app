@@ -1502,7 +1502,7 @@ function applyUserData(data){
 function launchApp(){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('main-app').classList.add('active');
-  renderCalendar();renderSchedule();buildSphereList();buildChatList();renderContacts();renderQuests();
+  renderCalendar();renderSchedule();buildSphereList();buildChatList();renderContacts();loadDailyQuests();
   syncLeaderboardPoints();
   handleStartParam();
 }
@@ -2449,6 +2449,16 @@ var DAILY_QUESTS=[
   {text:'Создай задачу',pts:30},
   {text:'Открой привычку',pts:20}
 ];
+function loadDailyQuests(){
+  if(!fbDb){renderQuests();return;}
+  fbDb.collection('daily_quests').where('active','==',true).get().then(function(snap){
+    if(snap.size>0){
+      DAILY_QUESTS=[];
+      snap.forEach(function(doc){var d=doc.data();DAILY_QUESTS.push({text:d.text,pts:d.points});});
+    }
+    renderQuests();
+  }).catch(function(){renderQuests();});
+}
 
 function openScreen(screenId){
   document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
