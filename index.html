@@ -201,6 +201,25 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .lesson-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
 .lesson-meta{font-size:11px;color:var(--text2);}
 .back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--accent);cursor:pointer;margin-bottom:16px;}
+/* EXTRA LESSONS: Pets, Nutrition, Languages */
+.extra-card{border-radius:14px;overflow:hidden;border:0.5px solid var(--border);cursor:pointer;position:relative;}
+.extra-card:active{border-color:rgba(201,168,76,0.4);}
+.extra-card-bg{height:80px;display:flex;align-items:center;justify-content:center;text-align:center;}
+.extra-card-overlay{padding:10px 12px;background:var(--bg3);}
+.extra-card-name{font-size:14px;font-weight:600;color:var(--text);}
+.extra-card-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.extra-tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin-bottom:14px;}
+.extra-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;}
+.extra-tab.active{color:var(--accent2);border-bottom-color:var(--accent);}
+.extra-tab-content{}
+.stub-lesson{padding:14px;background:var(--bg3);border-radius:12px;margin-bottom:8px;border:0.5px solid var(--border);}
+.stub-lesson-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.stub-lesson-status{font-size:11px;color:var(--text3);}
+.quest-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.quest-row:last-child{margin-bottom:0;}
+.quest-chk{width:13px;height:13px;border-radius:3px;border:1px solid var(--text3);flex-shrink:0;}
+.quest-name{flex:1;font-size:10px;color:var(--text2);}
+.quest-pts{font-size:9px;font-weight:600;color:var(--accent);}
 /* САМОПОЗНАНИЕ */
 .self-tools{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
 /* HABITS */
@@ -528,10 +547,20 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen active" id="s-home">
     <div class="topbar"><div><div class="topbar-logo">ManClub in Siberia</div><div class="topbar-sub">Мужской клуб</div></div><div class="topbar-actions"><div class="topbar-icon-btn" onclick="switchTab('news')">📰<div class="nav-badge"></div></div><div class="topbar-icon-btn" onclick="switchTab('chat')">💬<div class="nav-badge"></div></div></div></div>
     <div class="content">
-      <div class="stats-row" style="margin-top:16px;"><div class="stat-card"><div class="stat-val" id="home-points-val">0</div><div class="stat-label">Баллов</div></div><div class="stat-card" onclick="openLeaderboard()" style="cursor:pointer;"><div class="stat-val" id="home-rank-val">—</div><div class="stat-label">В рейтинге</div></div></div>
+      <div class="stats-row" style="margin-top:16px;">
+        <div class="stat-card" style="display:flex;align-items:center;justify-content:space-between;">
+          <div><div class="stat-val" id="home-points-val">0</div><div class="stat-label">Баллов</div></div>
+          <div onclick="openLeaderboard()" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:rgba(201,168,76,0.12);border:0.5px solid rgba(201,168,76,0.3);border-radius:14px;padding:3px 9px;font-size:11px;color:var(--accent2);font-weight:500;">🦁 <span id="home-rank-val">—</span></div>
+        </div>
+        <div class="stat-card" id="quests-card" style="padding:8px 10px;">
+          <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:6px;">Квесты дня</div>
+          <div id="quests-list"></div>
+        </div>
+      </div>
       <div class="home-widget-stub"><div class="home-widget-stub-icon">🏆</div><div class="home-widget-stub-text">Скоро тут будут ваши активные челленджи и привычки</div></div>
       <div class="home-widget-stub"><div class="home-widget-stub-icon">🧩</div><div class="home-widget-stub-text">Скоро здесь можно будет добавлять и убирать виджеты главной страницы</div></div>
       <div class="section-title" id="sched-title">Расписание дня</div>
+      <div class="add-event-btn" onclick="openTemplatePicker()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Добавить событие</span></div>
       <div class="cal-header">
         <div class="cal-nav-btn" onclick="calChangeMonth(-1)">‹</div>
         <div class="cal-month-label" id="cal-month-label">—</div>
@@ -539,7 +568,6 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       </div>
       <div class="cal-grid" id="cal-grid"></div>
       <div id="schedule-list"></div>
-      <div class="add-event-btn" onclick="openTemplatePicker()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Добавить событие</span></div>
     </div>
   </div>
 
@@ -568,7 +596,59 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen" id="s-lessons"><div class="topbar"><div><div class="topbar-logo">Путь участника</div><div class="topbar-sub">6 сфер жизни</div></div></div><div class="content" style="padding-top:16px;"><div id="sphere-list"></div></div></div>
   <div class="app-screen" id="s-lesson-detail"><div class="topbar"><div><div class="topbar-logo" id="detail-title">Уроки</div><div class="topbar-sub">Видеоуроки</div></div></div><div class="content" style="padding-top:16px;"><div class="back-btn" onclick="switchTab('lessons')">← Все сферы</div><div id="detail-extra"></div><div id="lesson-list"></div></div></div>
 
-  <!-- САМОПОЗНАНИЕ -->
+  <!-- ПИТОМЦЫ -->
+  <div class="app-screen" id="s-pets">
+    <div class="topbar"><div><div class="topbar-logo">🐾 Питомцы</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('lessons')">← Все сферы</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="pets-grid">
+        <div class="extra-card" onclick="openPetsDetail('dogs')">
+          <div class="extra-card-bg" style="background:rgba(180,130,80,0.15);font-size:48px;line-height:80px;">🐕</div>
+          <div class="extra-card-overlay"><div class="extra-card-name">Собаки</div><div class="extra-card-sub">4 темы</div></div>
+        </div>
+        <div class="extra-card" onclick="openPetsDetail('cats')">
+          <div class="extra-card-bg" style="background:rgba(200,160,120,0.15);font-size:48px;line-height:80px;">🐱</div>
+          <div class="extra-card-overlay"><div class="extra-card-name">Кошки</div><div class="extra-card-sub">4 темы</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="app-screen" id="s-pets-detail">
+    <div class="topbar"><div><div class="topbar-logo" id="pets-detail-title">Собаки</div><div class="topbar-sub" style="cursor:pointer" onclick="openScreen('s-pets')">← Питомцы</div></div></div>
+    <div class="content" style="padding-top:16px;"><div id="pets-detail-list"></div></div>
+  </div>
+
+  <!-- ПИТАНИЕ -->
+  <div class="app-screen" id="s-nutrition">
+    <div class="topbar"><div><div class="topbar-logo">🍽️ Питание</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('lessons')">← Все сферы</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div class="extra-tabs">
+        <div class="extra-tab active" id="nut-tab-counter" onclick="switchNutritionTab('counter')">🔢 Счётчик</div>
+        <div class="extra-tab" id="nut-tab-lessons" onclick="switchNutritionTab('lessons')">📚 Уроки</div>
+      </div>
+      <div id="nut-counter" class="extra-tab-content">
+        <div style="background:var(--bg3);border-radius:14px;border:0.5px solid var(--border);padding:24px 16px;text-align:center;">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Калории сегодня</div>
+          <div style="font-size:32px;font-weight:700;color:var(--text);margin-bottom:16px;">0 kcal</div>
+          <div style="padding:14px;border-radius:12px;border:0.5px dashed rgba(201,168,76,0.3);background:var(--bg2);color:var(--text3);font-size:13px;">🚧 Счётчик калорий скоро появится</div>
+        </div>
+      </div>
+      <div id="nut-lessons" class="extra-tab-content" style="display:none;">
+        <div id="nutrition-lessons-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЯЗЫКИ -->
+  <div class="app-screen" id="s-languages">
+    <div class="topbar"><div><div class="topbar-logo">🌍 Языки</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('lessons')">← Все сферы</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="lang-grid"></div>
+    </div>
+  </div>
+  <div class="app-screen" id="s-lang-detail">
+    <div class="topbar"><div><div class="topbar-logo" id="lang-detail-title">Английский</div><div class="topbar-sub" style="cursor:pointer" onclick="openScreen('s-languages')">← Языки</div></div></div>
+    <div class="content" style="padding-top:16px;"><div id="lang-activities-list"></div></div>
+  </div>
   <div class="app-screen" id="s-self">
     <div class="topbar"><div><div class="topbar-logo">Самопознание</div><div class="topbar-sub">Инструменты роста</div></div></div>
     <div class="self-tool-card-wide" onclick="openSelfTool('challenges')" style="margin:16px 16px 0;">
@@ -775,13 +855,13 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <!-- NETWORKING -->
   <div class="app-screen" id="s-net">
     <div class="topbar"><div><div class="topbar-logo">Нетворкинг</div><div class="topbar-sub">Контакты клуба</div></div></div>
+    <div class="net-add-btn" onclick="openContactModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Добавить контакт</span></div>
     <div class="net-tabs"><div class="net-tab active-men" id="tab-men" onclick="setNetTab('men')"><div class="net-tab-icon">👨</div><div class="net-tab-label">Мужчины</div><div class="net-tab-count" id="men-count">0 контактов</div></div><div class="net-tab" id="tab-women" onclick="setNetTab('women')"><div class="net-tab-icon">👩</div><div class="net-tab-label">Девушки</div><div class="net-tab-count" id="women-count">0 контактов</div></div></div>
     <div class="net-search-row">
       <input class="net-search-input" id="net-search" placeholder="Поиск по имени, заметкам..." oninput="renderContacts()">
       <div class="net-filter-btn" id="net-filter-btn" onclick="openContactFilters()">⚙️<div class="net-filter-dot" id="net-filter-dot" style="display:none"></div></div>
     </div>
     <div class="net-list" id="net-list"></div>
-    <div class="net-add-btn" onclick="openContactModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Добавить контакт</span></div>
   </div>
 
   <!-- MODAL: фильтры контактов -->
@@ -1422,7 +1502,7 @@ function applyUserData(data){
 function launchApp(){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('main-app').classList.add('active');
-  renderCalendar();renderSchedule();buildSphereList();buildChatList();renderContacts();
+  renderCalendar();renderSchedule();buildSphereList();buildChatList();renderContacts();renderQuests();
   syncLeaderboardPoints();
   handleStartParam();
 }
@@ -2313,6 +2393,119 @@ function buildSphereList(){
     var card=document.createElement('div');card.className='sphere-card';
     card.innerHTML='<div class="sphere-card-icon" style="background:'+s.color+'">'+s.icon+'</div><div class="sphere-card-info"><div class="sphere-card-title">'+s.name+'</div><div class="sphere-card-sub">'+subText+'</div>'+progressBar+'</div><div style="font-size:18px;color:var(--text3)">›</div>';
     (function(idx){card.onclick=function(){openLessonDetail(idx);};})(i);c.appendChild(card);
+  });
+  // Extra sections: Питомцы, Питание, Языки
+  var title=document.createElement('div');title.className='section-title';title.textContent='Дополнительно';c.appendChild(title);
+  var extras=[
+    {id:'pets',icon:'🐾',name:'Питомцы',sub:'Собаки и кошки',color:'rgba(180,130,80,0.15)'},
+    {id:'nutrition',icon:'🍽️',name:'Питание',sub:'Счётчик калорий и уроки',color:'rgba(34,197,94,0.15)'},
+    {id:'languages',icon:'🌍',name:'Языки',sub:'Челленджи и игры',color:'rgba(59,130,246,0.15)'}
+  ];
+  extras.forEach(function(e){
+    var card=document.createElement('div');card.className='sphere-card';
+    card.innerHTML='<div class="sphere-card-icon" style="background:'+e.color+'">'+e.icon+'</div><div class="sphere-card-info"><div class="sphere-card-title">'+e.name+'</div><div class="sphere-card-sub">'+e.sub+'</div></div><div style="font-size:18px;color:var(--text3)">›</div>';
+    card.onclick=function(){openScreen('s-'+e.id);if(e.id==='nutrition')buildNutritionLessons();if(e.id==='languages')buildLangGrid();};
+    c.appendChild(card);
+  });
+}
+
+// === EXTRA SECTIONS: PETS, NUTRITION, LANGUAGES ===
+var PETS_DATA={
+  dogs:{title:'🐕 Собаки',items:[
+    {icon:'🌡️',title:'Что делать в сильную жару?'},
+    {icon:'🍖',title:'Питание собаки'},
+    {icon:'🎓',title:'Дрессировка'},
+    {icon:'💊',title:'Здоровье собаки'}
+  ]},
+  cats:{title:'🐱 Кошки',items:[
+    {icon:'🌡️',title:'Что делать в сильную жару?'},
+    {icon:'🍖',title:'Питание кошки'},
+    {icon:'🎓',title:'Поведение кошки'},
+    {icon:'💊',title:'Здоровье кошки'}
+  ]}
+};
+var NUTRITION_LESSONS=[
+  {icon:'📖',title:'Основы здорового питания'},
+  {icon:'🥗',title:'Планирование меню'},
+  {icon:'🍎',title:'Витамины и минералы'}
+];
+var LANGUAGES=[
+  {id:'en',flag:'🇬🇧',name:'Английский'},
+  {id:'ru',flag:'🇷🇺',name:'Русский'},
+  {id:'es',flag:'🇪🇸',name:'Испанский'},
+  {id:'fr',flag:'🇫🇷',name:'Французский'},
+  {id:'de',flag:'🇩🇪',name:'Немецкий'}
+];
+var LANG_ACTIVITIES=[
+  {icon:'🃏',title:'Flashcards',sub:'Карточки со словами'},
+  {icon:'🎤',title:'Диктовка',sub:'Слушай и пиши'},
+  {icon:'✍️',title:'Написание текста',sub:'Writing prompts'},
+  {icon:'🗣️',title:'Практика говорения',sub:'Speaking practice'},
+  {icon:'🧠',title:'Викторина',sub:'Тест знаний'},
+  {icon:'🔗',title:'Matching',sub:'Сопоставление'}
+];
+var DAILY_QUESTS=[
+  {text:'Посмотри урок',pts:50},
+  {text:'Создай задачу',pts:30},
+  {text:'Открой привычку',pts:20}
+];
+
+function openScreen(screenId){
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(screenId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('nav-lessons').classList.add('active');
+}
+function openPetsDetail(type){
+  var data=PETS_DATA[type];
+  document.getElementById('pets-detail-title').textContent=data.title;
+  var c=document.getElementById('pets-detail-list');c.innerHTML='';
+  data.items.forEach(function(item){
+    var d=document.createElement('div');d.className='stub-lesson';
+    d.innerHTML='<div class="stub-lesson-title">'+item.icon+' '+item.title+'</div><div class="stub-lesson-status">Скоро: контент загружается...</div>';
+    c.appendChild(d);
+  });
+  openScreen('s-pets-detail');
+}
+function buildNutritionLessons(){
+  var c=document.getElementById('nutrition-lessons-list');c.innerHTML='';
+  NUTRITION_LESSONS.forEach(function(item){
+    var d=document.createElement('div');d.className='stub-lesson';
+    d.innerHTML='<div class="stub-lesson-title">'+item.icon+' '+item.title+'</div><div class="stub-lesson-status">Скоро: контент загружается...</div>';
+    c.appendChild(d);
+  });
+}
+function switchNutritionTab(tab){
+  document.getElementById('nut-tab-counter').classList.toggle('active',tab==='counter');
+  document.getElementById('nut-tab-lessons').classList.toggle('active',tab==='lessons');
+  document.getElementById('nut-counter').style.display=tab==='counter'?'':'none';
+  document.getElementById('nut-lessons').style.display=tab==='lessons'?'':'none';
+}
+function buildLangGrid(){
+  var c=document.getElementById('lang-grid');c.innerHTML='';
+  LANGUAGES.forEach(function(lang){
+    var card=document.createElement('div');card.className='extra-card';
+    card.innerHTML='<div class="extra-card-bg" style="background:rgba(59,130,246,0.1);font-size:36px;line-height:80px;">'+lang.flag+'</div><div class="extra-card-overlay"><div class="extra-card-name">'+lang.name+'</div><div class="extra-card-sub">6 активностей</div></div>';
+    card.onclick=function(){openLangDetail(lang);};
+    c.appendChild(card);
+  });
+}
+function openLangDetail(lang){
+  document.getElementById('lang-detail-title').textContent=lang.flag+' '+lang.name;
+  var c=document.getElementById('lang-activities-list');c.innerHTML='';
+  LANG_ACTIVITIES.forEach(function(a){
+    var d=document.createElement('div');d.className='stub-lesson';
+    d.innerHTML='<div class="stub-lesson-title">'+a.icon+' '+a.title+'</div><div class="stub-lesson-status">'+a.sub+' · Скоро</div>';
+    c.appendChild(d);
+  });
+  openScreen('s-lang-detail');
+}
+function renderQuests(){
+  var c=document.getElementById('quests-list');if(!c)return;c.innerHTML='';
+  DAILY_QUESTS.forEach(function(q){
+    var d=document.createElement('div');d.className='quest-row';
+    d.innerHTML='<div class="quest-chk"></div><div class="quest-name">'+q.text+'</div><div class="quest-pts">+'+q.pts+'⚡</div>';
+    c.appendChild(d);
   });
 }
 function openLessonDetail(idx){
