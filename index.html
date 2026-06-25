@@ -481,6 +481,25 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .pd-lesson-name{flex:1;font-size:13px;color:var(--text2);}
 .pd-lesson-progress{font-size:12px;color:var(--accent2);font-weight:600;}
 .pd-save-wrap{padding:8px 0 24px;}
+/* CYCLE CALENDAR */
+.cycle-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;}
+.cycle-cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;border-radius:8px;cursor:pointer;color:var(--text);border:0.5px solid var(--border);background:var(--bg3);}
+.cycle-cal-header{color:var(--text3);font-weight:600;font-size:10px;text-transform:uppercase;background:none;border:none;cursor:default;}
+.cycle-cal-menses{background:rgba(224,85,85,0.2);font-weight:600;border-color:rgba(224,85,85,0.4);}
+.cycle-cal-ovulation{background:rgba(76,175,80,0.2);font-weight:600;border-color:rgba(76,175,80,0.4);}
+.cycle-cal-contact{background:rgba(201,168,76,0.15);font-weight:600;border-color:rgba(201,168,76,0.3);}
+.cycle-legend-row{display:flex;gap:12px;font-size:10px;color:var(--text3);padding:12px 0;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);}
+.cycle-legend-item{display:flex;align-items:center;gap:4px;}
+.cycle-legend-dot{width:8px;height:8px;border-radius:2px;}
+.cycle-toggle-section{margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid var(--border);}
+.cycle-toggle-section:last-child{border-bottom:none;}
+.cycle-toggle-header{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;}
+.cycle-toggle-header input{cursor:pointer;width:16px;height:16px;}
+.cycle-toggle-content{background:var(--bg3);border-radius:10px;padding:10px;display:none;}
+.cycle-toggle-content.open{display:block;}
+.cycle-modal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.contact-cycle-btn{width:100%;padding:11px 14px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500;}
+.contact-cycle-btn:active{border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -995,6 +1014,157 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
         <input class="form-input" id="pd-pets" placeholder="Например, собака, кот">
       </div>
       <div class="pd-save-wrap"><button class="btn-gold" onclick="savePersonalData()">Сохранить →</button></div>
+    </div>
+  </div>
+
+  <!-- ЦИКЛ КАЛЕНДАРЬ -->
+  <div class="app-screen" id="s-cycle-calendar">
+    <div class="topbar"><div><div class="topbar-logo" id="cycle-contact-name">—</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('net')">← Контакты</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;" id="cycle-month-label">Июль 2026</div>
+        <div style="display:flex;gap:8px;">
+          <button style="background:none;border:none;color:var(--accent);font-size:16px;cursor:pointer;padding:4px 8px;" onclick="cycleChangeMonth(-1)">‹</button>
+          <button style="background:none;border:none;color:var(--accent);font-size:16px;cursor:pointer;padding:4px 8px;" onclick="cycleChangeMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="cycle-calendar-grid" id="cycle-calendar-grid"></div>
+      <div class="cycle-legend-row">
+        <div class="cycle-legend-item">
+          <div class="cycle-legend-dot" style="background:rgba(224,85,85,0.4);"></div>
+          <span>Месячные</span>
+        </div>
+        <div class="cycle-legend-item">
+          <div class="cycle-legend-dot" style="background:rgba(76,175,80,0.4);"></div>
+          <span>Овуляция</span>
+        </div>
+        <div class="cycle-legend-item">
+          <div class="cycle-legend-dot" style="background:rgba(201,168,76,0.3);"></div>
+          <span>Контакт</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЦИКЛ МОДАЛЬ ДЕНЬ -->
+  <div class="modal-overlay" id="cycle-day-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="cycle-day-title">—</div>
+      <div class="modal-subtitle" id="cycle-day-subtitle">—</div>
+      
+      <div class="cycle-toggle-section">
+        <label class="cycle-toggle-header">
+          <input type="checkbox" id="cycle-menses-check">
+          <span>Месячные</span>
+        </label>
+        <div class="cycle-toggle-content" id="cycle-menses-content">
+          <div class="form-group">
+            <div class="form-label">Дата начала</div>
+            <input class="form-input" id="cycle-menses-start" type="date">
+          </div>
+          <div class="form-group">
+            <div class="form-label">Дата конца</div>
+            <input class="form-input" id="cycle-menses-end" type="date">
+          </div>
+          <div class="form-group">
+            <div class="form-label">Интенсивность (1-3)</div>
+            <input type="range" id="cycle-menses-intensity" min="1" max="3" style="width:100%;">
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;" id="cycle-menses-intensity-label">Нормальная</div>
+          </div>
+          <label class="cycle-toggle-header" style="border:none;margin-bottom:0;margin-top:8px;">
+            <input type="checkbox" id="cycle-menses-pain">
+            <span>Боли</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="cycle-toggle-section">
+        <label class="cycle-toggle-header">
+          <input type="checkbox" id="cycle-ovulation-check">
+          <span>Овуляция</span>
+        </label>
+        <div class="cycle-toggle-content" id="cycle-ovulation-content">
+          <div class="form-group">
+            <div class="form-label">Предполагаемая дата</div>
+            <input class="form-input" id="cycle-ovulation-date" type="date">
+          </div>
+        </div>
+      </div>
+      
+      <div class="cycle-toggle-section">
+        <label class="cycle-toggle-header">
+          <input type="checkbox" id="cycle-contraception-check">
+          <span>Контрацепция</span>
+        </label>
+        <div class="cycle-toggle-content" id="cycle-contraception-content">
+          <div class="form-group">
+            <div class="form-label">Тип</div>
+            <select class="form-select" id="cycle-contraception-type">
+              <option value="">—</option>
+              <option value="condom">Презерватив</option>
+              <option value="iud">ВМС</option>
+              <option value="hormonal">Гормональные</option>
+              <option value="natural">Натуральные</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="cycle-toggle-section">
+        <label class="cycle-toggle-header">
+          <input type="checkbox" id="cycle-sex-protected-check">
+          <span>Секс защищённый</span>
+        </label>
+        <div class="cycle-toggle-content" id="cycle-sex-protected-content">
+          <div class="cycle-modal-row">
+            <div class="form-group">
+              <div class="form-label">Время</div>
+              <input class="form-input" id="cycle-sex-protected-time" type="time">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Длит. (мин)</div>
+              <input class="form-input" id="cycle-sex-protected-duration" type="number">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Кол-во раз</div>
+            <input class="form-input" id="cycle-sex-protected-freq" type="number">
+          </div>
+        </div>
+      </div>
+      
+      <div class="cycle-toggle-section">
+        <label class="cycle-toggle-header">
+          <input type="checkbox" id="cycle-sex-unprotected-check">
+          <span>Секс незащищённый</span>
+        </label>
+        <div class="cycle-toggle-content" id="cycle-sex-unprotected-content">
+          <div class="cycle-modal-row">
+            <div class="form-group">
+              <div class="form-label">Время</div>
+              <input class="form-input" id="cycle-sex-unprotected-time" type="time">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Длит. (мин)</div>
+              <input class="form-input" id="cycle-sex-unprotected-duration" type="number">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Кол-во раз</div>
+            <input class="form-input" id="cycle-sex-unprotected-freq" type="number">
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-bottom:14px;">
+        <div class="form-label">Заметки</div>
+        <textarea class="form-input" id="cycle-notes" style="resize:none;" rows="2" placeholder="Дополнительная информация..."></textarea>
+      </div>
+      
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeCycleDayModal()">Отмена</button>
+        <button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveCycleDayData()">Сохранить</button>
+      </div>
     </div>
   </div>
 
@@ -2621,9 +2791,11 @@ function renderContacts(){
     var pinLabel=ct.pinned?'📌 Открепить':'📌 Закрепить наверх';
     var avaContent=ct.photoUrl?'':initials;
     var avaStyle=ct.photoUrl?' style="background-image:url('+ct.photoUrl+');background-size:cover;background-position:center;"':'';
-    card.innerHTML='<div class="contact-card-header"><div class="contact-ava '+netTab+'"'+avaStyle+'>'+avaContent+'</div><div class="contact-main"><div class="contact-name">'+(ct.pinned?'<span class="pin-badge">📌</span>':'')+ct.name+'</div><div class="contact-role">'+ct.role+'</div></div><div class="contact-expand">›</div></div><div class="contact-details" id="cd-'+netTab+'-'+i+'"><div class="contact-socials">'+pills+'</div>'+(ct.note?'<div class="contact-note-label">Заметка</div><div class="contact-note">'+ct.note+'</div>':'')+actions+'<div class="pin-btn'+(ct.pinned?' pinned':'')+'" data-id="'+ct.id+'">'+pinLabel+'</div><div class="contact-edit-btn" data-id="'+ct.id+'">✏️ Редактировать</div></div>';
+    var cycleBtn=(netTab==='women'?'<div class="contact-cycle-btn" data-id="'+ct.id+'" data-name="'+ct.name+'">📅 Календарь месячных</div>':'');
+    card.innerHTML='<div class="contact-card-header"><div class="contact-ava '+netTab+'"'+avaStyle+'>'+avaContent+'</div><div class="contact-main"><div class="contact-name">'+(ct.pinned?'<span class="pin-badge">📌</span>':'')+ct.name+'</div><div class="contact-role">'+ct.role+'</div></div><div class="contact-expand">›</div></div><div class="contact-details" id="cd-'+netTab+'-'+i+'"><div class="contact-socials">'+pills+'</div>'+(ct.note?'<div class="contact-note-label">Заметка</div><div class="contact-note">'+ct.note+'</div>':'')+cycleBtn+actions+'<div class="pin-btn'+(ct.pinned?' pinned':'')+'" data-id="'+ct.id+'">'+pinLabel+'</div><div class="contact-edit-btn" data-id="'+ct.id+'">✏️ Редактировать</div></div>';
     card.querySelector('.contact-card-header').onclick=function(){toggleContact(i,this);};
     card.querySelectorAll('.contact-action-btn').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();contactAction(this.dataset.act,this.dataset.id);};});
+    if(cycleBtn){card.querySelector('.contact-cycle-btn').onclick=function(e){e.stopPropagation();openCycleCalendar(this.dataset.id,this.dataset.name);};}
     card.querySelector('.pin-btn').onclick=function(e){e.stopPropagation();togglePinContact(this.dataset.id);};
     card.querySelector('.contact-edit-btn').onclick=function(e){e.stopPropagation();editContact(this.dataset.id);};
     list.appendChild(card);
@@ -2906,6 +3078,239 @@ function showToast(msg){
   clearTimeout(t._timer);
   t._timer=setTimeout(function(){t.classList.remove('show');},2200);
 }
+
+// ===== CALENDAR CYCLE =====
+var cycleCurrentDate=new Date();
+var cycleContactId=null;
+var cycleContactName='';
+var cycleData={}; // {contactId: {year: {month: {dayNum: {data}}}}}
+
+function initCycleData(){
+  var stored=localStorage.getItem('mp_cycle_data_v1');
+  if(stored){
+    try{cycleData=JSON.parse(stored);}catch(e){cycleData={};}
+  }
+}
+
+function saveCycleData(){
+  localStorage.setItem('mp_cycle_data_v1',JSON.stringify(cycleData));
+}
+
+function openCycleCalendar(id,name){
+  cycleContactId=id;
+  cycleContactName=name;
+  cycleCurrentDate=new Date();
+  document.getElementById('cycle-contact-name').textContent=name;
+  renderCycleCalendar();
+  switchTab('cycle-calendar');
+}
+
+function renderCycleCalendar(){
+  var year=cycleCurrentDate.getFullYear();
+  var month=cycleCurrentDate.getMonth();
+  
+  document.getElementById('cycle-month-label').textContent=
+    ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][month]+' '+year;
+  
+  var grid=document.getElementById('cycle-calendar-grid');grid.innerHTML='';
+  
+  // Headers
+  var headers=['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+  headers.forEach(function(h){
+    var cell=document.createElement('div');
+    cell.className='cycle-cal-cell cycle-cal-header';
+    cell.textContent=h;
+    grid.appendChild(cell);
+  });
+  
+  // Days
+  var firstDay=new Date(year,month,1).getDay()-1;if(firstDay<0)firstDay=6;
+  var daysInMonth=new Date(year,month+1,0).getDate();
+  
+  for(var i=0;i<firstDay;i++){
+    var cell=document.createElement('div');
+    cell.className='cycle-cal-cell';
+    grid.appendChild(cell);
+  }
+  
+  for(var d=1;d<=daysInMonth;d++){
+    var cell=document.createElement('div');
+    var dayStr=d<10?'0'+d:d;
+    var monthStr=(month+1)<10?'0'+(month+1):(month+1);
+    var dateISO=year+'-'+monthStr+'-'+dayStr;
+    
+    var dayData=getCycleDayData(dateISO);
+    
+    cell.className='cycle-cal-cell';
+    if(dayData.menses)cell.classList.add('cycle-cal-menses');
+    if(dayData.ovulation)cell.classList.add('cycle-cal-ovulation');
+    if(dayData.contact)cell.classList.add('cycle-cal-contact');
+    
+    cell.textContent=d;
+    cell.onclick=(function(date){
+      return function(){openCycleDayModal(date);};
+    })(dateISO);
+    
+    grid.appendChild(cell);
+  }
+}
+
+function getCycleDayData(dateISO){
+  if(!cycleContactId||!cycleData[cycleContactId])return {menses:false,ovulation:false,contact:false};
+  var parts=dateISO.split('-');
+  var year=parseInt(parts[0]);
+  var month=parseInt(parts[1]);
+  var day=parseInt(parts[2]);
+  
+  if(!cycleData[cycleContactId][year])return {menses:false,ovulation:false,contact:false};
+  if(!cycleData[cycleContactId][year][month])return {menses:false,ovulation:false,contact:false};
+  if(!cycleData[cycleContactId][year][month][day])return {menses:false,ovulation:false,contact:false};
+  
+  var data=cycleData[cycleContactId][year][month][day];
+  return {
+    menses: !!(data.menses&&data.menses.active),
+    ovulation: !!(data.ovulation&&data.ovulation.active),
+    contact: !!(data.sexProtected&&data.sexProtected.active)||(data.sexUnprotected&&data.sexUnprotected.active)
+  };
+}
+
+function cycleChangeMonth(delta){
+  cycleCurrentDate.setMonth(cycleCurrentDate.getMonth()+delta);
+  renderCycleCalendar();
+}
+
+function openCycleDayModal(dateISO){
+  document.getElementById('cycle-day-modal').classList.add('active');
+  
+  var date=new Date(dateISO+'T00:00:00');
+  var dayName=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][date.getDay()];
+  var monthName=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][date.getMonth()];
+  
+  document.getElementById('cycle-day-title').textContent=cycleContactName;
+  document.getElementById('cycle-day-subtitle').textContent=dayName+', '+date.getDate()+' '+monthName+' '+date.getFullYear();
+  
+  // Load data for this day
+  var parts=dateISO.split('-');
+  var year=parseInt(parts[0]);
+  var month=parseInt(parts[1]);
+  var day=parseInt(parts[2]);
+  
+  var dayData={};
+  if(cycleData[cycleContactId]&&cycleData[cycleContactId][year]&&
+     cycleData[cycleContactId][year][month]&&cycleData[cycleContactId][year][month][day]){
+    dayData=cycleData[cycleContactId][year][month][day];
+  }
+  
+  // Reset form
+  document.getElementById('cycle-menses-check').checked=!!(dayData.menses&&dayData.menses.active);
+  document.getElementById('cycle-menses-content').classList.toggle('open',!!(dayData.menses&&dayData.menses.active));
+  document.getElementById('cycle-menses-start').value=dayData.menses&&dayData.menses.startDate?dayData.menses.startDate:'';
+  document.getElementById('cycle-menses-end').value=dayData.menses&&dayData.menses.endDate?dayData.menses.endDate:'';
+  document.getElementById('cycle-menses-intensity').value=dayData.menses&&dayData.menses.intensity?dayData.menses.intensity:'2';
+  updateMensesIntensityLabel();
+  document.getElementById('cycle-menses-pain').checked=!!(dayData.menses&&dayData.menses.pain);
+  
+  document.getElementById('cycle-ovulation-check').checked=!!(dayData.ovulation&&dayData.ovulation.active);
+  document.getElementById('cycle-ovulation-content').classList.toggle('open',!!(dayData.ovulation&&dayData.ovulation.active));
+  document.getElementById('cycle-ovulation-date').value=dayData.ovulation&&dayData.ovulation.date?dayData.ovulation.date:dateISO;
+  
+  document.getElementById('cycle-contraception-check').checked=!!(dayData.contraception&&dayData.contraception.active);
+  document.getElementById('cycle-contraception-content').classList.toggle('open',!!(dayData.contraception&&dayData.contraception.active));
+  document.getElementById('cycle-contraception-type').value=dayData.contraception&&dayData.contraception.type?dayData.contraception.type:'';
+  
+  document.getElementById('cycle-sex-protected-check').checked=!!(dayData.sexProtected&&dayData.sexProtected.active);
+  document.getElementById('cycle-sex-protected-content').classList.toggle('open',!!(dayData.sexProtected&&dayData.sexProtected.active));
+  document.getElementById('cycle-sex-protected-time').value=dayData.sexProtected&&dayData.sexProtected.time?dayData.sexProtected.time:'';
+  document.getElementById('cycle-sex-protected-duration').value=dayData.sexProtected&&dayData.sexProtected.duration?dayData.sexProtected.duration:'';
+  document.getElementById('cycle-sex-protected-freq').value=dayData.sexProtected&&dayData.sexProtected.frequency?dayData.sexProtected.frequency:'';
+  
+  document.getElementById('cycle-sex-unprotected-check').checked=!!(dayData.sexUnprotected&&dayData.sexUnprotected.active);
+  document.getElementById('cycle-sex-unprotected-content').classList.toggle('open',!!(dayData.sexUnprotected&&dayData.sexUnprotected.active));
+  document.getElementById('cycle-sex-unprotected-time').value=dayData.sexUnprotected&&dayData.sexUnprotected.time?dayData.sexUnprotected.time:'';
+  document.getElementById('cycle-sex-unprotected-duration').value=dayData.sexUnprotected&&dayData.sexUnprotected.duration?dayData.sexUnprotected.duration:'';
+  document.getElementById('cycle-sex-unprotected-freq').value=dayData.sexUnprotected&&dayData.sexUnprotected.frequency?dayData.sexUnprotected.frequency:'';
+  
+  document.getElementById('cycle-notes').value=dayData.notes||'';
+  
+  // Store current date for save
+  window.cycleEditingDateISO=dateISO;
+}
+
+function closeCycleDayModal(){
+  document.getElementById('cycle-day-modal').classList.remove('active');
+}
+
+function saveCycleDayData(){
+  var dateISO=window.cycleEditingDateISO;
+  var parts=dateISO.split('-');
+  var year=parseInt(parts[0]);
+  var month=parseInt(parts[1]);
+  var day=parseInt(parts[2]);
+  
+  if(!cycleData[cycleContactId]){cycleData[cycleContactId]={};}
+  if(!cycleData[cycleContactId][year]){cycleData[cycleContactId][year]={};}
+  if(!cycleData[cycleContactId][year][month]){cycleData[cycleContactId][year][month]={};}
+  
+  cycleData[cycleContactId][year][month][day]={
+    menses: {
+      active: document.getElementById('cycle-menses-check').checked,
+      startDate: document.getElementById('cycle-menses-start').value||null,
+      endDate: document.getElementById('cycle-menses-end').value||null,
+      intensity: parseInt(document.getElementById('cycle-menses-intensity').value)||2,
+      pain: document.getElementById('cycle-menses-pain').checked
+    },
+    ovulation: {
+      active: document.getElementById('cycle-ovulation-check').checked,
+      date: document.getElementById('cycle-ovulation-date').value||null
+    },
+    contraception: {
+      active: document.getElementById('cycle-contraception-check').checked,
+      type: document.getElementById('cycle-contraception-type').value||null
+    },
+    sexProtected: {
+      active: document.getElementById('cycle-sex-protected-check').checked,
+      time: document.getElementById('cycle-sex-protected-time').value||null,
+      duration: parseInt(document.getElementById('cycle-sex-protected-duration').value)||null,
+      frequency: parseInt(document.getElementById('cycle-sex-protected-freq').value)||null
+    },
+    sexUnprotected: {
+      active: document.getElementById('cycle-sex-unprotected-check').checked,
+      time: document.getElementById('cycle-sex-unprotected-time').value||null,
+      duration: parseInt(document.getElementById('cycle-sex-unprotected-duration').value)||null,
+      frequency: parseInt(document.getElementById('cycle-sex-unprotected-freq').value)||null
+    },
+    notes: document.getElementById('cycle-notes').value||null
+  };
+  
+  saveCycleData();
+  closeCycleDayModal();
+  renderCycleCalendar();
+  showToast('✓ Сохранено');
+}
+
+function updateMensesIntensityLabel(){
+  var val=parseInt(document.getElementById('cycle-menses-intensity').value);
+  var labels=['','Слабая','Нормальная','Сильная'];
+  document.getElementById('cycle-menses-intensity-label').textContent=labels[val]||'Нормальная';
+}
+
+// Toggle content listeners
+document.querySelectorAll('.cycle-toggle-header').forEach(function(header){
+  header.addEventListener('click',function(){
+    var content=this.nextElementSibling;
+    if(content&&content.classList.contains('cycle-toggle-content')){
+      content.classList.toggle('open');
+    }
+  });
+});
+
+// Update intensity label on change
+document.getElementById('cycle-menses-intensity')?.addEventListener('change',updateMensesIntensityLabel);
+
+// Init on load
+window.addEventListener('load',function(){
+  initCycleData();
+});
 </script>
 </body>
 </html>
