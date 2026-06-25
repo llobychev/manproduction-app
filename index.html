@@ -123,6 +123,9 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .sch-tag{font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(201,168,76,0.12);color:var(--accent2);white-space:nowrap;flex-shrink:0;}
 .sch-tag.done{background:rgba(100,100,100,0.15);color:var(--text3);}
 .sch-tag.now{background:rgba(201,168,76,0.2);color:var(--accent2);}
+.sch-tag.intimacy{background:rgba(255,107,122,0.15);color:#ff6b7a;}
+.sch-tag.intimacy.done{background:rgba(100,100,100,0.15);color:var(--text3);}
+.intimacy-card{border-left:3px solid #ff6b7a !important;}
 .sch-card-desc{font-size:11px;color:var(--text2);line-height:1.4;}
 .sch-card-actions{display:flex;align-items:center;gap:8px;margin-top:8px;}
 .sch-check-btn{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg2);cursor:pointer;font-size:11px;color:var(--text2);}
@@ -1194,6 +1197,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div class="tpl-card" onclick="selectTemplate('morning')"><div class="tpl-icon">🌅</div><div class="tpl-name">Утренние мысли</div><div class="tpl-desc">Открывает дневник</div></div>
       <div class="tpl-card" onclick="selectTemplate('positivity')"><div class="tpl-icon">📔</div><div class="tpl-name">Дневник позитива</div><div class="tpl-desc">Практика благодарности</div></div>
       <div class="tpl-card" onclick="selectTemplate('workout')"><div class="tpl-icon">💪</div><div class="tpl-name">Зарядка</div><div class="tpl-desc">Открывает уроки здоровья</div></div>
+      <div class="tpl-card" onclick="selectTemplate('intimacy')"><div class="tpl-icon">💕</div><div class="tpl-name">Близость</div><div class="tpl-desc">Мастурбация или секс</div></div>
       <div class="tpl-card" onclick="selectTemplate('custom')"><div class="tpl-icon">✏️</div><div class="tpl-name">Своё событие</div><div class="tpl-desc">Заполнить вручную</div></div>
     </div>
     <button class="btn-cancel" onclick="closeTplModal()" style="width:100%">Отмена</button>
@@ -1262,6 +1266,78 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <button class="btn-cancel" onclick="closeFinModal()">Отмена</button>
       <button class="btn-delete" id="fin-btn-delete" style="display:none" onclick="deleteFinRecord()">🗑</button>
       <button class="btn-gold" style="flex:1;width:auto;padding:12px" id="fin-btn-save" onclick="saveFinRecord()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: событие близости -->
+<div class="modal-overlay" id="intimacy-modal">
+  <div class="modal-box">
+    <div class="modal-title">💕 Близость</div>
+    <div class="form-group">
+      <div class="form-label">Тип события</div>
+      <select class="modal-input" id="intimacy-type" style="margin-bottom:10px;">
+        <option value="sex">Секс</option>
+        <option value="masturbation">Мастурбация</option>
+      </select>
+    </div>
+    
+    <div id="intimacy-contact-wrap" style="display:none;">
+      <div class="form-group">
+        <div class="form-label">Контакт (девушка)</div>
+        <select class="modal-input" id="intimacy-contact" style="margin-bottom:10px;">
+          <option value="">— Не выбран —</option>
+        </select>
+      </div>
+    </div>
+    
+    <div id="intimacy-subtype-wrap" style="display:none;">
+      <div class="form-group">
+        <div class="form-label">С защитой?</div>
+        <select class="modal-input" id="intimacy-protected" style="margin-bottom:10px;">
+          <option value="protected">✓ Защищённый</option>
+          <option value="unprotected">⚠️ Незащищённый</option>
+        </select>
+      </div>
+    </div>
+    
+    <div id="intimacy-contraception-wrap" style="display:none;">
+      <div class="form-group">
+        <div class="form-label">Вид контрацепции</div>
+        <select class="modal-input" id="intimacy-contraception" style="margin-bottom:10px;">
+          <option value="">—</option>
+          <option value="condom">Презерватив</option>
+          <option value="iud">ВМС</option>
+          <option value="hormonal">Гормональные</option>
+          <option value="natural">Натуральные</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="modal-row">
+      <div class="form-group">
+        <div class="form-label">Время</div>
+        <input class="modal-input" id="intimacy-time" type="time" style="margin-bottom:0;">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Длит. (мин)</div>
+        <input class="modal-input" id="intimacy-duration" type="number" placeholder="30" style="margin-bottom:0;">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <div class="form-label">Кол-во раз</div>
+      <input class="modal-input" id="intimacy-frequency" type="number" placeholder="1" style="margin-bottom:10px;">
+    </div>
+    
+    <div class="form-group">
+      <div class="form-label">Заметки</div>
+      <textarea class="modal-input" id="intimacy-notes" style="resize:none;margin-bottom:10px;" rows="2" placeholder="Дополнительная информация..."></textarea>
+    </div>
+    
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeIntimacyModal()">Отмена</button>
+      <button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveIntimacyEvent()">Добавить в расписание</button>
     </div>
   </div>
 </div>
@@ -1865,15 +1941,33 @@ function renderSchedule(){
     var contactsLine=linkedNames.length?'<div class="sch-card-desc">👥 '+linkedNames.join(', ')+'</div>':'';
     var recBadge=ev.recurrence&&ev.recurrence.type!=='none'?'<span style="margin-left:4px;">🔁</span>':'';
     var reminderBadge=ev.reminderOffset&&ev.reminderOffset!=='none'?'<span style="margin-left:4px;">🔔</span>':'';
+    
+    // Intimacy badges
+    var intimacyBadges='';
+    if(ev.tag==='intimacy'){
+      if(ev.intimacySubtype==='protected'){
+        intimacyBadges='<span class="sch-tag intimacy" style="background:rgba(76,175,80,0.15);color:#4caf50;margin-right:4px;">✓ Защищено</span>';
+      }else if(ev.intimacySubtype==='unprotected'){
+        intimacyBadges='<span class="sch-tag intimacy" style="background:rgba(255,152,0,0.15);color:#ff9800;margin-right:4px;">⚠️ Не защищено</span>';
+      }
+      if(ev.intimacyContraceptive){
+        var contraceptiveLabels={condom:'Презерватив',iud:'ВМС',hormonal:'Гормональные',natural:'Натуральные'};
+        intimacyBadges+='<span class="sch-tag" style="background:rgba(59,130,246,0.15);color:#3b82f6;">'+contraceptiveLabels[ev.intimacyContraceptive]+'</span>';
+      }
+    }
+    
+    var cardClass='sch-card'+(isDone?'done-c':'')+(ev.tag==='intimacy'?' intimacy-card':'');
+    
     item.innerHTML=
       '<div class="sch-time-col"><div class="sch-time">'+ev.time+'</div></div>'+
       '<div class="sch-line-wrap"><div class="sch-dot '+(isDone?'done':'')+'"></div>'+(isLast?'':'<div class="sch-vline"></div>')+'</div>'+
-      '<div class="sch-card '+(isDone?'done-c':'')+'">'+
+      '<div class="'+cardClass+'">'+
         '<div class="sch-card-header">'+
           '<div class="'+titleClass+'" data-link="'+(ev.link||'')+'">'+ev.title+recBadge+reminderBadge+'</div>'+
-          '<div class="sch-tag '+(isDone?'done':'')+'">'+(isDone?'Выполнено':ev.tag)+'</div>'+
+          '<div class="sch-tag '+(isDone?'done':'')+' '+(ev.tag==='intimacy'?'intimacy':'')+'">'+(isDone?'Выполнено':ev.tag)+'</div>'+
         '</div>'+
         (ev.desc?'<div class="sch-card-desc">'+ev.desc+'</div>':'')+contactsLine+
+        (intimacyBadges?'<div style="margin-top:6px;">'+intimacyBadges+'</div>':'')+
         '<div class="sch-card-actions">'+
           '<div class="sch-check-btn'+(isDone?' checked':'')+'" data-id="'+ev.id+'">'+(isDone?'✓ Выполнено':'○ Отметить')+'</div>'+
           '<div class="sch-edit-btn" data-id="'+ev.id+'">✏️ Изменить</div>'+
@@ -1903,6 +1997,11 @@ function handleLink(link){
 function openTemplatePicker(){document.getElementById('tpl-modal').classList.add('active');}
 function closeTplModal(){document.getElementById('tpl-modal').classList.remove('active');}
 function selectTemplate(type){
+  if(type==='intimacy'){
+    openIntimacyModal();
+    document.getElementById('tpl-modal').classList.remove('active');
+    return;
+  }
   closeTplModal();
   if(type==='custom'){openModal();return;}
   pendingTemplate=type;
@@ -3311,6 +3410,161 @@ document.getElementById('cycle-menses-intensity')?.addEventListener('change',upd
 window.addEventListener('load',function(){
   initCycleData();
 });
+
+// ===== INTIMACY EVENT =====
+function openIntimacyModal(){
+  document.getElementById('intimacy-modal').classList.add('active');
+  
+  // Populate contacts
+  var contactSelect=document.getElementById('intimacy-contact');
+  contactSelect.innerHTML='<option value="">— Не выбран —</option>';
+  contacts.women.forEach(function(ct){
+    var opt=document.createElement('option');
+    opt.value=ct.id;
+    opt.textContent=ct.name;
+    contactSelect.appendChild(opt);
+  });
+  
+  // Reset form
+  document.getElementById('intimacy-type').value='sex';
+  document.getElementById('intimacy-protected').value='protected';
+  document.getElementById('intimacy-contact').value='';
+  document.getElementById('intimacy-contraception').value='';
+  document.getElementById('intimacy-time').value='';
+  document.getElementById('intimacy-duration').value='30';
+  document.getElementById('intimacy-frequency').value='1';
+  document.getElementById('intimacy-notes').value='';
+  
+  updateIntimacyForm();
+}
+
+function closeIntimacyModal(){
+  document.getElementById('intimacy-modal').classList.remove('active');
+}
+
+function updateIntimacyForm(){
+  var type=document.getElementById('intimacy-type').value;
+  var isSex=(type==='sex');
+  
+  document.getElementById('intimacy-contact-wrap').style.display=isSex?'block':'none';
+  document.getElementById('intimacy-subtype-wrap').style.display=isSex?'block':'none';
+  
+  var isProtected=(document.getElementById('intimacy-protected').value==='protected');
+  document.getElementById('intimacy-contraception-wrap').style.display=(isSex&&isProtected)?'block':'none';
+}
+
+function saveIntimacyEvent(){
+  var type=document.getElementById('intimacy-type').value;
+  var contactId=document.getElementById('intimacy-contact').value||null;
+  var contactName='';
+  var isProtected=true;
+  var contraceptive='';
+  var time=document.getElementById('intimacy-time').value;
+  var duration=parseInt(document.getElementById('intimacy-duration').value)||30;
+  var frequency=parseInt(document.getElementById('intimacy-frequency').value)||1;
+  var notes=document.getElementById('intimacy-notes').value;
+  
+  if(type==='sex'){
+    isProtected=(document.getElementById('intimacy-protected').value==='protected');
+    contraceptive=document.getElementById('intimacy-contraception').value||'';
+    
+    if(contactId){
+      var ct=findContactById(contactId);
+      contactName=ct?ct.name:'';
+    }
+  }
+  
+  if(!time){showToast('⚠️ Укажи время');return;}
+  
+  var todayISO=new Date().toISOString().split('T')[0];
+  var eventId='intimacy_'+Date.now();
+  
+  var title=(type==='sex'?'💕 '+(contactName?contactName:'Близость'):'🍆 Мастурбация');
+  var desc=(type==='sex'?
+    (isProtected?'✓ Защищённый':'⚠️ Без защиты')+' · '+duration+' мин':
+    duration+' мин'
+  );
+  
+  var ev={
+    id: eventId,
+    title: title,
+    desc: desc,
+    tag: 'intimacy',
+    time: time,
+    dateISO: todayISO,
+    recurrence: {type:'none'},
+    doneDates: [],
+    linkedContactIds: contactId?[contactId]:[],
+    intimacyType: type,
+    intimacySubtype: (type==='sex'?isProtected?'protected':'unprotected':null),
+    intimacyContact: contactName,
+    intimacyDuration: duration,
+    intimacyFrequency: frequency,
+    intimacyContraceptive: contraceptive,
+    intimacyNotes: notes
+  };
+  
+  schedules.push(ev);
+  saveSchedulesStore();
+  syncEventToCloud(ev);
+  
+  // SYNC to cycle calendar if contact selected
+  if(contactId&&type==='sex'){
+    syncIntimacyToCycle(contactId,todayISO,{
+      protected: isProtected,
+      contraceptive: contraceptive,
+      time: time,
+      duration: duration,
+      frequency: frequency
+    });
+  }
+  
+  closeIntimacyModal();
+  renderSchedule();
+  showToast('✓ Событие добавлено');
+}
+
+function syncIntimacyToCycle(contactId,dateISO,intimacyData){
+  if(!cycleData[contactId]){cycleData[contactId]={};}
+  
+  var parts=dateISO.split('-');
+  var year=parseInt(parts[0]);
+  var month=parseInt(parts[1]);
+  var day=parseInt(parts[2]);
+  
+  if(!cycleData[contactId][year]){cycleData[contactId][year]={};}
+  if(!cycleData[contactId][year][month]){cycleData[contactId][year][month]={};}
+  if(!cycleData[contactId][year][month][day]){cycleData[contactId][year][month][day]={};}
+  
+  if(intimacyData.protected){
+    cycleData[contactId][year][month][day].sexProtected={
+      active: true,
+      time: intimacyData.time,
+      duration: intimacyData.duration,
+      frequency: intimacyData.frequency
+    };
+  }else{
+    cycleData[contactId][year][month][day].sexUnprotected={
+      active: true,
+      time: intimacyData.time,
+      duration: intimacyData.duration,
+      frequency: intimacyData.frequency
+    };
+  }
+  
+  if(intimacyData.contraceptive){
+    cycleData[contactId][year][month][day].contraception={
+      active: true,
+      type: intimacyData.contraceptive
+    };
+  }
+  
+  saveCycleData();
+}
+
+// Update form on type change
+document.getElementById('intimacy-type')?.addEventListener('change',updateIntimacyForm);
+document.getElementById('intimacy-protected')?.addEventListener('change',updateIntimacyForm);
 </script>
 </body>
 </html>
