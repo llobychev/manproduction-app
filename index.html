@@ -1546,60 +1546,53 @@ function parseIso(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
 
 // STORAGE
 function saveToStorage(data){
-  var json=JSON.stringify(data);
-  try{if(fbDb){fbDb.collection("users").doc(getUID()).set(JSON.parse(json),{merge:true}).catch(function(err){console.warn(err);})};
-try{localStorage.setItem(STORAGE_KEY,json);}catch(e){};}catch(e){}
-  var tg=window.Telegram&&window.Telegram.WebApp;
-  if(tg&&tg.CloudStorage){tg.CloudStorage.setItem(STORAGE_KEY,json,function(){});storageMethod='tg';}
-  else storageMethod='ls';
+  storageMethod='fb';
+  if(!fbDb)return;
+  var uid=getTgUserId();
+  if(!uid)return;
+  fbDb.collection('users').doc(uid).set(data,{merge:true})
+    .catch(function(err){console.warn('saveToStorage error:',err);});
 }
 function loadFromStorage(cb){
-  var lsVal=null;try{lsVal=localStorage.getItem(STORAGE_KEY);}catch(e){}
-  if(lsVal){storageMethod='ls';cb(JSON.parse(lsVal));
-    var tg=window.Telegram&&window.Telegram.WebApp;
-    if(tg&&tg.CloudStorage){tg.CloudStorage.getItem(STORAGE_KEY,function(err,val){if(!err&&val){storageMethod='tg';try{localStorage.setItem(STORAGE_KEY,val);}catch(e){}}});}
-    return;
-  }
-  var tg=window.Telegram&&window.Telegram.WebApp;
-  if(tg&&tg.CloudStorage){
-    var done=false;
-    var timer=setTimeout(function(){if(!done){done=true;cb(null);}},3000);
-    tg.CloudStorage.getItem(STORAGE_KEY,function(err,val){if(done)return;clearTimeout(timer);done=true;if(!err&&val){storageMethod='tg';try{localStorage.setItem(STORAGE_KEY,val);}catch(e){}cb(JSON.parse(val));}else cb(null);});
-  } else cb(null);
+  storageMethod='fb';
+  if(!fbDb){cb(null);return;}
+  var uid=getTgUserId();
+  if(!uid){cb(null);return;}
+  fbDb.collection('users').doc(uid).get()
+    .then(function(doc){
+      if(doc.exists){cb(doc.data());}
+      else{cb(null);}
+    })
+    .catch(function(err){console.warn('loadFromStorage error:',err);cb(null);});
 }
 function clearStorage(){
-  try{localStorage.clear();}catch(e){}
-  var tg=window.Telegram&&window.Telegram.WebApp;
-  if(tg&&tg.CloudStorage){['STORAGE_KEY','JOURNAL_KEY','POSITIVITY_KEY','CONTACTS_KEY','SCHEDULES_KEY','FINANCE_KEY','PERSONAL_DATA_KEY','HABITS_KEY','CHALLENGES_PROGRESS_KEY'].forEach(function(k){tg.CloudStorage.removeItem(window[k],function(){});});}
+  if(!fbDb)return;
+  var uid=getTgUserId();
+  if(!uid)return;
+  fbDb.collection('users').doc(uid).delete().catch(function(err){console.warn(err);});
+  fbDb.collection('user_data').doc(uid).delete().catch(function(err){console.warn(err);});
+  fbDb.collection('cycle_data').doc(uid).delete().catch(function(err){console.warn(err);});
 }
-// Unified loader: reads each data key from localStorage first (instant), and from
-// CloudStorage in background to repair data if localStorage was cleared/empty.
 function loadAllData(){
-  var keys=[['JOURNAL_KEY',JOURNAL_KEY,function(v){morningEntries=v;}],
-            ['POSITIVITY_KEY',POSITIVITY_KEY,function(v){positivityEntries=v;}],
-            ['CONTACTS_KEY',CONTACTS_KEY,function(v){contacts=v;}],
-            ['SCHEDULES_KEY',SCHEDULES_KEY,function(v){schedules=v;}],
-            ['FINANCE_KEY',FINANCE_KEY,function(v){financeRecords=v;}],
-            ['PERSONAL_DATA_KEY',PERSONAL_DATA_KEY,function(v){personalData=v;}],
-            ['HABITS_KEY',HABITS_KEY,function(v){habitsData=v;}],
-            ['CHALLENGES_PROGRESS_KEY',CHALLENGES_PROGRESS_KEY,function(v){challengesProgress=v;}]];
-  var tg=window.Telegram&&window.Telegram.WebApp;
-  keys.forEach(function(k){
-    var lsVal=null;try{lsVal=localStorage.getItem(k[1]);}catch(e){}
-    if(lsVal){try{k[2](JSON.parse(lsVal));}catch(e){}}
-    if(tg&&tg.CloudStorage){
-      tg.CloudStorage.getItem(k[1],function(err,val){
-        if(!err&&val){
-          // If localStorage had nothing, this restores it. If both exist we keep
-          // localStorage's version live in memory already; cloud write below keeps them in sync.
-          if(!lsVal){try{k[2](JSON.parse(val));}catch(e){}
-            try{localStorage.setItem(k[1],val);}catch(e){}
-            refreshAllViews();
-          }
-        }
-      });
-    }
-  });
+  if(!fbDb)return;
+  var uid=getTgUserId();
+  if(!uid)return;
+  fbDb.collection('user_data').doc(uid).get()
+    .then(function(doc){
+      if(doc.exists){
+        var d=doc.data();
+        if(d.journal)morningEntries=d.journal;
+        if(d.positivity)positivityEntries=d.positivity;
+        if(d.contacts)contacts=d.contacts;
+        if(d.schedules)schedules=d.schedules;
+        if(d.finance)financeRecords=d.finance;
+        if(d.personal)personalData=d.personal;
+        if(d.habits)habitsData=d.habits;
+        if(d.challengesProgress)challengesProgress=d.challengesProgress;
+        refreshAllViews();
+      }
+    })
+    .catch(function(err){console.warn('loadAllData error:',err);});
 }
 function refreshAllViews(){
   if(document.getElementById('main-app')&&document.getElementById('main-app').classList.contains('active')){
@@ -1699,10 +1692,23 @@ function renderChallengeLeaderboard(challengeId){
 }
 function saveChallengesProgress(){persistKey(CHALLENGES_PROGRESS_KEY,challengesProgress);}
 function persistKey(key,value){
-  var json=JSON.stringify(value);
-  try{localStorage.setItem(key,json);}catch(e){}
-  var tg=window.Telegram&&window.Telegram.WebApp;
-  if(tg&&tg.CloudStorage)tg.CloudStorage.setItem(key,json,function(){});
+  if(!fbDb)return;
+  var uid=getTgUserId();
+  if(!uid)return;
+  var fieldMap={};
+  fieldMap[JOURNAL_KEY]='journal';
+  fieldMap[POSITIVITY_KEY]='positivity';
+  fieldMap[CONTACTS_KEY]='contacts';
+  fieldMap[SCHEDULES_KEY]='schedules';
+  fieldMap[FINANCE_KEY]='finance';
+  fieldMap[PERSONAL_DATA_KEY]='personal';
+  fieldMap[HABITS_KEY]='habits';
+  fieldMap[CHALLENGES_PROGRESS_KEY]='challengesProgress';
+  var fieldName=fieldMap[key]||key;
+  var update={};
+  update[fieldName]=value;
+  fbDb.collection('user_data').doc(uid).set(update,{merge:true})
+    .catch(function(err){console.warn('persistKey error:',err);});
 }
 
 // BOOT
@@ -1721,10 +1727,8 @@ window.addEventListener('load',function(){
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(tg){tg.ready();tg.expand();}
   pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;
-  
-  // ===== ЗАПУСК МИГРАЦИИ =====
-  runMigration(fbDb, function() {
-    // Миграция завершена, продолжаем загрузку
+  // Run one-time migration then load
+  runMigration(fbDb, function(){
     loadFromStorage(function(saved){
       document.getElementById('splash').style.display='none';
       if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();}
@@ -1749,7 +1753,7 @@ function applyUserData(data){
   document.getElementById('profile-data-name').textContent=data.fullName;
   document.getElementById('tg-user').textContent='@'+(data.tgUsername||data.first.toLowerCase());
   CHAT_DATA[0].msgs=[{from:'bot',text:'Привет, '+data.first+'! Я ассистент ManClub in Siberia. Чем могу помочь?',time:'сейчас'}];
-  document.getElementById('storage-badge-wrap').innerHTML='<div class="storage-badge">'+(storageMethod==='tg'?'☁️ Telegram Cloud':'💾 Локально')+'</div>';
+  document.getElementById('storage-badge-wrap').innerHTML='<div class="storage-badge">'+'☁️ Firebase Cloud'+'</div>';
 }
 function launchApp(){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
@@ -3191,15 +3195,24 @@ var cycleContactName='';
 var cycleData={}; // {contactId: {year: {month: {dayNum: {data}}}}}
 
 function initCycleData(){
-  var stored=localStorage.getItem("mp_cycle_data_v1");
-  if(stored){
-    try{cycleData=JSON.parse(stored);}catch(e){cycleData={};}
-  }
+  if(!fbDb)return;
+  var uid=getTgUserId();
+  if(!uid)return;
+  fbDb.collection('cycle_data').doc(uid).get()
+    .then(function(doc){
+      if(doc.exists&&doc.data().data){
+        cycleData=doc.data().data;
+      }
+    })
+    .catch(function(err){console.warn('initCycleData error:',err);});
 }
 
 function saveCycleData(){
-  saveCycleData();
-try{localStorage.setItem("mp_cycle_data_v1",JSON.stringify(cycleData));}catch(e){};
+  if(!fbDb)return;
+  var uid=getTgUserId();
+  if(!uid)return;
+  fbDb.collection('cycle_data').doc(uid).set({data:cycleData},{merge:true})
+    .catch(function(err){console.warn('saveCycleData error:',err);});
 }
 
 function openCycleCalendar(id,name){
@@ -3573,258 +3586,80 @@ function syncIntimacyToCycle(contactId,dateISO,intimacyData){
 document.getElementById('intimacy-type')?.addEventListener('change',updateIntimacyForm);
 document.getElementById('intimacy-protected')?.addEventListener('change',updateIntimacyForm);
 
-// ===== MIGRATION SCRIPT =====
-var MIGRATION_STATUS_KEY = 'mp_migration_v1_done';
-var MIGRATION_LOG_KEY = 'mp_migration_log_v1';
+// ===== MIGRATION: localStorage → Firestore (one-time) =====
+var MIGRATION_STATUS_KEY='mp_migration_v1_done';
+function isMigrationDone(){try{return localStorage.getItem(MIGRATION_STATUS_KEY)==='true';}catch(e){return false;}}
+function markMigrationDone(){try{localStorage.setItem(MIGRATION_STATUS_KEY,'true');}catch(e){}}
 
-function logMigration(msg) {
-  var timestamp = new Date().toISOString();
-  var logMsg = '[' + timestamp + '] ' + msg;
-  console.log(logMsg);
-  try {
-    var logs = JSON.parse(localStorage.getItem(MIGRATION_LOG_KEY) || '[]');
-    logs.push(logMsg);
-    if (logs.length > 50) logs.shift();
-    localStorage.setItem(MIGRATION_LOG_KEY, JSON.stringify(logs));
-  } catch (e) {}
-}
+function runMigration(db,callback){
+  callback=callback||function(){};
+  if(isMigrationDone()){console.log('[Migration] already done, skipping');callback();return;}
+  if(!db){console.log('[Migration] Firestore not available');callback();return;}
+  var uid=getTgUserId();
+  if(!uid){console.log('[Migration] No user ID');callback();return;}
+  console.log('[Migration] Starting for user:',uid);
 
-function isMigrationDone() {
-  try {
-    return localStorage.getItem(MIGRATION_STATUS_KEY) === 'true';
-  } catch (e) {
-    return false;
-  }
-}
-
-function markMigrationDone() {
-  try {
-    localStorage.setItem(MIGRATION_STATUS_KEY, 'true');
-  } catch (e) {}
-}
-
-function readFromLocalStorage(key) {
-  try {
-    var val = localStorage.getItem(key);
-    return val ? JSON.parse(val) : null;
-  } catch (e) {
-    logMigration('ERROR reading ' + key + ': ' + e.message);
-    return null;
-  }
-}
-
-function saveBackupToFirestore(fbDb, uid, data) {
-  return new Promise(function(resolve) {
-    if (!fbDb || !data || Object.keys(data).length === 0) {
-      resolve();
-      return;
-    }
-    fbDb.collection('migration_backup').doc(uid).set({
-      backupData: data,
-      backupDate: firebase.firestore.FieldValue.serverTimestamp(),
-      backupVersion: 'v1'
-    }).then(function() {
-      logMigration('Backup saved to Firestore for user ' + uid);
-      resolve();
-    }).catch(function(err) {
-      logMigration('ERROR saving backup: ' + err.message);
-      resolve();
-    });
+  // Collect all localStorage data
+  var keys=['mp_user_v1','mp_journal_v1','mp_positivity_v1','mp_contacts_v1','mp_schedules_v1','mp_finance_v1','mp_personal_data_v1','mp_habits_v1','mp_challenges_progress_v1','mp_cycle_data_v1'];
+  var backup={};
+  var hasData=false;
+  keys.forEach(function(k){
+    try{var v=localStorage.getItem(k);if(v){backup[k]=JSON.parse(v);hasData=true;}}catch(e){}
   });
-}
 
-function migrateDataToFirestore(fbDb, uid, sourceKey, targetCollection, targetDoc, parser) {
-  return new Promise(function(resolve) {
-    var data = readFromLocalStorage(sourceKey);
-    if (!data) {
-      logMigration('No data to migrate for key: ' + sourceKey);
-      resolve();
-      return;
-    }
-    if (!fbDb) {
-      logMigration('Firestore not available, skipping migration of ' + sourceKey);
-      resolve();
-      return;
-    }
-    var transformedData = parser ? parser(data) : data;
-    fbDb.collection(targetCollection).doc(targetDoc).set(transformedData, { merge: true })
-      .then(function() {
-        logMigration('✓ Migrated ' + sourceKey + ' → ' + targetCollection + '/' + targetDoc);
-        resolve();
-      })
-      .catch(function(err) {
-        logMigration('ERROR migrating ' + sourceKey + ': ' + err.message);
-        resolve();
-      });
-  });
-}
+  if(!hasData){console.log('[Migration] No localStorage data to migrate');markMigrationDone();callback();return;}
 
-function runMigration(fbDb, callback) {
-  callback = callback || function() {};
-  if (isMigrationDone()) {
-    logMigration('Migration already done, skipping');
-    callback();
-    return;
-  }
-  logMigration('Starting migration from localStorage to Firestore...');
-  if (!fbDb) {
-    logMigration('Firestore not available, migration aborted');
-    callback();
-    return;
-  }
-  var uid = getTgUserId();
-  if (!uid) {
-    logMigration('User ID not available, migration aborted');
-    callback();
-    return;
-  }
-  logMigration('Migration starting for user: ' + uid);
-  
-  var STORAGE_KEY = 'mp_user_v1';
-  var JOURNAL_KEY = 'mp_journal_v1';
-  var POSITIVITY_KEY = 'mp_positivity_v1';
-  var CONTACTS_KEY = 'mp_contacts_v1';
-  var SCHEDULES_KEY = 'mp_schedules_v1';
-  var FINANCE_KEY = 'mp_finance_v1';
-  var PERSONAL_DATA_KEY = 'mp_personal_data_v1';
-  var HABITS_KEY = 'mp_habits_v1';
-  var CHALLENGES_PROGRESS_KEY = 'mp_challenges_progress_v1';
-  
-  var allBackupData = {};
-  var userData = readFromLocalStorage(STORAGE_KEY);
-  var journalData = readFromLocalStorage(JOURNAL_KEY);
-  var positivityData = readFromLocalStorage(POSITIVITY_KEY);
-  var contactsData = readFromLocalStorage(CONTACTS_KEY);
-  var schedulesData = readFromLocalStorage(SCHEDULES_KEY);
-  var financeData = readFromLocalStorage(FINANCE_KEY);
-  var personalData = readFromLocalStorage(PERSONAL_DATA_KEY);
-  var habitsData = readFromLocalStorage(HABITS_KEY);
-  var challengesProgressData = readFromLocalStorage(CHALLENGES_PROGRESS_KEY);
-  
-  if (userData) allBackupData.userData = userData;
-  if (journalData) allBackupData.journalData = journalData;
-  if (positivityData) allBackupData.positivityData = positivityData;
-  if (contactsData) allBackupData.contactsData = contactsData;
-  if (schedulesData) allBackupData.schedulesData = schedulesData;
-  if (financeData) allBackupData.financeData = financeData;
-  if (personalData) allBackupData.personalData = personalData;
-  if (habitsData) allBackupData.habitsData = habitsData;
-  if (challengesProgressData) allBackupData.challengesProgressData = challengesProgressData;
-  
-  saveBackupToFirestore(fbDb, uid, allBackupData).then(function() {
-    var migrations = [
-      migrateDataToFirestore(fbDb, uid, STORAGE_KEY, 'users', uid, null),
-      migrateDataToFirestore(fbDb, uid, JOURNAL_KEY, 'journal', uid, null),
-      migrateDataToFirestore(fbDb, uid, POSITIVITY_KEY, 'positivity', uid, null),
-      migrateDataToFirestore(fbDb, uid, CONTACTS_KEY, 'contacts', uid, null),
-      migrateDataToFirestore(fbDb, uid, SCHEDULES_KEY, 'schedule', uid, null),
-      migrateDataToFirestore(fbDb, uid, FINANCE_KEY, 'finance', uid, null),
-      migrateDataToFirestore(fbDb, uid, PERSONAL_DATA_KEY, 'personal', uid, null),
-      migrateDataToFirestore(fbDb, uid, HABITS_KEY, 'habits', uid, null),
-      migrateDataToFirestore(fbDb, uid, CHALLENGES_PROGRESS_KEY, 'challenge_progress', uid, null)
-    ];
-    
-    Promise.all(migrations).then(function() {
-      logMigration('All migrations completed');
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(JOURNAL_KEY);
-        localStorage.removeItem(POSITIVITY_KEY);
-        localStorage.removeItem(CONTACTS_KEY);
-        localStorage.removeItem(SCHEDULES_KEY);
-        localStorage.removeItem(FINANCE_KEY);
-        localStorage.removeItem(PERSONAL_DATA_KEY);
-        localStorage.removeItem(HABITS_KEY);
-        localStorage.removeItem(CHALLENGES_PROGRESS_KEY);
-        localStorage.removeItem('mp_anon_uid');
-        logMigration('✓ Old localStorage data cleared');
-      } catch (e) {
-        logMigration('WARNING: Could not clear localStorage: ' + e.message);
-      }
+  // Save backup
+  db.collection('migration_backup').doc(uid).set({
+    backupData:backup,
+    backupDate:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    console.log('[Migration] Backup saved');
+
+    var promises=[];
+
+    // Migrate user profile
+    if(backup['mp_user_v1']){
+      promises.push(db.collection('users').doc(uid).set(backup['mp_user_v1'],{merge:true}));
+    }
+
+    // Migrate all other data into user_data/{uid}
+    var dataDoc={};
+    if(backup['mp_journal_v1'])dataDoc.journal=backup['mp_journal_v1'];
+    if(backup['mp_positivity_v1'])dataDoc.positivity=backup['mp_positivity_v1'];
+    if(backup['mp_contacts_v1'])dataDoc.contacts=backup['mp_contacts_v1'];
+    if(backup['mp_schedules_v1'])dataDoc.schedules=backup['mp_schedules_v1'];
+    if(backup['mp_finance_v1'])dataDoc.finance=backup['mp_finance_v1'];
+    if(backup['mp_personal_data_v1'])dataDoc.personal=backup['mp_personal_data_v1'];
+    if(backup['mp_habits_v1'])dataDoc.habits=backup['mp_habits_v1'];
+    if(backup['mp_challenges_progress_v1'])dataDoc.challengesProgress=backup['mp_challenges_progress_v1'];
+    if(Object.keys(dataDoc).length>0){
+      promises.push(db.collection('user_data').doc(uid).set(dataDoc,{merge:true}));
+    }
+
+    // Migrate cycle data
+    if(backup['mp_cycle_data_v1']){
+      promises.push(db.collection('cycle_data').doc(uid).set({data:backup['mp_cycle_data_v1']},{merge:true}));
+    }
+
+    Promise.all(promises).then(function(){
+      console.log('[Migration] All data migrated to Firestore');
+      // Clear localStorage
+      keys.forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+      try{localStorage.removeItem('mp_anon_uid');}catch(e){}
       markMigrationDone();
-      logMigration('✓✓✓ MIGRATION COMPLETE ✓✓✓');
+      console.log('[Migration] ✓✓✓ COMPLETE ✓✓✓');
       callback();
+    }).catch(function(err){
+      console.warn('[Migration] Error during migration:',err);
+      callback(); // Continue anyway
     });
+  }).catch(function(err){
+    console.warn('[Migration] Backup save failed:',err);
+    callback(); // Continue anyway
   });
 }
-// ===== END MIGRATION SCRIPT =====
-
-// ===== FIRESTORE OPERATIONS =====
-var CURRENT_USER_ID = null;
-
-function getUID() {
-  if (!CURRENT_USER_ID) {
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-      CURRENT_USER_ID = String(tg.initDataUnsafe.user.id);
-    }
-  }
-  return CURRENT_USER_ID;
-}
-
-function saveUserProfile(userData, callback) {
-  callback = callback || function() {};
-  if (!fbDb) { callback(); return; }
-  var uid = getUID();
-  if (!uid) { callback(); return; }
-  fbDb.collection('users').doc(uid).set(userData, { merge: true })
-    .then(function() { callback(); })
-    .catch(function(err) { console.warn('Error saving user profile:', err); callback(); });
-}
-
-function loadUserProfile(callback) {
-  callback = callback || function(data) {};
-  if (!fbDb) { callback(null); return; }
-  var uid = getUID();
-  if (!uid) { callback(null); return; }
-  fbDb.collection('users').doc(uid).get()
-    .then(function(doc) { callback(doc.exists ? doc.data() : null); })
-    .catch(function(err) { console.warn('Error loading user profile:', err); callback(null); });
-}
-
-function saveCycleData() {
-  if (!fbDb) { return; }
-  var uid = getUID();
-  if (!uid) { return; }
-  fbDb.collection('cycle_data').doc(uid).set({ data: cycleData }, { merge: true })
-    .catch(function(err) { console.warn('Error saving cycle data:', err); });
-}
-
-function loadCycleData(callback) {
-  callback = callback || function() {};
-  if (!fbDb) { callback(); return; }
-  var uid = getUID();
-  if (!uid) { callback(); return; }
-  fbDb.collection('cycle_data').doc(uid).get()
-    .then(function(doc) {
-      if (doc.exists && doc.data().data) {
-        cycleData = doc.data().data;
-      }
-      callback();
-    })
-    .catch(function(err) { console.warn('Error loading cycle data:', err); callback(); });
-}
-
-function saveAllData() {
-  if (!fbDb) { return; }
-  var uid = getUID();
-  if (!uid) { return; }
-  
-  // Сохраняем все основные данные
-  fbDb.collection('users').doc(uid).set({
-    userData: userData,
-    stats: { energy: energy, depth: depth, series: series, points: points, level: userLevel },
-    contacts: contacts,
-    schedules: schedules,
-    journal: morningEntries,
-    positivity: positivityEntries,
-    habits: habitsList,
-    challengeProgress: challengeProgress
-  }, { merge: true }).catch(function(err) { console.warn('Error saving all data:', err); });
-}
-
-// ===== END FIRESTORE OPERATIONS =====
-
+// ===== END MIGRATION =====
 
 </script>
 </body>
