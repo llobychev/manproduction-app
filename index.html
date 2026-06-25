@@ -1720,13 +1720,18 @@ window.addEventListener('load',function(){
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(tg){tg.ready();tg.expand();}
   pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;
-  loadFromStorage(function(saved){
-    document.getElementById('splash').style.display='none';
-    if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();}
-    else{
-      if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){var u=tg.initDataUnsafe.user;if(u.first_name)document.getElementById('inp-first').value=u.first_name;if(u.last_name)document.getElementById('inp-last').value=u.last_name;}
-      showScreen('ob-welcome');
-    }
+  
+  // ===== ЗАПУСК МИГРАЦИИ =====
+  runMigration(fbDb, function() {
+    // Миграция завершена, продолжаем загрузку
+    loadFromStorage(function(saved){
+      document.getElementById('splash').style.display='none';
+      if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();}
+      else{
+        if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){var u=tg.initDataUnsafe.user;if(u.first_name)document.getElementById('inp-first').value=u.first_name;if(u.last_name)document.getElementById('inp-last').value=u.last_name;}
+        showScreen('ob-welcome');
+      }
+    });
   });
 });
 function handleStartParam(){
@@ -3565,6 +3570,183 @@ function syncIntimacyToCycle(contactId,dateISO,intimacyData){
 // Update form on type change
 document.getElementById('intimacy-type')?.addEventListener('change',updateIntimacyForm);
 document.getElementById('intimacy-protected')?.addEventListener('change',updateIntimacyForm);
+
+// ===== MIGRATION SCRIPT =====
+var MIGRATION_STATUS_KEY = 'mp_migration_v1_done';
+var MIGRATION_LOG_KEY = 'mp_migration_log_v1';
+
+function logMigration(msg) {
+  var timestamp = new Date().toISOString();
+  var logMsg = '[' + timestamp + '] ' + msg;
+  console.log(logMsg);
+  try {
+    var logs = JSON.parse(localStorage.getItem(MIGRATION_LOG_KEY) || '[]');
+    logs.push(logMsg);
+    if (logs.length > 50) logs.shift();
+    localStorage.setItem(MIGRATION_LOG_KEY, JSON.stringify(logs));
+  } catch (e) {}
+}
+
+function isMigrationDone() {
+  try {
+    return localStorage.getItem(MIGRATION_STATUS_KEY) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+function markMigrationDone() {
+  try {
+    localStorage.setItem(MIGRATION_STATUS_KEY, 'true');
+  } catch (e) {}
+}
+
+function readFromLocalStorage(key) {
+  try {
+    var val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : null;
+  } catch (e) {
+    logMigration('ERROR reading ' + key + ': ' + e.message);
+    return null;
+  }
+}
+
+function saveBackupToFirestore(fbDb, uid, data) {
+  return new Promise(function(resolve) {
+    if (!fbDb || !data || Object.keys(data).length === 0) {
+      resolve();
+      return;
+    }
+    fbDb.collection('migration_backup').doc(uid).set({
+      backupData: data,
+      backupDate: firebase.firestore.FieldValue.serverTimestamp(),
+      backupVersion: 'v1'
+    }).then(function() {
+      logMigration('Backup saved to Firestore for user ' + uid);
+      resolve();
+    }).catch(function(err) {
+      logMigration('ERROR saving backup: ' + err.message);
+      resolve();
+    });
+  });
+}
+
+function migrateDataToFirestore(fbDb, uid, sourceKey, targetCollection, targetDoc, parser) {
+  return new Promise(function(resolve) {
+    var data = readFromLocalStorage(sourceKey);
+    if (!data) {
+      logMigration('No data to migrate for key: ' + sourceKey);
+      resolve();
+      return;
+    }
+    if (!fbDb) {
+      logMigration('Firestore not available, skipping migration of ' + sourceKey);
+      resolve();
+      return;
+    }
+    var transformedData = parser ? parser(data) : data;
+    fbDb.collection(targetCollection).doc(targetDoc).set(transformedData, { merge: true })
+      .then(function() {
+        logMigration('✓ Migrated ' + sourceKey + ' → ' + targetCollection + '/' + targetDoc);
+        resolve();
+      })
+      .catch(function(err) {
+        logMigration('ERROR migrating ' + sourceKey + ': ' + err.message);
+        resolve();
+      });
+  });
+}
+
+function runMigration(fbDb, callback) {
+  callback = callback || function() {};
+  if (isMigrationDone()) {
+    logMigration('Migration already done, skipping');
+    callback();
+    return;
+  }
+  logMigration('Starting migration from localStorage to Firestore...');
+  if (!fbDb) {
+    logMigration('Firestore not available, migration aborted');
+    callback();
+    return;
+  }
+  var uid = getTgUserId();
+  if (!uid) {
+    logMigration('User ID not available, migration aborted');
+    callback();
+    return;
+  }
+  logMigration('Migration starting for user: ' + uid);
+  
+  var STORAGE_KEY = 'mp_user_v1';
+  var JOURNAL_KEY = 'mp_journal_v1';
+  var POSITIVITY_KEY = 'mp_positivity_v1';
+  var CONTACTS_KEY = 'mp_contacts_v1';
+  var SCHEDULES_KEY = 'mp_schedules_v1';
+  var FINANCE_KEY = 'mp_finance_v1';
+  var PERSONAL_DATA_KEY = 'mp_personal_data_v1';
+  var HABITS_KEY = 'mp_habits_v1';
+  var CHALLENGES_PROGRESS_KEY = 'mp_challenges_progress_v1';
+  
+  var allBackupData = {};
+  var userData = readFromLocalStorage(STORAGE_KEY);
+  var journalData = readFromLocalStorage(JOURNAL_KEY);
+  var positivityData = readFromLocalStorage(POSITIVITY_KEY);
+  var contactsData = readFromLocalStorage(CONTACTS_KEY);
+  var schedulesData = readFromLocalStorage(SCHEDULES_KEY);
+  var financeData = readFromLocalStorage(FINANCE_KEY);
+  var personalData = readFromLocalStorage(PERSONAL_DATA_KEY);
+  var habitsData = readFromLocalStorage(HABITS_KEY);
+  var challengesProgressData = readFromLocalStorage(CHALLENGES_PROGRESS_KEY);
+  
+  if (userData) allBackupData.userData = userData;
+  if (journalData) allBackupData.journalData = journalData;
+  if (positivityData) allBackupData.positivityData = positivityData;
+  if (contactsData) allBackupData.contactsData = contactsData;
+  if (schedulesData) allBackupData.schedulesData = schedulesData;
+  if (financeData) allBackupData.financeData = financeData;
+  if (personalData) allBackupData.personalData = personalData;
+  if (habitsData) allBackupData.habitsData = habitsData;
+  if (challengesProgressData) allBackupData.challengesProgressData = challengesProgressData;
+  
+  saveBackupToFirestore(fbDb, uid, allBackupData).then(function() {
+    var migrations = [
+      migrateDataToFirestore(fbDb, uid, STORAGE_KEY, 'users', uid, null),
+      migrateDataToFirestore(fbDb, uid, JOURNAL_KEY, 'journal', uid, null),
+      migrateDataToFirestore(fbDb, uid, POSITIVITY_KEY, 'positivity', uid, null),
+      migrateDataToFirestore(fbDb, uid, CONTACTS_KEY, 'contacts', uid, null),
+      migrateDataToFirestore(fbDb, uid, SCHEDULES_KEY, 'schedule', uid, null),
+      migrateDataToFirestore(fbDb, uid, FINANCE_KEY, 'finance', uid, null),
+      migrateDataToFirestore(fbDb, uid, PERSONAL_DATA_KEY, 'personal', uid, null),
+      migrateDataToFirestore(fbDb, uid, HABITS_KEY, 'habits', uid, null),
+      migrateDataToFirestore(fbDb, uid, CHALLENGES_PROGRESS_KEY, 'challenge_progress', uid, null)
+    ];
+    
+    Promise.all(migrations).then(function() {
+      logMigration('All migrations completed');
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(JOURNAL_KEY);
+        localStorage.removeItem(POSITIVITY_KEY);
+        localStorage.removeItem(CONTACTS_KEY);
+        localStorage.removeItem(SCHEDULES_KEY);
+        localStorage.removeItem(FINANCE_KEY);
+        localStorage.removeItem(PERSONAL_DATA_KEY);
+        localStorage.removeItem(HABITS_KEY);
+        localStorage.removeItem(CHALLENGES_PROGRESS_KEY);
+        localStorage.removeItem('mp_anon_uid');
+        logMigration('✓ Old localStorage data cleared');
+      } catch (e) {
+        logMigration('WARNING: Could not clear localStorage: ' + e.message);
+      }
+      markMigrationDone();
+      logMigration('✓✓✓ MIGRATION COMPLETE ✓✓✓');
+      callback();
+    });
+  });
+}
+// ===== END MIGRATION SCRIPT =====
+
 </script>
 </body>
 </html>
