@@ -665,6 +665,38 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen" id="s-lessons"><div class="topbar"><div><div class="topbar-logo">Путь участника</div><div class="topbar-sub">6 сфер жизни</div></div></div><div class="content" style="padding-top:16px;"><div id="sphere-list"></div></div></div>
   <div class="app-screen" id="s-lesson-detail"><div class="topbar"><div><div class="topbar-logo" id="detail-title">Уроки</div><div class="topbar-sub">Видеоуроки</div></div></div><div class="content" style="padding-top:16px;"><div class="back-btn" onclick="switchTab('lessons')">← Все сферы</div><div id="detail-extra"></div><div id="lesson-list"></div></div></div>
 
+  <!-- СПОРТ: ХАБ -->
+  <div class="app-screen" id="s-sport-hub">
+    <div class="topbar"><div><div class="topbar-logo">🏋️ Спорт</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('lessons')">← Все сферы</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div class="rel-list">
+        <div class="rel-item" onclick="openSportCategory('yoga')"><div class="rel-icon">🧘</div><div class="rel-name">Йога</div><div class="rel-arrow">›</div></div>
+        <div class="rel-item" onclick="openSportCategory('charge')"><div class="rel-icon">⚡</div><div class="rel-name">Зарядка</div><div class="rel-arrow">›</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- СПОРТ: КАТЕГОРИЯ -->
+  <div class="app-screen" id="s-sport-category">
+    <div class="topbar"><div><div class="topbar-logo" id="sport-cat-title">Категория</div><div class="topbar-sub" style="cursor:pointer" onclick="openSportHub()">← Спорт</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div id="sport-cat-list"></div>
+      <div class="rel-stub" id="sport-cat-stub" style="display:none;">
+        <div class="rel-stub-icon">🚧</div>
+        <div class="rel-stub-text">Контент скоро появится здесь.<br>Раздел в разработке.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- СПОРТ: ВИДЕО -->
+  <div class="app-screen" id="s-sport-video">
+    <div class="topbar"><div><div class="topbar-logo" id="sport-video-title">Видео</div><div class="topbar-sub" style="cursor:pointer" onclick="backToSportCategory()">← Назад</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div id="sport-video-frame-wrap" style="margin-bottom:14px;"></div>
+      <div id="sport-video-desc" style="font-size:13px;color:var(--text2);padding:0 2px;"></div>
+    </div>
+  </div>
+
   <!-- ПИТОМЦЫ -->
   <div class="app-screen" id="s-pets">
     <div class="topbar"><div><div class="topbar-logo">🐾 Питомцы</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('lessons')">← Все сферы</div></div></div>
@@ -1645,6 +1677,7 @@ function escHtmlNews(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 var SPHERES=[
   {id:'health',icon:'🩻',name:'Здоровье',color:'rgba(239,68,68,0.15)',q:'Как оцениваешь своё здоровье?',desc:'Энергия, сон, спорт, питание',opts:['Всё отлично — в отличной форме','Неплохо, но есть что улучшить','Мало двигаюсь, часто устаю','Здоровье — моя слабая зона'],lessons:['Введение: тело как основа','Режим дня победителя','Питание для энергии','Тренировки без зала','Сон и восстановление']},
+  {id:'sport',icon:'🏋️',name:'Спорт',color:'rgba(34,197,94,0.15)',noQuiz:true,lessons:['Йога','Зарядка']},
   {id:'finance',icon:'💰',name:'Финансы',color:'rgba(34,197,94,0.15)',q:'Как обстоят дела с деньгами?',desc:'Доходы, сбережения, инвестиции',opts:['Финансово независим','Зарабатываю, но не откладываю','Живу от зарплаты до зарплаты','Финансы в минусе'],lessons:['Мышление богатого человека','Личный бюджет за 1 час','Первые инвестиции','Пассивный доход с нуля','Финансовая свобода']},
   {id:'rel',icon:'❤️',name:'Отношения',color:'rgba(236,72,153,0.15)',q:'Как складываются отношения?',desc:'Партнёр, семья, дружба',opts:['Всё гармонично','Есть моменты напряжения','Отношения требуют работы','Этот аспект запущен'],lessons:['Мужская роль в паре','Коммуникация без конфликтов','Семья и карьера: баланс','Дружба и нетворкинг','Границы и уважение']},
   {id:'career',icon:'🚀',name:'Карьера',color:'rgba(59,130,246,0.15)',q:'Доволен профессиональным путём?',desc:'Работа, дело, реализация',opts:['Занимаюсь любимым делом','Работа есть, но нет роста','Хочу изменить путь','Только начинаю'],lessons:['Найти своё призвание','Карьерный трекинг','Как стать незаменимым','Переговоры о зарплате','Запуск своего дела']},
@@ -3175,6 +3208,7 @@ function renderQuests(){
 function openLessonDetail(idx){
   var s=SPHERES[idx];
   if(s.id==='rel'){openRelHub();return;}
+  if(s.id==='sport'){openSportHub();return;}
   document.getElementById('detail-title').textContent=s.icon+' '+s.name;
   var extra=document.getElementById('detail-extra');
   extra.innerHTML=s.id==='finance'?'<div class="rel-item" style="margin-bottom:14px;" onclick="openFinLessons()"><div class="rel-icon">🎓</div><div class="rel-name">Финансовая грамотность</div><div class="rel-arrow">›</div></div>':'';
@@ -3193,6 +3227,60 @@ function openLessonDetail(idx){
 function openFinLessons(){
   var idx=SPHERES.findIndex(function(s){return s.id==='finance';});
   if(idx>=0)openLessonDetail(idx);
+}
+
+// СПОРТ
+var SPORT_CATEGORIES=[
+  {id:'yoga',icon:'🧘',name:'Йога',videos:[
+    {title:'Йога: первое занятие',desc:'Базовая практика для начала',vkOid:'-239871905',vkId:'456239019',vkHash:'ef1c071acb5e5d34'}
+  ]},
+  {id:'charge',icon:'⚡',name:'Зарядка',videos:[]}
+];
+var currentSportCategory=null;
+function openSportHub(){
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-sport-hub').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('nav-lessons').classList.add('active');
+}
+function openSportCategory(catId){
+  var cat=SPORT_CATEGORIES.find(function(c){return c.id===catId;});
+  if(!cat)return;
+  currentSportCategory=catId;
+  document.getElementById('sport-cat-title').textContent=cat.icon+' '+cat.name;
+  var list=document.getElementById('sport-cat-list');var stub=document.getElementById('sport-cat-stub');
+  list.innerHTML='';
+  if(cat.videos.length===0){
+    list.style.display='none';stub.style.display='';
+  }else{
+    list.style.display='';stub.style.display='none';
+    cat.videos.forEach(function(v,i){
+      var item=document.createElement('div');item.className='lesson-item';
+      item.innerHTML='<div class="lesson-num">'+(i+1)+'</div><div class="lesson-info"><div class="lesson-title">'+v.title+'</div><div class="lesson-meta">'+v.desc+'</div></div><div style="font-size:14px">▶️</div>';
+      item.onclick=(function(idx){return function(){openSportVideo(catId,idx);};})(i);
+      list.appendChild(item);
+    });
+  }
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-sport-category').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('nav-lessons').classList.add('active');
+}
+function openSportVideo(catId,idx){
+  var cat=SPORT_CATEGORIES.find(function(c){return c.id===catId;});
+  if(!cat)return;
+  var v=cat.videos[idx];if(!v)return;
+  document.getElementById('sport-video-title').textContent=v.title;
+  document.getElementById('sport-video-frame-wrap').innerHTML='<iframe src="https://vk.com/video_ext.php?oid='+v.vkOid+'&id='+v.vkId+'&hash='+v.vkHash+'&autoplay=1" width="100%" height="220" style="border-radius:14px;background:#000;border:0;display:block;" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; screen-wake-lock;" allowfullscreen></iframe>';
+  document.getElementById('sport-video-desc').textContent=v.desc||'';
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-sport-video').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('nav-lessons').classList.add('active');
+}
+function backToSportCategory(){
+  document.getElementById('sport-video-frame-wrap').innerHTML='';
+  openSportCategory(currentSportCategory);
 }
 
 // ОТНОШЕНИЯ
