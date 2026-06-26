@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{--bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#242424;--accent:#c9a84c;--accent2:#e8c97a;--text:#f0ece4;--text2:#a09a90;--text3:#6a6460;--border:rgba(201,168,76,0.15);--red:#e05555;}
@@ -1722,20 +1723,49 @@ document.addEventListener('focusin',function(e){
   }
 });
 
+
+// ===== FIREBASE AUTH =====
+var AUTH_SERVER='https://llobychev-manproduction-networking-server-6f2d.twc1.net';
+function firebaseAuth(callback){
+  callback=callback||function(){};
+  var tg=window.Telegram&&window.Telegram.WebApp;
+  if(!tg||!tg.initData){console.warn('No initData, skipping auth');callback();return;}
+  var xhr=new XMLHttpRequest();
+  xhr.open('POST',AUTH_SERVER+'/auth',true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.onload=function(){
+    if(xhr.status===200){
+      try{
+        var data=JSON.parse(xhr.responseText);
+        if(data.token){
+          firebase.auth().signInWithCustomToken(data.token)
+            .then(function(){console.log('Firebase Auth: signed in as',firebase.auth().currentUser.uid);callback();})
+            .catch(function(err){console.warn('Auth signIn error:',err);callback();});
+        }else{callback();}
+      }catch(e){console.warn('Auth parse error:',e);callback();}
+    }else{console.warn('Auth server error:',xhr.status);callback();}
+  };
+  xhr.onerror=function(){console.warn('Auth network error');callback();};
+  xhr.send(JSON.stringify({initData:tg.initData}));
+}
+// ===== END FIREBASE AUTH =====
+
 window.addEventListener('load',function(){
   initFirebase();
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(tg){tg.ready();tg.expand();}
   pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;
-  // Run one-time migration then load
-  runMigration(fbDb, function(){
-    loadFromStorage(function(saved){
-      document.getElementById('splash').style.display='none';
-      if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();}
-      else{
-        if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){var u=tg.initDataUnsafe.user;if(u.first_name)document.getElementById('inp-first').value=u.first_name;if(u.last_name)document.getElementById('inp-last').value=u.last_name;}
-        showScreen('ob-welcome');
-      }
+  // Auth then migrate then load
+  firebaseAuth(function(){
+    runMigration(fbDb, function(){
+      loadFromStorage(function(saved){
+        document.getElementById('splash').style.display='none';
+        if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();}
+        else{
+          if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){var u=tg.initDataUnsafe.user;if(u.first_name)document.getElementById('inp-first').value=u.first_name;if(u.last_name)document.getElementById('inp-last').value=u.last_name;}
+          showScreen('ob-welcome');
+        }
+      });
     });
   });
 });
