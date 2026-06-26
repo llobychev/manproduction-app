@@ -504,6 +504,52 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .cycle-modal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .contact-cycle-btn{width:100%;padding:11px 14px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500;}
 .contact-cycle-btn:active{border-color:var(--accent);}
+/* GOALS */
+.goal-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:16px;margin:0 16px 12px;}
+.goal-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.goal-title{font-size:15px;font-weight:700;color:var(--text);flex:1;}
+.goal-sphere-tag{font-size:10px;padding:3px 8px;border-radius:8px;white-space:nowrap;font-weight:600;color:var(--accent2);flex-shrink:0;}
+.goal-meta{font-size:11px;color:var(--text3);margin-bottom:10px;}
+.goal-progress-track{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.goal-progress-fill{height:100%;background-color:#c9a84c;border-radius:3px;}
+.goal-progress-label{font-size:11px;color:var(--text3);margin-bottom:8px;}
+.goal-steps{border-top:0.5px solid var(--border);padding-top:8px;margin-top:2px;}
+.goal-step-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;color:var(--text);cursor:pointer;}
+.goal-step-row.done{color:var(--text3);text-decoration:line-through;}
+.goal-step-check{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.goal-step-row.done .goal-step-check{background-color:#c9a84c;border-color:#c9a84c;color:#1a0f00;}
+.goal-card-actions{display:flex;gap:8px;margin-top:10px;}
+.goal-edit-btn{flex:1;padding:9px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;text-align:center;cursor:pointer;}
+.goal-step-input-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+.goal-step-rm{color:var(--text3);font-size:16px;cursor:pointer;padding:4px;}
+.goal-add-step-btn{padding:9px;border-radius:10px;border:0.5px dashed rgba(201,168,76,0.4);text-align:center;font-size:12px;color:var(--text3);cursor:pointer;margin-bottom:10px;}
+/* CONTACT CLUB BADGE */
+.club-badge{font-size:9px;padding:2px 7px;border-radius:7px;margin-left:6px;white-space:nowrap;font-weight:600;vertical-align:1px;}
+.club-badge.in{background:rgba(34,197,94,0.15);color:#22c55e;}
+.club-badge.out{background:var(--bg2);color:var(--text3);}
+/* FINANCE TABS / PAYMENTS / DEBTS / SAVINGS */
+.fin-tabs{display:flex;gap:4px;margin:16px 16px 4px;background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:4px;}
+.fin-tab{flex:1;text-align:center;padding:9px;border-radius:9px;font-size:13px;color:var(--text2);cursor:pointer;}
+.fin-tab.active{background-color:#c9a84c;color:#1a0f00;font-weight:700;}
+.pay-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:12px;margin-bottom:8px;border:0.5px solid var(--border);cursor:pointer;}
+.pay-info{flex:1;min-width:0;}
+.pay-title{font-size:13px;font-weight:600;color:var(--text);}
+.pay-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.pay-amt{font-size:14px;font-weight:700;flex-shrink:0;color:var(--text);}
+.debt-summary-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 14px;}
+.debt-summary-card{background:var(--bg3);border-radius:12px;padding:12px;border:0.5px solid var(--border);}
+.debt-summary-label{font-size:11px;color:var(--text3);}
+.debt-summary-val{font-size:17px;font-weight:700;margin-top:2px;color:var(--text);}
+.savings-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px;cursor:pointer;}
+.savings-top{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;gap:8px;}
+.savings-progress-track{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;}
+.savings-progress-fill{height:100%;background-color:#c9a84c;border-radius:3px;}
+.savings-meta{font-size:11px;color:var(--text3);margin-top:6px;}
+.calc-result-row{display:flex;justify-content:space-between;border-top:0.5px solid var(--border);padding-top:10px;margin-top:4px;}
+.calc-result-col{text-align:left;}
+.calc-result-col.right{text-align:right;}
+.calc-result-label{font-size:11px;color:var(--text3);}
+.calc-result-val{font-size:16px;font-weight:700;color:var(--text);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -672,9 +718,24 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     <div class="topbar"><div><div class="topbar-logo" id="lang-detail-title">Английский</div><div class="topbar-sub" style="cursor:pointer" onclick="openScreen('s-languages')">← Языки</div></div></div>
     <div class="content" style="padding-top:16px;"><div id="lang-activities-list"></div></div>
   </div>
+  <!-- КАЛЬЯНЫ (заглушка) -->
+  <div class="app-screen" id="s-hookah">
+    <div class="topbar"><div><div class="topbar-logo">💨 Кальяны</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('lessons')">← Все сферы</div></div></div>
+    <div class="generic-stub"><div class="generic-stub-icon">💨</div><div class="generic-stub-text">Тренинг по кальянам<br>скоро появится здесь.</div></div>
+  </div>
+  <!-- АЛКОГОЛЬ (заглушка) -->
+  <div class="app-screen" id="s-alcohol">
+    <div class="topbar"><div><div class="topbar-logo">🥃 Алкоголь</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('lessons')">← Все сферы</div></div></div>
+    <div class="generic-stub"><div class="generic-stub-icon">🥃</div><div class="generic-stub-text">Тренинг по алкоголю<br>скоро появится здесь.</div></div>
+  </div>
   <div class="app-screen" id="s-self">
     <div class="topbar"><div><div class="topbar-logo">Самопознание</div><div class="topbar-sub">Инструменты роста</div></div></div>
-    <div class="self-tool-card-wide" onclick="openSelfTool('challenges')" style="margin:16px 16px 0;">
+    <div class="self-tool-card-wide" onclick="openSelfTool('goals')" style="margin:16px 16px 0;">
+      <div class="self-tool-icon" style="font-size:28px;">🎯</div>
+      <div style="flex:1;text-align:left;"><div class="self-tool-name">Цели и планирование</div><div class="self-tool-desc">Ставь цели и планируй их достижение</div></div>
+      <div style="font-size:18px;color:var(--text3);">›</div>
+    </div>
+    <div class="self-tool-card-wide" onclick="openSelfTool('challenges')" style="margin:10px 16px 0;">
       <div class="self-tool-icon" style="font-size:28px;">🏆</div>
       <div style="flex:1;text-align:left;"><div class="self-tool-name">Челленджи</div><div class="self-tool-desc">Соревнуйся с другими участниками клуба</div></div>
       <div style="font-size:18px;color:var(--text3);">›</div>
@@ -709,6 +770,11 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
         <div class="self-tool-icon">🌊</div>
         <div class="self-tool-name">Flow</div>
         <div class="self-tool-desc">Вход в поток</div>
+      </div>
+      <div class="self-tool-card" onclick="openSelfTool('intention')">
+        <div class="self-tool-icon">🧭</div>
+        <div class="self-tool-name">Намерение</div>
+        <div class="self-tool-desc">Скоро здесь</div>
       </div>
     </div>
   </div>
@@ -782,6 +848,30 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     <div id="challenges-list-wrap"></div>
   </div>
 
+  <!-- ЦЕЛИ И ПЛАНИРОВАНИЕ -->
+  <div class="app-screen" id="s-goals">
+    <div class="topbar"><div><div class="topbar-logo">🎯 Цели</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
+    <div class="add-event-btn" style="margin:16px 16px 14px;" onclick="openGoalModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Добавить цель</span></div>
+    <div id="goals-list-wrap"></div>
+  </div>
+
+  <!-- MODAL: цель -->
+  <div class="modal-overlay" id="goal-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="goal-modal-title">Новая цель</div>
+      <input class="modal-input" id="goal-title-input" placeholder="Название цели">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Сфера</div>
+      <div class="filter-chip-row" id="goal-sphere-chips"></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Дедлайн</div>
+      <input class="modal-input" id="goal-deadline-input" type="date">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Шаги / чек-лист</div>
+      <div id="goal-steps-input-wrap"></div>
+      <div class="goal-add-step-btn" onclick="addGoalStepInput()">➕ Добавить шаг</div>
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeGoalModal()">Отмена</button><button class="btn-delete" id="goal-btn-delete" style="display:none" onclick="deleteGoal()">🗑</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveGoal()">Сохранить</button></div>
+    </div>
+  </div>
+
+
   <!-- TEAM HUB: create or join a team for a specific challenge -->
   <div class="app-screen" id="s-team-hub">
     <div class="topbar"><div><div class="topbar-logo">👥 Командный режим</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('challenges')">← Челленджи</div></div></div>
@@ -810,6 +900,12 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen" id="s-flow">
     <div class="topbar"><div><div class="topbar-logo">🌊 Flow</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
     <div class="generic-stub"><div class="generic-stub-icon">🚧</div><div class="generic-stub-text">Геймификация для входа в поток<br>скоро появится здесь.</div></div>
+  </div>
+
+  <!-- НАМЕРЕНИЕ (заглушка) -->
+  <div class="app-screen" id="s-intention">
+    <div class="topbar"><div><div class="topbar-logo">🧭 Намерение</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('self')">← Самопознание</div></div></div>
+    <div class="generic-stub"><div class="generic-stub-icon">🧭</div><div class="generic-stub-text">Дневник намерений<br>скоро появится здесь.</div></div>
   </div>
 
   <!-- МЫШЛЕНИЕ -->
@@ -961,25 +1057,109 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <!-- ФИНАНСЫ -->
   <div class="app-screen" id="s-fin">
     <div class="topbar"><div><div class="topbar-logo">Финансы</div><div class="topbar-sub">Учёт доходов и расходов</div></div></div>
-    <div class="rel-item" style="margin:16px 16px 12px;" onclick="openFinLessons()"><div class="rel-icon">🎓</div><div class="rel-name">Финансовая грамотность</div><div class="rel-arrow">›</div></div>
-    <div class="fin-balance-card" style="margin-top:0;">
-      <div class="fin-balance-label">Общий баланс</div>
-      <div class="fin-balance-val" id="fin-balance">0 ₽</div>
-      <div class="fin-balance-sub">
-        <div class="fin-sub-item income">Доходы: <span id="fin-total-income">0 ₽</span></div>
-        <div class="fin-sub-item expense">Расходы: <span id="fin-total-expense">0 ₽</span></div>
+    <div class="fin-tabs">
+      <div class="fin-tab active" id="fin-tab-btn-overview" onclick="setFinTab('overview')">Обзор</div>
+      <div class="fin-tab" id="fin-tab-btn-payments" onclick="setFinTab('payments')">Платежи и долги</div>
+    </div>
+    <div id="fin-tab-overview">
+      <div class="rel-item" style="margin:0 16px 12px;" onclick="openFinLessons()"><div class="rel-icon">🎓</div><div class="rel-name">Финансовая грамотность</div><div class="rel-arrow">›</div></div>
+      <div class="fin-balance-card" style="margin-top:0;">
+        <div class="fin-balance-label">Общий баланс</div>
+        <div class="fin-balance-val" id="fin-balance">0 ₽</div>
+        <div class="fin-balance-sub">
+          <div class="fin-sub-item income">Доходы: <span id="fin-total-income">0 ₽</span></div>
+          <div class="fin-sub-item expense">Расходы: <span id="fin-total-expense">0 ₽</span></div>
+        </div>
       </div>
+      <div class="fin-actions">
+        <div class="fin-action-btn expense" onclick="openFinModal('expense')">－ Расход</div>
+        <div class="fin-action-btn income" onclick="openFinModal('income')">＋ Доход</div>
+      </div>
+      <div class="fin-chart-wrap">
+        <div class="fin-chart-title">Расходы по категориям</div>
+        <div id="fin-chart-content"></div>
+      </div>
+      <div class="section-title" style="margin:0 16px 10px;">Копилки</div>
+      <div style="padding:0 16px;" id="savings-list"></div>
+      <div class="add-event-btn" style="margin:0 16px 16px;" onclick="openSavingsModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Новая копилка</span></div>
+      <div class="fin-chart-wrap">
+        <div class="fin-chart-title">Калькулятор: вклад под процент</div>
+        <div class="form-group"><div class="form-label">Сумма</div><input class="form-input" id="calc-principal" type="number" placeholder="100000" oninput="calcSavings()"></div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Ставка, % годовых</div><input class="form-input" id="calc-rate" type="number" placeholder="18" oninput="calcSavings()"></div>
+          <div class="form-group"><div class="form-label">Срок, мес</div><input class="form-input" id="calc-months" type="number" placeholder="12" oninput="calcSavings()"></div>
+        </div>
+        <div class="form-group"><div class="form-label">Пополнение в месяц (необязательно)</div><input class="form-input" id="calc-monthly" type="number" placeholder="0" oninput="calcSavings()"></div>
+        <div class="calc-result-row">
+          <div class="calc-result-col"><div class="calc-result-label">Итоговая сумма</div><div class="calc-result-val" id="calc-result-total">0 ₽</div></div>
+          <div class="calc-result-col right"><div class="calc-result-label">Доход</div><div class="calc-result-val" id="calc-result-profit" style="color:#22c55e;">0 ₽</div></div>
+        </div>
+      </div>
+      <div class="section-title" style="margin:0 16px 10px;">История</div>
+      <div class="fin-records" id="fin-records"></div>
     </div>
-    <div class="fin-actions">
-      <div class="fin-action-btn expense" onclick="openFinModal('expense')">－ Расход</div>
-      <div class="fin-action-btn income" onclick="openFinModal('income')">＋ Доход</div>
+    <div id="fin-tab-payments" style="display:none;">
+      <div class="section-title" style="margin:16px 16px 10px;">Регулярные платежи</div>
+      <div style="padding:0 16px;" id="recurring-list"></div>
+      <div class="add-event-btn" style="margin:0 16px 16px;" onclick="openRecurringModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Новый платёж</span></div>
+      <div class="section-title" style="margin:0 16px 10px;">Долги</div>
+      <div class="debt-summary-row">
+        <div class="debt-summary-card"><div class="debt-summary-label">Я должен</div><div class="debt-summary-val" id="debt-i-owe" style="color:var(--red);">0 ₽</div></div>
+        <div class="debt-summary-card"><div class="debt-summary-label">Мне должны</div><div class="debt-summary-val" id="debt-owed-to-me" style="color:#22c55e;">0 ₽</div></div>
+      </div>
+      <div style="padding:0 16px;" id="debts-list"></div>
+      <div class="add-event-btn" style="margin:0 16px 24px;" onclick="openDebtModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Новый долг</span></div>
     </div>
-    <div class="fin-chart-wrap">
-      <div class="fin-chart-title">Расходы по категориям</div>
-      <div id="fin-chart-content"></div>
+  </div>
+
+  <!-- MODAL: регулярный платёж -->
+  <div class="modal-overlay" id="recurring-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="recurring-modal-title">Новый платёж</div>
+      <input class="modal-input" id="recurring-title" placeholder="Название (Аренда, Netflix...)">
+      <div class="modal-row" style="margin-bottom:10px;">
+        <input class="modal-input" id="recurring-amount" type="number" inputmode="decimal" placeholder="Сумма, ₽" style="margin-bottom:0;">
+        <input class="modal-input" id="recurring-day" type="number" min="1" max="31" placeholder="Число месяца" style="margin-bottom:0;">
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Напомнить</div>
+      <select class="modal-input" id="recurring-reminder-select" style="margin-bottom:10px;"></select>
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeRecurringModal()">Отмена</button><button class="btn-delete" id="recurring-btn-delete" style="display:none" onclick="deleteRecurring()">🗑</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveRecurring()">Сохранить</button></div>
     </div>
-    <div class="section-title" style="margin:0 16px 10px;">История</div>
-    <div class="fin-records" id="fin-records"></div>
+  </div>
+
+  <!-- MODAL: долг -->
+  <div class="modal-overlay" id="debt-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="debt-modal-title">Новый долг</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div id="debt-dir-owe" onclick="setDebtDirection('owe')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--red);background:rgba(224,85,85,0.1);text-align:center;cursor:pointer;font-size:13px;color:var(--red);font-weight:600;">Я должен</div>
+        <div id="debt-dir-owed" onclick="setDebtDirection('owed')" style="flex:1;padding:10px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);text-align:center;cursor:pointer;font-size:13px;color:var(--text2);">Мне должны</div>
+      </div>
+      <input class="modal-input" id="debt-amount" type="number" inputmode="decimal" placeholder="Сумма, ₽">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Контакт</div>
+      <div class="contact-pick-list" id="debt-contact-pick-list" style="display:block;max-height:180px;"></div>
+      <input class="modal-input" id="debt-manual-name" placeholder="Или впиши имя вручную (если нет в контактах)">
+      <input class="modal-input" id="debt-date" type="date">
+      <input class="modal-input" id="debt-note" placeholder="Заметка (необязательно)">
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeDebtModal()">Отмена</button><button class="btn-delete" id="debt-btn-delete" style="display:none" onclick="deleteDebt()">🗑</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveDebt()">Сохранить</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: копилка -->
+  <div class="modal-overlay" id="savings-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="savings-modal-title">Новая копилка</div>
+      <input class="modal-input" id="savings-name" placeholder="Название (На машину...)">
+      <div class="modal-row" style="margin-bottom:10px;">
+        <input class="modal-input" id="savings-current" type="number" placeholder="Сейчас, ₽" style="margin-bottom:0;">
+        <input class="modal-input" id="savings-target" type="number" placeholder="Цель, ₽" style="margin-bottom:0;">
+      </div>
+      <div class="modal-row" style="margin-bottom:0;">
+        <input class="modal-input" id="savings-rate" type="number" placeholder="Ставка, % годовых" style="margin-bottom:0;">
+        <input class="modal-input" id="savings-monthly" type="number" placeholder="Пополнение в мес." style="margin-bottom:0;">
+      </div>
+      <div class="modal-btns"><button class="btn-cancel" onclick="closeSavingsModal()">Отмена</button><button class="btn-delete" id="savings-btn-delete" style="display:none" onclick="deleteSavings()">🗑</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveSavings()">Сохранить</button></div>
+    </div>
   </div>
 
   <!-- PROFILE -->
@@ -1367,6 +1547,21 @@ function initFirebase(){
     }
   }catch(e){console.warn('Firebase init failed',e);}
 }
+// Loads telegram usernames of all registered club members (from the `users`
+// collection) once per session, so contact cards can show a "в клубе" badge
+// by matching against a contact's saved telegram username.
+function loadClubUsernames(cb){
+  if(clubUsernames){cb&&cb();return;}
+  if(!fbDb){clubUsernames=new Set();cb&&cb();return;}
+  fbDb.collection('users').get().then(function(snap){
+    clubUsernames=new Set();
+    snap.forEach(function(doc){
+      var d=doc.data();
+      if(d&&d.tgUsername)clubUsernames.add(String(d.tgUsername).toLowerCase());
+    });
+    cb&&cb();
+  }).catch(function(err){console.warn('loadClubUsernames failed',err);clubUsernames=new Set();cb&&cb();});
+}
 
 function getTgUserId(){
   var tg=window.Telegram&&window.Telegram.WebApp;
@@ -1468,6 +1663,15 @@ var SCHEDULES_KEY='mp_schedules_v1';
 var FINANCE_KEY='mp_finance_v1';
 var PERSONAL_DATA_KEY='mp_personal_data_v1';
 var HABITS_KEY='mp_habits_v1';
+var GOALS_KEY='mp_goals_v1';
+var RECURRING_KEY='mp_recurring_v1';
+var DEBTS_KEY='mp_debts_v1';
+var SAVINGS_KEY='mp_savings_v1';
+var goalsData=[]; // {id,title,sphere,deadline,steps:[{id,text,done}],createdAt}
+var recurringPayments=[]; // {id,title,amount,day,reminderOffset}
+var debts=[]; // {id,direction:'owe'|'owed',amount,contactId,manualName,dateISO,note}
+var savingsGoals=[]; // {id,name,current,target,rate,monthlyTopUp}
+var clubUsernames=null; // null = not loaded yet, Set<string> once loaded
 var habitsData={active:[],points:0,earnedBadges:[]}; // active: [{id,catalogId,name,icon,totalDays,doneDates:[],startedAt,lastCheckDate}]
 var CHALLENGES_PROGRESS_KEY='mp_challenges_progress_v1';
 var challengesProgress={}; // {challengeId: {joinedAt, doneDates:[], teamId, teamName}}
@@ -1590,6 +1794,10 @@ function loadAllData(){
         if(d.personal)personalData=d.personal;
         if(d.habits)habitsData=d.habits;
         if(d.challengesProgress)challengesProgress=d.challengesProgress;
+        if(d.goals)goalsData=d.goals;
+        if(d.recurringPayments)recurringPayments=d.recurringPayments;
+        if(d.debts)debts=d.debts;
+        if(d.savings)savingsGoals=d.savings;
         refreshAllViews();
       }
     })
@@ -1607,6 +1815,10 @@ function saveSchedulesStore(){persistKey(SCHEDULES_KEY,schedules);}
 function saveFinanceStore(){persistKey(FINANCE_KEY,financeRecords);}
 function savePersonalDataStore(){persistKey(PERSONAL_DATA_KEY,personalData);}
 function saveHabitsStore(){persistKey(HABITS_KEY,habitsData);}
+function saveGoalsStore(){persistKey(GOALS_KEY,goalsData);}
+function saveRecurringStore(){persistKey(RECURRING_KEY,recurringPayments);}
+function saveDebtsStore(){persistKey(DEBTS_KEY,debts);}
+function saveSavingsStore(){persistKey(SAVINGS_KEY,savingsGoals);}
 // LEADERBOARD: mirrors each user's total points to a shared Firestore collection
 // so the club-wide ranking can be built from real other-members data.
 function syncLeaderboardPoints(){
@@ -1705,6 +1917,10 @@ function persistKey(key,value){
   fieldMap[PERSONAL_DATA_KEY]='personal';
   fieldMap[HABITS_KEY]='habits';
   fieldMap[CHALLENGES_PROGRESS_KEY]='challengesProgress';
+  fieldMap[GOALS_KEY]='goals';
+  fieldMap[RECURRING_KEY]='recurringPayments';
+  fieldMap[DEBTS_KEY]='debts';
+  fieldMap[SAVINGS_KEY]='savings';
   var fieldName=fieldMap[key]||key;
   var update={};
   update[fieldName]=value;
@@ -1790,6 +2006,7 @@ function launchApp(){
   document.getElementById('main-app').classList.add('active');
   renderCalendar();renderSchedule();buildSphereList();buildChatList();renderContacts();loadDailyQuests();
   syncLeaderboardPoints();
+  loadClubUsernames(function(){renderContacts();});
   handleStartParam();
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var el=document.getElementById(id);if(el){el.classList.add('active');el.scrollTop=0;}}
@@ -2183,6 +2400,131 @@ function deleteEvent(){
   saveSchedulesStore();deleteEventFromCloud(editingIdx);closeModal();renderCalendar();renderSchedule();
 }
 
+// ЦЕЛИ И ПЛАНИРОВАНИЕ
+var editingGoalId=null;
+var modalGoalSphere=null;
+var modalGoalSteps=[];
+function fmtDateFromIso(iso){var d=parseIso(iso);return d.getDate()+' '+MONTHS_RU[d.getMonth()]+' '+d.getFullYear();}
+function renderGoalsScreen(){
+  var wrap=document.getElementById('goals-list-wrap');wrap.innerHTML='';
+  if(!goalsData.length){wrap.innerHTML='<div class="generic-stub"><div class="generic-stub-icon">🎯</div><div class="generic-stub-text">Пока нет ни одной цели.<br>Добавь первую!</div></div>';return;}
+  goalsData.slice().sort(function(a,b){return (a.deadline||'9999').localeCompare(b.deadline||'9999');}).forEach(function(g){
+    var sphere=SPHERES.find(function(s){return s.id===g.sphere;});
+    var steps=g.steps||[];
+    var doneSteps=steps.filter(function(s){return s.done;}).length;
+    var pct=steps.length?Math.round(doneSteps/steps.length*100):0;
+    var deadlineLabel=g.deadline?fmtDateFromIso(g.deadline):'без срока';
+    var card=document.createElement('div');card.className='goal-card';
+    var sphereTag=sphere?'<span class="goal-sphere-tag" style="background:'+sphere.color+';">'+sphere.icon+' '+sphere.name+'</span>':'';
+    card.innerHTML='<div class="goal-card-top"><div class="goal-title">'+esc(g.title)+'</div>'+sphereTag+'</div>'+
+      '<div class="goal-meta">Дедлайн: '+deadlineLabel+(steps.length?' · '+doneSteps+' из '+steps.length+' шагов':'')+'</div>'+
+      (steps.length?'<div class="goal-progress-track"><div class="goal-progress-fill" style="width:'+pct+'%"></div></div><div class="goal-progress-label">'+pct+'% выполнено</div>':'')+
+      (steps.length?'<div class="goal-steps" id="goal-steps-'+g.id+'"></div>':'')+
+      '<div class="goal-card-actions"><div class="goal-edit-btn" data-id="'+g.id+'">✏️ Изменить</div></div>';
+    card.querySelector('.goal-edit-btn').onclick=function(){openGoalModal(this.dataset.id);};
+    wrap.appendChild(card);
+    if(steps.length)renderGoalSteps(g);
+  });
+}
+function renderGoalSteps(g){
+  var wrap=document.getElementById('goal-steps-'+g.id);if(!wrap)return;wrap.innerHTML='';
+  (g.steps||[]).forEach(function(st){
+    var row=document.createElement('div');row.className='goal-step-row'+(st.done?' done':'');
+    row.innerHTML='<div class="goal-step-check">'+(st.done?'✓':'')+'</div><div style="flex:1;">'+esc(st.text)+'</div>';
+    row.onclick=function(){st.done=!st.done;saveGoalsStore();renderGoalsScreen();};
+    wrap.appendChild(row);
+  });
+}
+function openGoalModal(id){
+  editingGoalId=id||null;
+  var isEdit=!!editingGoalId;
+  document.getElementById('goal-modal-title').textContent=isEdit?'Редактировать цель':'Новая цель';
+  document.getElementById('goal-btn-delete').style.display=isEdit?'block':'none';
+  if(isEdit){
+    var g=goalsData.find(function(x){return x.id===editingGoalId;});
+    document.getElementById('goal-title-input').value=g.title;
+    document.getElementById('goal-deadline-input').value=g.deadline||'';
+    modalGoalSphere=g.sphere||null;
+    modalGoalSteps=(g.steps||[]).map(function(s){return {id:s.id,text:s.text};});
+  } else {
+    document.getElementById('goal-title-input').value='';
+    document.getElementById('goal-deadline-input').value='';
+    modalGoalSphere=null;
+    modalGoalSteps=[];
+  }
+  renderGoalSphereChips();renderGoalStepInputs();
+  document.getElementById('goal-modal').classList.add('active');
+}
+function closeGoalModal(){document.getElementById('goal-modal').classList.remove('active');editingGoalId=null;}
+function renderGoalSphereChips(){
+  var wrap=document.getElementById('goal-sphere-chips');wrap.innerHTML='';
+  SPHERES.filter(function(s){return !s.noQuiz;}).forEach(function(s){
+    var chip=document.createElement('div');chip.className='filter-chip'+(modalGoalSphere===s.id?' selected':'');
+    chip.textContent=s.icon+' '+s.name;
+    chip.onclick=function(){modalGoalSphere=(modalGoalSphere===s.id)?null:s.id;renderGoalSphereChips();};
+    wrap.appendChild(chip);
+  });
+}
+function renderGoalStepInputs(){
+  var wrap=document.getElementById('goal-steps-input-wrap');wrap.innerHTML='';
+  modalGoalSteps.forEach(function(st,i){
+    var row=document.createElement('div');row.className='goal-step-input-row';
+    row.innerHTML='<input class="modal-input" style="margin-bottom:0;flex:1;" value="'+esc(st.text)+'" placeholder="Шаг к цели"><div class="goal-step-rm">✕</div>';
+    row.querySelector('input').oninput=function(){modalGoalSteps[i].text=this.value;};
+    row.querySelector('.goal-step-rm').onclick=function(){modalGoalSteps.splice(i,1);renderGoalStepInputs();};
+    wrap.appendChild(row);
+  });
+}
+function addGoalStepInput(){modalGoalSteps.push({id:'step_'+Date.now()+'_'+Math.floor(Math.random()*1000),text:''});renderGoalStepInputs();}
+function saveGoal(){
+  var title=document.getElementById('goal-title-input').value.trim();if(!title)return;
+  var deadline=document.getElementById('goal-deadline-input').value||null;
+  var prevSteps=editingGoalId?((goalsData.find(function(g){return g.id===editingGoalId;})||{}).steps||[]):[];
+  var steps=modalGoalSteps.filter(function(s){return s.text.trim();}).map(function(s){
+    var prev=prevSteps.find(function(p){return p.id===s.id;});
+    return {id:s.id,text:s.text.trim(),done:prev?!!prev.done:false};
+  });
+  var goal;
+  if(editingGoalId){
+    goal=goalsData.find(function(x){return x.id===editingGoalId;});
+    Object.assign(goal,{title:title,sphere:modalGoalSphere,deadline:deadline,steps:steps});
+  } else {
+    goal={id:'goal_'+Date.now()+'_'+Math.floor(Math.random()*1000),title:title,sphere:modalGoalSphere,deadline:deadline,steps:steps,createdAt:Date.now()};
+    goalsData.push(goal);
+  }
+  saveGoalsStore();
+  syncGoalDeadlineToCalendar(goal);
+  closeGoalModal();renderGoalsScreen();
+}
+function deleteGoal(){
+  if(!editingGoalId)return;
+  removeGoalDeadlineEvent(editingGoalId);
+  goalsData=goalsData.filter(function(g){return g.id!==editingGoalId;});
+  saveGoalsStore();closeGoalModal();renderGoalsScreen();
+}
+// Mirrors a goal's deadline into the home calendar as a regular schedule event,
+// using a stable id (goal_deadline_<goalId>) so re-saving the goal just
+// replaces the old calendar entry instead of duplicating it.
+function syncGoalDeadlineToCalendar(g){
+  var evId='goal_deadline_'+g.id;
+  schedules=schedules.filter(function(e){return e.id!==evId;});
+  if(g.deadline){
+    var ev={id:evId,time:'09:00',title:'🎯 Дедлайн цели: '+g.title,desc:'',tag:'Цель',dateISO:g.deadline,recurrence:{type:'none'},doneDates:[],linkedContactIds:[],reminderOffset:'none',link:''};
+    schedules.push(ev);
+    syncEventToCloud(ev);
+  } else {
+    deleteEventFromCloud(evId);
+  }
+  saveSchedulesStore();renderCalendar();renderSchedule();
+}
+function removeGoalDeadlineEvent(goalId){
+  var evId='goal_deadline_'+goalId;
+  schedules=schedules.filter(function(e){return e.id!==evId;});
+  deleteEventFromCloud(evId);
+  saveSchedulesStore();renderCalendar();renderSchedule();
+}
+
+
 // САМОПОЗНАНИЕ
 function openSelfTool(tool){
   var id='s-'+tool;
@@ -2194,6 +2536,7 @@ function openSelfTool(tool){
   else if(tool==='positivity')renderPositivityEntries();
   else if(tool==='habits')renderHabitsScreen();
   else if(tool==='challenges')renderChallengesScreen();
+  else if(tool==='goals')renderGoalsScreen();
 }
 function saveMorning(){
   var text=document.getElementById('morning-input').value.trim();if(!text)return;
@@ -2708,7 +3051,9 @@ function buildSphereList(){
   var extras=[
     {id:'pets',icon:'🐾',name:'Питомцы',sub:'Собаки и кошки',color:'rgba(180,130,80,0.15)'},
     {id:'nutrition',icon:'🍽️',name:'Питание',sub:'Счётчик калорий и уроки',color:'rgba(34,197,94,0.15)'},
-    {id:'languages',icon:'🌍',name:'Языки',sub:'Челленджи и игры',color:'rgba(59,130,246,0.15)'}
+    {id:'languages',icon:'🌍',name:'Языки',sub:'Челленджи и игры',color:'rgba(59,130,246,0.15)'},
+    {id:'hookah',icon:'💨',name:'Кальяны',sub:'Скоро здесь',color:'rgba(168,85,247,0.15)'},
+    {id:'alcohol',icon:'🥃',name:'Алкоголь',sub:'Скоро здесь',color:'rgba(234,179,8,0.15)'}
   ];
   extras.forEach(function(e){
     var card=document.createElement('div');card.className='sphere-card';
@@ -2931,7 +3276,13 @@ function renderContacts(){
     var avaContent=ct.photoUrl?'':initials;
     var avaStyle=ct.photoUrl?' style="background-image:url('+ct.photoUrl+');background-size:cover;background-position:center;"':'';
     var cycleBtn=(netTab==='women'?'<div class="contact-cycle-btn" data-id="'+ct.id+'" data-name="'+ct.name+'">📅 Календарь месячных</div>':'');
-    card.innerHTML='<div class="contact-card-header"><div class="contact-ava '+netTab+'"'+avaStyle+'>'+avaContent+'</div><div class="contact-main"><div class="contact-name">'+(ct.pinned?'<span class="pin-badge">📌</span>':'')+ct.name+'</div><div class="contact-role">'+ct.role+'</div></div><div class="contact-expand">›</div></div><div class="contact-details" id="cd-'+netTab+'-'+i+'"><div class="contact-socials">'+pills+'</div>'+(ct.note?'<div class="contact-note-label">Заметка</div><div class="contact-note">'+ct.note+'</div>':'')+cycleBtn+actions+'<div class="pin-btn'+(ct.pinned?' pinned':'')+'" data-id="'+ct.id+'">'+pinLabel+'</div><div class="contact-edit-btn" data-id="'+ct.id+'">✏️ Редактировать</div></div>';
+    var clubBadge='';
+    if(ct.tg){
+      if(clubUsernames===null){clubBadge='';}
+      else if(clubUsernames.has(ct.tg.toLowerCase())){clubBadge='<span class="club-badge in">✓ в клубе</span>';}
+      else{clubBadge='<span class="club-badge out">не в клубе</span>';}
+    }
+    card.innerHTML='<div class="contact-card-header"><div class="contact-ava '+netTab+'"'+avaStyle+'>'+avaContent+'</div><div class="contact-main"><div class="contact-name">'+(ct.pinned?'<span class="pin-badge">📌</span>':'')+ct.name+clubBadge+'</div><div class="contact-role">'+ct.role+'</div></div><div class="contact-expand">›</div></div><div class="contact-details" id="cd-'+netTab+'-'+i+'"><div class="contact-socials">'+pills+'</div>'+(ct.note?'<div class="contact-note-label">Заметка</div><div class="contact-note">'+ct.note+'</div>':'')+cycleBtn+actions+'<div class="pin-btn'+(ct.pinned?' pinned':'')+'" data-id="'+ct.id+'">'+pinLabel+'</div><div class="contact-edit-btn" data-id="'+ct.id+'">✏️ Редактировать</div></div>';
     card.querySelector('.contact-card-header').onclick=function(){toggleContact(i,this);};
     card.querySelectorAll('.contact-action-btn').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();contactAction(this.dataset.act,this.dataset.id);};});
     if(cycleBtn){card.querySelector('.contact-cycle-btn').onclick=function(e){e.stopPropagation();openCycleCalendar(this.dataset.id,this.dataset.name);};}
@@ -3102,6 +3453,9 @@ function renderFinance(){
   document.getElementById('fin-total-expense').textContent=fmtMoney(expense);
   renderFinChart();
   renderFinRecords();
+  renderSavingsList();
+  calcSavings();
+  if(finTab==='payments'){renderRecurringList();renderDebtsSummaryAndList();}
 }
 function fmtMoney(n){return Math.round(n).toLocaleString('ru-RU')+' ₽';}
 function renderFinChart(){
@@ -3196,6 +3550,239 @@ function deleteFinRecord(){
   financeRecords=financeRecords.filter(function(r){return r.id!==finEditId;});
   saveFinanceStore();closeFinModal();renderFinance();
 }
+
+// FINANCE TABS
+var finTab='overview';
+function setFinTab(t){
+  finTab=t;
+  document.getElementById('fin-tab-overview').style.display=t==='overview'?'':'none';
+  document.getElementById('fin-tab-payments').style.display=t==='payments'?'':'none';
+  document.getElementById('fin-tab-btn-overview').classList.toggle('active',t==='overview');
+  document.getElementById('fin-tab-btn-payments').classList.toggle('active',t==='payments');
+  if(t==='payments'){renderRecurringList();renderDebtsSummaryAndList();}
+}
+
+// РЕГУЛЯРНЫЕ ПЛАТЕЖИ
+var PAY_REMINDER_OPTS=[{id:'none',label:'Без напоминания'},{id:'1day',label:'За 1 день'},{id:'3days',label:'За 3 дня'},{id:'7days',label:'За 7 дней'}];
+var modalPayReminder='none';
+var editingPaymentId=null;
+function daysUntilNextPaymentDay(day){
+  var now=new Date();var y=now.getFullYear(),m=now.getMonth();
+  var target=new Date(y,m,day);
+  if(target<now)target=new Date(y,m+1,day);
+  return Math.ceil((target-now)/86400000);
+}
+function renderRecurringList(){
+  var wrap=document.getElementById('recurring-list');wrap.innerHTML='';
+  if(!recurringPayments.length){wrap.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">Пока нет регулярных платежей</div>';return;}
+  recurringPayments.slice().sort(function(a,b){return a.day-b.day;}).forEach(function(p){
+    var daysLeft=daysUntilNextPaymentDay(p.day);
+    var div=document.createElement('div');div.className='pay-item';
+    var reminderBadge=p.reminderOffset&&p.reminderOffset!=='none'?' 🔔':'';
+    div.innerHTML='<div class="pay-info"><div class="pay-title">'+esc(p.title)+reminderBadge+'</div><div class="pay-sub">Каждое '+p.day+' число · через '+daysLeft+' дн.</div></div><div class="pay-amt">'+fmtMoney(p.amount)+'</div>';
+    div.onclick=function(){openRecurringModal(p.id);};
+    wrap.appendChild(div);
+  });
+}
+function renderPayReminderOptions(){
+  var sel=document.getElementById('recurring-reminder-select');sel.innerHTML='';
+  PAY_REMINDER_OPTS.forEach(function(opt){
+    var o=document.createElement('option');o.value=opt.id;o.textContent=opt.label;
+    if(modalPayReminder===opt.id)o.selected=true;
+    sel.appendChild(o);
+  });
+  sel.onchange=function(){modalPayReminder=sel.value;};
+}
+function openRecurringModal(id){
+  editingPaymentId=id||null;
+  var isEdit=!!editingPaymentId;
+  document.getElementById('recurring-modal-title').textContent=isEdit?'Редактировать платёж':'Новый платёж';
+  document.getElementById('recurring-btn-delete').style.display=isEdit?'block':'none';
+  if(isEdit){
+    var p=recurringPayments.find(function(x){return x.id===editingPaymentId;});
+    document.getElementById('recurring-title').value=p.title;
+    document.getElementById('recurring-amount').value=p.amount;
+    document.getElementById('recurring-day').value=p.day;
+    modalPayReminder=p.reminderOffset||'none';
+  } else {
+    document.getElementById('recurring-title').value='';
+    document.getElementById('recurring-amount').value='';
+    document.getElementById('recurring-day').value='1';
+    modalPayReminder='none';
+  }
+  renderPayReminderOptions();
+  document.getElementById('recurring-modal').classList.add('active');
+}
+function closeRecurringModal(){document.getElementById('recurring-modal').classList.remove('active');editingPaymentId=null;}
+function saveRecurring(){
+  var title=document.getElementById('recurring-title').value.trim();if(!title)return;
+  var amount=parseFloat(document.getElementById('recurring-amount').value);if(!amount||amount<=0)return;
+  var day=Math.min(31,Math.max(1,parseInt(document.getElementById('recurring-day').value,10)||1));
+  var data={id:editingPaymentId||('pay_'+Date.now()),title:title,amount:amount,day:day,reminderOffset:modalPayReminder};
+  if(editingPaymentId){
+    var idx=recurringPayments.findIndex(function(x){return x.id===editingPaymentId;});
+    recurringPayments[idx]=data;
+  } else recurringPayments.push(data);
+  saveRecurringStore();closeRecurringModal();renderRecurringList();
+}
+function deleteRecurring(){
+  if(!editingPaymentId)return;
+  recurringPayments=recurringPayments.filter(function(p){return p.id!==editingPaymentId;});
+  saveRecurringStore();closeRecurringModal();renderRecurringList();
+}
+
+// ДОЛГИ
+var debtDirection='owe';
+var debtSelectedContactId=null;
+var editingDebtId=null;
+function setDebtDirection(dir){
+  debtDirection=dir;
+  document.getElementById('debt-dir-owe').style.cssText='flex:1;padding:10px;border-radius:10px;border:'+(dir==='owe'?'1.5px solid var(--red)':'0.5px solid var(--border)')+';background:'+(dir==='owe'?'rgba(224,85,85,0.1)':'var(--bg3)')+';text-align:center;cursor:pointer;font-size:13px;color:'+(dir==='owe'?'var(--red)':'var(--text2)')+';font-weight:'+(dir==='owe'?'600':'400');
+  document.getElementById('debt-dir-owed').style.cssText='flex:1;padding:10px;border-radius:10px;border:'+(dir==='owed'?'1.5px solid #22c55e':'0.5px solid var(--border)')+';background:'+(dir==='owed'?'rgba(34,197,94,0.1)':'var(--bg3)')+';text-align:center;cursor:pointer;font-size:13px;color:'+(dir==='owed'?'#22c55e':'var(--text2)')+';font-weight:'+(dir==='owed'?'600':'400');
+}
+function renderDebtContactPicker(){
+  var wrap=document.getElementById('debt-contact-pick-list');wrap.innerHTML='';
+  var all=contacts.men.concat(contacts.women);
+  if(!all.length){wrap.innerHTML='<div style="padding:8px;font-size:12px;color:var(--text3);">Нет сохранённых контактов</div>';return;}
+  all.forEach(function(ct){
+    var initials=ct.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    var isMen=contacts.men.indexOf(ct)>=0;
+    var item=document.createElement('div');item.className='contact-pick-item'+(debtSelectedContactId===ct.id?' selected':'');
+    item.innerHTML='<div class="contact-pick-ava '+(isMen?'men':'women')+'" style="background:'+(isMen?'rgba(74,144,217,0.15)':'rgba(232,121,160,0.15)')+';color:'+(isMen?'#4a90d9':'#e879a0')+'">'+initials+'</div><div class="contact-pick-name">'+ct.name+'</div>';
+    item.onclick=function(){debtSelectedContactId=(debtSelectedContactId===ct.id)?null:ct.id;renderDebtContactPicker();};
+    wrap.appendChild(item);
+  });
+}
+function openDebtModal(id){
+  editingDebtId=id||null;
+  var isEdit=!!editingDebtId;
+  document.getElementById('debt-modal-title').textContent=isEdit?'Редактировать долг':'Новый долг';
+  document.getElementById('debt-btn-delete').style.display=isEdit?'block':'none';
+  if(isEdit){
+    var d=debts.find(function(x){return x.id===editingDebtId;});
+    setDebtDirection(d.direction);
+    document.getElementById('debt-amount').value=d.amount;
+    document.getElementById('debt-date').value=d.dateISO||'';
+    document.getElementById('debt-note').value=d.note||'';
+    debtSelectedContactId=d.contactId||null;
+    document.getElementById('debt-manual-name').value=d.manualName||'';
+  } else {
+    setDebtDirection('owe');
+    document.getElementById('debt-amount').value='';
+    document.getElementById('debt-date').value=new Date().toISOString().slice(0,10);
+    document.getElementById('debt-note').value='';
+    debtSelectedContactId=null;
+    document.getElementById('debt-manual-name').value='';
+  }
+  renderDebtContactPicker();
+  document.getElementById('debt-modal').classList.add('active');
+}
+function closeDebtModal(){document.getElementById('debt-modal').classList.remove('active');editingDebtId=null;}
+function saveDebt(){
+  var amount=parseFloat(document.getElementById('debt-amount').value);if(!amount||amount<=0)return;
+  var manualName=document.getElementById('debt-manual-name').value.trim();
+  if(!debtSelectedContactId&&!manualName)return;
+  var data={id:editingDebtId||('debt_'+Date.now()),direction:debtDirection,amount:amount,contactId:debtSelectedContactId||null,manualName:debtSelectedContactId?null:manualName,dateISO:document.getElementById('debt-date').value||null,note:document.getElementById('debt-note').value.trim()};
+  if(editingDebtId){
+    var idx=debts.findIndex(function(x){return x.id===editingDebtId;});
+    debts[idx]=data;
+  } else debts.push(data);
+  saveDebtsStore();closeDebtModal();renderDebtsSummaryAndList();
+}
+function deleteDebt(){
+  if(!editingDebtId)return;
+  debts=debts.filter(function(d){return d.id!==editingDebtId;});
+  saveDebtsStore();closeDebtModal();renderDebtsSummaryAndList();
+}
+function renderDebtsSummaryAndList(){
+  var iOwe=0,owedToMe=0;
+  debts.forEach(function(d){if(d.direction==='owe')iOwe+=d.amount;else owedToMe+=d.amount;});
+  document.getElementById('debt-i-owe').textContent=fmtMoney(iOwe);
+  document.getElementById('debt-owed-to-me').textContent=fmtMoney(owedToMe);
+  var wrap=document.getElementById('debts-list');wrap.innerHTML='';
+  if(!debts.length){wrap.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">Долгов пока нет</div>';return;}
+  debts.slice().sort(function(a,b){return (b.dateISO||'').localeCompare(a.dateISO||'');}).forEach(function(d){
+    var who=d.contactId?((findContactById(d.contactId)||{}).name||d.manualName||'—'):(d.manualName||'—');
+    var div=document.createElement('div');div.className='pay-item';
+    var sub=(d.note?esc(d.note):'')+(d.dateISO?(d.note?' · ':'')+'с '+fmtDateFromIso(d.dateISO):'');
+    div.innerHTML='<div class="pay-info"><div class="pay-title">'+esc(who)+'</div><div class="pay-sub">'+sub+'</div></div><div class="pay-amt" style="color:'+(d.direction==='owe'?'var(--red)':'#22c55e')+'">'+(d.direction==='owe'?'−':'+')+fmtMoney(d.amount)+'</div>';
+    div.onclick=function(){openDebtModal(d.id);};
+    wrap.appendChild(div);
+  });
+}
+
+// КОПИЛКИ
+var editingSavingsId=null;
+function renderSavingsList(){
+  var wrap=document.getElementById('savings-list');wrap.innerHTML='';
+  if(!savingsGoals.length){wrap.innerHTML='<div style="padding:12px;text-align:center;color:var(--text3);font-size:12px;">Пока нет копилок</div>';return;}
+  savingsGoals.forEach(function(s){
+    var pct=s.target?Math.min(100,Math.round(s.current/s.target*100)):0;
+    var div=document.createElement('div');div.className='savings-card';
+    var metaParts=[];
+    if(s.rate)metaParts.push('Ставка '+s.rate+'% годовых');
+    if(s.monthlyTopUp)metaParts.push('пополнение '+fmtMoney(s.monthlyTopUp)+'/мес');
+    div.innerHTML='<div class="savings-top"><span>'+esc(s.name)+'</span><span>'+fmtMoney(s.current)+' / '+fmtMoney(s.target)+'</span></div><div class="savings-progress-track"><div class="savings-progress-fill" style="width:'+pct+'%"></div></div>'+(metaParts.length?'<div class="savings-meta">'+metaParts.join(' · ')+'</div>':'');
+    div.onclick=function(){openSavingsModal(s.id);};
+    wrap.appendChild(div);
+  });
+}
+function openSavingsModal(id){
+  editingSavingsId=id||null;
+  var isEdit=!!editingSavingsId;
+  document.getElementById('savings-modal-title').textContent=isEdit?'Редактировать копилку':'Новая копилка';
+  document.getElementById('savings-btn-delete').style.display=isEdit?'block':'none';
+  if(isEdit){
+    var s=savingsGoals.find(function(x){return x.id===editingSavingsId;});
+    document.getElementById('savings-name').value=s.name;
+    document.getElementById('savings-current').value=s.current;
+    document.getElementById('savings-target').value=s.target;
+    document.getElementById('savings-rate').value=s.rate||'';
+    document.getElementById('savings-monthly').value=s.monthlyTopUp||'';
+  } else {
+    document.getElementById('savings-name').value='';
+    document.getElementById('savings-current').value='';
+    document.getElementById('savings-target').value='';
+    document.getElementById('savings-rate').value='';
+    document.getElementById('savings-monthly').value='';
+  }
+  document.getElementById('savings-modal').classList.add('active');
+}
+function closeSavingsModal(){document.getElementById('savings-modal').classList.remove('active');editingSavingsId=null;}
+function saveSavings(){
+  var name=document.getElementById('savings-name').value.trim();if(!name)return;
+  var current=parseFloat(document.getElementById('savings-current').value)||0;
+  var target=parseFloat(document.getElementById('savings-target').value)||0;
+  var rate=parseFloat(document.getElementById('savings-rate').value)||0;
+  var monthlyTopUp=parseFloat(document.getElementById('savings-monthly').value)||0;
+  var data={id:editingSavingsId||('sav_'+Date.now()),name:name,current:current,target:target,rate:rate,monthlyTopUp:monthlyTopUp};
+  if(editingSavingsId){
+    var idx=savingsGoals.findIndex(function(x){return x.id===editingSavingsId;});
+    savingsGoals[idx]=data;
+  } else savingsGoals.push(data);
+  saveSavingsStore();closeSavingsModal();renderSavingsList();
+}
+function deleteSavings(){
+  if(!editingSavingsId)return;
+  savingsGoals=savingsGoals.filter(function(s){return s.id!==editingSavingsId;});
+  saveSavingsStore();closeSavingsModal();renderSavingsList();
+}
+// Calculator: simulates monthly compounding with optional fixed monthly top-ups.
+// Purely illustrative client-side math — not persisted as a record.
+function calcSavings(){
+  var principal=parseFloat(document.getElementById('calc-principal').value)||0;
+  var rate=parseFloat(document.getElementById('calc-rate').value)||0;
+  var months=Math.max(0,parseInt(document.getElementById('calc-months').value,10)||0);
+  var monthly=parseFloat(document.getElementById('calc-monthly').value)||0;
+  var monthlyRate=rate/100/12;
+  var total=principal;
+  for(var i=0;i<months;i++){total=total*(1+monthlyRate)+monthly;}
+  var contributed=principal+monthly*months;
+  var profit=total-contributed;
+  document.getElementById('calc-result-total').textContent=fmtMoney(total);
+  document.getElementById('calc-result-profit').textContent=(profit>=0?'+':'')+fmtMoney(profit);
+}
+
 
 function switchTab(tab){
   document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
