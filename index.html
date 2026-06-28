@@ -2076,7 +2076,7 @@ function finishReg(){
   var initials=((first[0]||'')+(last[0]||'')).toUpperCase()||'МП';
   var tg=window.Telegram&&window.Telegram.WebApp;
   var tgUsername=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user&&tg.initDataUnsafe.user.username)||first.toLowerCase();
-  var data={first:first,last:last,fullName:fullName,initials:initials,tgUsername:tgUsername,registeredAt:Date.now()};
+  var data={first:first,last:last,fullName:fullName,initials:initials,tgUsername:tgUsername,name:fullName,registeredAt:Date.now()};
   saveToStorage(data);applyUserData(data);loadAllData();launchApp();
 }
 function doLogout(){clearStorage();location.reload();}
