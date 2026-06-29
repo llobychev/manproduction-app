@@ -550,6 +550,33 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .calc-result-col.right{text-align:right;}
 .calc-result-label{font-size:11px;color:var(--text3);}
 .calc-result-val{font-size:16px;font-weight:700;color:var(--text);margin-top:2px;}
+
+/* ===== DEMO BANNER ===== */
+#demo-banner{display:none;position:relative;background:linear-gradient(90deg,#1a2a1a,#0f1b0f);border-bottom:0.5px solid rgba(201,168,76,0.3);overflow:hidden;height:36px;flex-shrink:0;align-items:center;}
+#demo-banner.active{display:flex;}
+.demo-marquee-wrap{flex:1;overflow:hidden;height:100%;display:flex;align-items:center;}
+.demo-marquee{display:inline-block;white-space:nowrap;animation:marquee 18s linear infinite;font-size:11px;color:#a8d5a2;padding-left:100%;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
+.demo-pay-btn{flex-shrink:0;background:var(--accent);color:#1a0f00;font-size:10px;font-weight:700;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;margin-right:8px;white-space:nowrap;}
+/* ===== PAYMENT SCREEN ===== */
+#s-payment{background:var(--bg);}
+.pay-hero{padding:32px 24px 20px;text-align:center;}
+.pay-hero-icon{font-size:52px;margin-bottom:16px;}
+.pay-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.pay-sub{font-size:13px;color:var(--text2);line-height:1.6;}
+.pay-discount-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.15);border:0.5px solid rgba(201,168,76,0.4);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--accent2);margin:12px 0;}
+.pay-price-block{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;margin:0 16px 16px;padding:20px;}
+.pay-price-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.pay-price-label{font-size:13px;color:var(--text2);}
+.pay-price-val{font-size:13px;color:var(--text);font-weight:600;}
+.pay-price-val.crossed{text-decoration:line-through;color:var(--text3);}
+.pay-price-val.final{font-size:20px;color:var(--accent);font-weight:700;}
+.pay-divider{height:0.5px;background:var(--border);margin:12px 0;}
+.pay-stars-btn{margin:0 16px 12px;width:calc(100% - 32px);padding:15px;background:var(--accent);border:none;border-radius:14px;font-size:15px;font-weight:700;color:#1a0f00;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.pay-promo-row{margin:0 16px 24px;display:flex;gap:8px;}
+.pay-promo-input{flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:13px;outline:none;}
+.pay-promo-apply{background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:11px 16px;color:var(--text2);font-size:13px;cursor:pointer;}
+/* ===== END DEMO/PAYMENT ===== */
 </style>
 </head>
 <body>
@@ -611,6 +638,15 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 
 <!-- MAIN APP -->
 <div class="app-wrap" id="main-app">
+
+<!-- DEMO BANNER -->
+<div id="demo-banner">
+  <div class="demo-marquee-wrap">
+    <span class="demo-marquee" id="demo-marquee-text">⏳ Демо-доступ закончится через ... дней &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⏳ Демо-доступ закончится через ... дней &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+  </div>
+  <button class="demo-pay-btn" onclick="switchTab('payment')">Убрать ограничения</button>
+</div>
+
 
   <!-- HOME -->
   <div class="app-screen active" id="s-home">
@@ -1384,6 +1420,32 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     </div>
   </div>
 
+
+  <!-- PAYMENT -->
+  <div class="app-screen" id="s-payment" style="overflow-y:auto;">
+    <div class="topbar"><div><div class="topbar-logo">Доступ к ManClub</div><div class="topbar-sub">Оформление подписки</div></div></div>
+    <div class="pay-hero">
+      <div class="pay-hero-icon">👑</div>
+      <div class="pay-title">Полный доступ к ManClub</div>
+      <div class="pay-sub">Все инструменты клуба без ограничений.<br>Твой прогресс из демо сохранится.</div>
+      <div id="pay-discount-badge" style="display:none;" class="pay-discount-badge">🎁 У тебя есть скидка <span id="pay-discount-pct"></span></div>
+    </div>
+    <div class="pay-price-block">
+      <div class="pay-price-row"><span class="pay-price-label">Стоимость</span><span class="pay-price-val crossed" id="pay-original-price">590 ⭐</span></div>
+      <div id="pay-discount-row" style="display:none;" class="pay-price-row"><span class="pay-price-label">Скидка</span><span class="pay-price-val" style="color:#4caf50;" id="pay-discount-amount"></span></div>
+      <div class="pay-divider"></div>
+      <div class="pay-price-row"><span class="pay-price-label">Итого</span><span class="pay-price-val final" id="pay-final-price">590 ⭐</span></div>
+    </div>
+    <button class="pay-stars-btn" onclick="startStarsPayment()">⭐ Оплатить через Telegram Stars</button>
+    <div class="pay-promo-row">
+      <input class="pay-promo-input" id="pay-promo-input" placeholder="Промокод (если есть)" />
+      <button class="pay-promo-apply" onclick="applyPromoCode()">Применить</button>
+    </div>
+    <div style="padding:0 16px 32px;font-size:11px;color:var(--text3);text-align:center;line-height:1.6;">
+      После оплаты доступ активируется мгновенно.<br>Вопросы? Пиши в поддержку.
+    </div>
+  </div>
+
   <nav class="bottomnav">
     <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><div class="nav-icon">🏠</div><div class="nav-label">Главная</div></div>
     <div class="nav-item" id="nav-events" onclick="switchTab('events')"><div class="nav-icon">🪩</div><div class="nav-label">Мероприятия</div></div>
@@ -1392,6 +1454,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     <div class="nav-item" id="nav-net" onclick="switchTab('net')"><div class="nav-icon">🤝</div><div class="nav-label">Контакты</div></div>
     <div class="nav-item" id="nav-fin" onclick="switchTab('fin')"><div class="nav-icon">💰</div><div class="nav-label">Финансы</div></div>
     <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><div class="nav-icon">👤</div><div class="nav-label">Профиль</div></div>
+    <div class="nav-item" id="nav-payment" style="display:none;" onclick="switchTab('payment')"><div class="nav-icon">👑</div><div class="nav-label">Доступ</div></div>
   </nav>
 </div>
 
@@ -1999,6 +2062,153 @@ function firebaseAuth(callback){
 }
 // ===== END FIREBASE AUTH =====
 
+
+// ===== ANALYTICS (main app) =====
+function trackEvent(eventName, data) {
+  if(!fbDb) return;
+  var uid = getTgUserId();
+  if(!uid) return;
+  try {
+    fbDb.collection('analytics').doc('main').collection('events').add({
+      tgId: uid,
+      event: eventName,
+      data: data || {},
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) {}
+}
+// ===== END ANALYTICS =====
+
+// ===== DEMO MODE =====
+var demoAccessUntil = null;
+var userDiscount = null; // {pct: 15, code: 'PROMO15'} etc
+var BASE_PRICE_STARS = 590;
+
+function initDemoMode() {
+  if(!fbDb) return;
+  var uid = getTgUserId();
+  if(!uid) return;
+  // Check demo access from roulette_active_perks
+  fbDb.collection('roulette_active_perks').doc(uid).get().then(function(doc) {
+    if(!doc.exists) return;
+    var d = doc.data();
+    // Demo access
+    if(d.demoAccessUntil) {
+      var until = new Date(d.demoAccessUntil);
+      var now = new Date();
+      if(until > now) {
+        demoAccessUntil = until;
+        showDemoBanner(until);
+        trackEvent('demo_active', {until: d.demoAccessUntil});
+      }
+    }
+    // Discount from won prize
+    if(d.discountPct) {
+      userDiscount = {pct: d.discountPct, source: 'roulette'};
+    }
+    // Subscription active
+    if(d.freeSubscriptionUntil) {
+      var subUntil = new Date(d.freeSubscriptionUntil);
+      if(subUntil > new Date()) {
+        // Full access — hide demo banner
+        demoAccessUntil = null;
+        document.getElementById('demo-banner').classList.remove('active');
+      }
+    }
+  }).catch(function(){});
+
+  // Also check subscriptionUntil in users doc
+  fbDb.collection('users').doc(uid).get().then(function(doc) {
+    if(!doc.exists) return;
+    var d = doc.data();
+    if(d.subscriptionUntil) {
+      var until = new Date(d.subscriptionUntil);
+      if(until > new Date()) {
+        demoAccessUntil = null;
+        document.getElementById('demo-banner').classList.remove('active');
+      }
+    }
+    if(d.discountPct && !userDiscount) {
+      userDiscount = {pct: d.discountPct, source: 'promo'};
+    }
+  }).catch(function(){});
+}
+
+function showDemoBanner(until) {
+  var banner = document.getElementById('demo-banner');
+  banner.classList.add('active');
+  var now = new Date();
+  var diffMs = until - now;
+  var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  var text = '⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ';
+  document.getElementById('demo-marquee-text').textContent = text;
+}
+
+function pluralDays(n) {
+  if(n % 10 === 1 && n % 100 !== 11) return 'день';
+  if(n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'дня';
+  return 'дней';
+}
+
+function renderPaymentScreen() {
+  var price = BASE_PRICE_STARS;
+  var discountBadge = document.getElementById('pay-discount-badge');
+  var discountRow = document.getElementById('pay-discount-row');
+  var discountPct = document.getElementById('pay-discount-pct');
+  var discountAmt = document.getElementById('pay-discount-amount');
+  var originalPrice = document.getElementById('pay-original-price');
+  var finalPrice = document.getElementById('pay-final-price');
+
+  if(userDiscount && userDiscount.pct) {
+    var saved = Math.round(price * userDiscount.pct / 100);
+    var final = price - saved;
+    discountBadge.style.display = 'inline-flex';
+    discountPct.textContent = userDiscount.pct + '%';
+    discountRow.style.display = 'flex';
+    discountAmt.textContent = '-' + saved + ' ⭐';
+    originalPrice.textContent = price + ' ⭐';
+    finalPrice.textContent = final + ' ⭐';
+  } else {
+    discountBadge.style.display = 'none';
+    discountRow.style.display = 'none';
+    originalPrice.classList.remove('crossed');
+    finalPrice.textContent = price + ' ⭐';
+  }
+  trackEvent('payment_screen_open', {discount: userDiscount ? userDiscount.pct : 0});
+}
+
+function applyPromoCode() {
+  var code = document.getElementById('pay-promo-input').value.trim().toUpperCase();
+  if(!code) { showToast('Введи промокод'); return; }
+  if(!fbDb) { showToast('Нет соединения'); return; }
+  fbDb.collection('promo_codes').doc(code).get().then(function(doc) {
+    if(doc.exists && doc.data().active) {
+      var pct = doc.data().discountPct || 10;
+      userDiscount = {pct: pct, source: 'promo', code: code};
+      showToast('Промокод применён: -' + pct + '%');
+      renderPaymentScreen();
+      trackEvent('promo_applied', {code: code, pct: pct});
+    } else {
+      showToast('Промокод не найден или недействителен');
+      trackEvent('promo_failed', {code: code});
+    }
+  }).catch(function() { showToast('Ошибка проверки промокода'); });
+}
+
+function startStarsPayment() {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if(!tg) { showToast('Только в Telegram'); return; }
+  var price = BASE_PRICE_STARS;
+  if(userDiscount && userDiscount.pct) {
+    price = price - Math.round(price * userDiscount.pct / 100);
+  }
+  trackEvent('payment_initiated', {stars: price, discount: userDiscount ? userDiscount.pct : 0});
+  // Open invoice via bot — bot must send invoice first via Telegram Payments API
+  // For now open support to complete payment
+  tg.openTelegramLink('https://t.me/games_lis_bot?start=pay_' + price);
+}
+// ===== END DEMO MODE =====
+
 window.addEventListener('load',function(){
   initFirebase();
   var tg=window.Telegram&&window.Telegram.WebApp;
@@ -2041,6 +2251,8 @@ function launchApp(){
   syncLeaderboardPoints();
   loadClubUsernames(function(){renderContacts();});
   handleStartParam();
+  initDemoMode();
+  trackEvent('app_open',{});
 }
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var el=document.getElementById(id);if(el){el.classList.add('active');el.scrollTop=0;}}
 
@@ -3880,6 +4092,8 @@ function switchTab(tab){
   if(navEl)navEl.classList.add('active');
   if(tab==='fin')renderFinance();
   if(tab==='news'&&!newsFeedLoaded)loadNewsFeed();
+  if(tab==='payment')renderPaymentScreen();
+  trackEvent('tab_switch',{tab:tab});
 }
 
 function showToast(msg){
@@ -4132,6 +4346,153 @@ document.querySelectorAll('.cycle-toggle-header').forEach(function(header){
 document.getElementById('cycle-menses-intensity')?.addEventListener('change',updateMensesIntensityLabel);
 
 // Init on load
+
+// ===== ANALYTICS (main app) =====
+function trackEvent(eventName, data) {
+  if(!fbDb) return;
+  var uid = getTgUserId();
+  if(!uid) return;
+  try {
+    fbDb.collection('analytics').doc('main').collection('events').add({
+      tgId: uid,
+      event: eventName,
+      data: data || {},
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) {}
+}
+// ===== END ANALYTICS =====
+
+// ===== DEMO MODE =====
+var demoAccessUntil = null;
+var userDiscount = null; // {pct: 15, code: 'PROMO15'} etc
+var BASE_PRICE_STARS = 590;
+
+function initDemoMode() {
+  if(!fbDb) return;
+  var uid = getTgUserId();
+  if(!uid) return;
+  // Check demo access from roulette_active_perks
+  fbDb.collection('roulette_active_perks').doc(uid).get().then(function(doc) {
+    if(!doc.exists) return;
+    var d = doc.data();
+    // Demo access
+    if(d.demoAccessUntil) {
+      var until = new Date(d.demoAccessUntil);
+      var now = new Date();
+      if(until > now) {
+        demoAccessUntil = until;
+        showDemoBanner(until);
+        trackEvent('demo_active', {until: d.demoAccessUntil});
+      }
+    }
+    // Discount from won prize
+    if(d.discountPct) {
+      userDiscount = {pct: d.discountPct, source: 'roulette'};
+    }
+    // Subscription active
+    if(d.freeSubscriptionUntil) {
+      var subUntil = new Date(d.freeSubscriptionUntil);
+      if(subUntil > new Date()) {
+        // Full access — hide demo banner
+        demoAccessUntil = null;
+        document.getElementById('demo-banner').classList.remove('active');
+      }
+    }
+  }).catch(function(){});
+
+  // Also check subscriptionUntil in users doc
+  fbDb.collection('users').doc(uid).get().then(function(doc) {
+    if(!doc.exists) return;
+    var d = doc.data();
+    if(d.subscriptionUntil) {
+      var until = new Date(d.subscriptionUntil);
+      if(until > new Date()) {
+        demoAccessUntil = null;
+        document.getElementById('demo-banner').classList.remove('active');
+      }
+    }
+    if(d.discountPct && !userDiscount) {
+      userDiscount = {pct: d.discountPct, source: 'promo'};
+    }
+  }).catch(function(){});
+}
+
+function showDemoBanner(until) {
+  var banner = document.getElementById('demo-banner');
+  banner.classList.add('active');
+  var now = new Date();
+  var diffMs = until - now;
+  var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  var text = '⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ';
+  document.getElementById('demo-marquee-text').textContent = text;
+}
+
+function pluralDays(n) {
+  if(n % 10 === 1 && n % 100 !== 11) return 'день';
+  if(n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'дня';
+  return 'дней';
+}
+
+function renderPaymentScreen() {
+  var price = BASE_PRICE_STARS;
+  var discountBadge = document.getElementById('pay-discount-badge');
+  var discountRow = document.getElementById('pay-discount-row');
+  var discountPct = document.getElementById('pay-discount-pct');
+  var discountAmt = document.getElementById('pay-discount-amount');
+  var originalPrice = document.getElementById('pay-original-price');
+  var finalPrice = document.getElementById('pay-final-price');
+
+  if(userDiscount && userDiscount.pct) {
+    var saved = Math.round(price * userDiscount.pct / 100);
+    var final = price - saved;
+    discountBadge.style.display = 'inline-flex';
+    discountPct.textContent = userDiscount.pct + '%';
+    discountRow.style.display = 'flex';
+    discountAmt.textContent = '-' + saved + ' ⭐';
+    originalPrice.textContent = price + ' ⭐';
+    finalPrice.textContent = final + ' ⭐';
+  } else {
+    discountBadge.style.display = 'none';
+    discountRow.style.display = 'none';
+    originalPrice.classList.remove('crossed');
+    finalPrice.textContent = price + ' ⭐';
+  }
+  trackEvent('payment_screen_open', {discount: userDiscount ? userDiscount.pct : 0});
+}
+
+function applyPromoCode() {
+  var code = document.getElementById('pay-promo-input').value.trim().toUpperCase();
+  if(!code) { showToast('Введи промокод'); return; }
+  if(!fbDb) { showToast('Нет соединения'); return; }
+  fbDb.collection('promo_codes').doc(code).get().then(function(doc) {
+    if(doc.exists && doc.data().active) {
+      var pct = doc.data().discountPct || 10;
+      userDiscount = {pct: pct, source: 'promo', code: code};
+      showToast('Промокод применён: -' + pct + '%');
+      renderPaymentScreen();
+      trackEvent('promo_applied', {code: code, pct: pct});
+    } else {
+      showToast('Промокод не найден или недействителен');
+      trackEvent('promo_failed', {code: code});
+    }
+  }).catch(function() { showToast('Ошибка проверки промокода'); });
+}
+
+function startStarsPayment() {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if(!tg) { showToast('Только в Telegram'); return; }
+  var price = BASE_PRICE_STARS;
+  if(userDiscount && userDiscount.pct) {
+    price = price - Math.round(price * userDiscount.pct / 100);
+  }
+  trackEvent('payment_initiated', {stars: price, discount: userDiscount ? userDiscount.pct : 0});
+  // Open invoice via bot — bot must send invoice first via Telegram Payments API
+  // For now open support to complete payment
+  tg.openTelegramLink('https://t.me/games_lis_bot?start=pay_' + price);
+}
+// ===== END DEMO MODE =====
+
 window.addEventListener('load',function(){
   initCycleData();
 });
