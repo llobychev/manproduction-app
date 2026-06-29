@@ -552,11 +552,13 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .calc-result-val{font-size:16px;font-weight:700;color:var(--text);margin-top:2px;}
 
 /* ===== DEMO BANNER ===== */
-#demo-banner{display:none;position:relative;background:linear-gradient(90deg,#1a2a1a,#0f1b0f);border-bottom:0.5px solid rgba(201,168,76,0.3);overflow:hidden;height:36px;flex-shrink:0;align-items:center;}
+#demo-banner{display:none;position:relative;background:#1f1015;border-bottom:0.5px solid rgba(210,80,100,0.3);overflow:hidden;height:36px;flex-shrink:0;align-items:center;}
 #demo-banner.active{display:flex;}
 .demo-marquee-wrap{flex:1;overflow:hidden;height:100%;display:flex;align-items:center;}
-.demo-marquee{display:inline-block;white-space:nowrap;animation:marquee 18s linear infinite;font-size:11px;color:#a8d5a2;padding-left:100%;}
+.demo-marquee{display:inline-block;white-space:nowrap;animation:marquee 18s linear infinite;font-size:11px;color:#f5b0b8;padding-left:100%;}
 @keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
+
+.demo-profile-badge{display:inline-flex;align-items:center;gap:4px;background:#3a1015;border:0.5px solid rgba(210,80,100,0.4);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:#f08090;margin-top:6px;}
 .demo-pay-btn{flex-shrink:0;background:var(--accent);color:#1a0f00;font-size:10px;font-weight:700;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;margin-right:8px;white-space:nowrap;}
 /* ===== PAYMENT SCREEN ===== */
 #s-payment{background:var(--bg);}
@@ -1234,7 +1236,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen" id="s-profile">
     <div class="topbar"><div><div class="topbar-logo">Профиль</div><div class="topbar-sub">ManClub in Siberia</div></div></div>
     <div class="content">
-      <div class="profile-hero"><div class="hero-level" style="margin:0 auto 14px;display:inline-flex;">⚡ Уровень 1 — Новобранец</div><div class="profile-ava-big" id="profile-ava">МП</div><div class="profile-name" id="profile-name">—</div><div id="storage-badge-wrap"></div><div class="profile-stats"><div><div class="pstat-val">0</div><div class="pstat-label">Баллов</div></div><div><div class="pstat-val">0/6</div><div class="pstat-label">Модулей</div></div><div><div class="pstat-val">—</div><div class="pstat-label">Рейтинг</div></div></div></div>
+      <div class="profile-hero"><div class="hero-level" style="margin:0 auto 14px;display:inline-flex;">⚡ Уровень 1 — Новобранец</div><div class="profile-ava-big" id="profile-ava">МП</div><div class="profile-name" id="profile-name">—</div><div id="demo-profile-badge-wrap"></div><div id="storage-badge-wrap"></div><div class="profile-stats"><div><div class="pstat-val">0</div><div class="pstat-label">Баллов</div></div><div><div class="pstat-val">0/6</div><div class="pstat-label">Модулей</div></div><div><div class="pstat-val">—</div><div class="pstat-label">Рейтинг</div></div></div></div>
       <div class="section-title">Аккаунт</div>
       <div class="settings-group"><div class="settings-row" onclick="openPersonalData()"><div class="s-icon" style="background:rgba(59,130,246,0.15)">👤</div><span class="settings-label" id="profile-data-name">Личные данные</span><span class="settings-arrow">›</span></div><div class="settings-row"><div class="s-icon" style="background:rgba(201,168,76,0.15)">⭐</div><span class="settings-label">Тариф и подписка</span><span class="plan-badge" style="margin-right:8px">Pro</span><span class="settings-arrow">›</span></div></div>
       <div class="section-title">Оформление</div>
@@ -2142,6 +2144,8 @@ function showDemoBanner(until) {
   var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   var text = '⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ';
   document.getElementById('demo-marquee-text').textContent = text;
+  var wrap = document.getElementById('demo-profile-badge-wrap');
+  if(wrap) wrap.innerHTML = '<div class="demo-profile-badge">⚠ Демо-доступ · ' + diffDays + ' ' + pluralDays(diffDays) + '</div>';
 }
 
 function pluralDays(n) {
@@ -4418,15 +4422,6 @@ function initDemoMode() {
   }).catch(function(){});
 }
 
-function showDemoBanner(until) {
-  var banner = document.getElementById('demo-banner');
-  banner.classList.add('active');
-  var now = new Date();
-  var diffMs = until - now;
-  var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  var text = '⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ';
-  document.getElementById('demo-marquee-text').textContent = text;
-}
 
 function pluralDays(n) {
   if(n % 10 === 1 && n % 100 !== 11) return 'день';
