@@ -578,6 +578,21 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .pay-promo-row{margin:0 16px 24px;display:flex;gap:8px;}
 .pay-promo-input{flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:13px;outline:none;}
 .pay-promo-apply{background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:11px 16px;color:var(--text2);font-size:13px;cursor:pointer;}
+/* plan cards */
+.plan-cards-wrap{padding:0 16px 8px;}
+.plan-card{background:var(--bg2);border:1.5px solid var(--bg3);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.plan-card.selected{border-color:var(--accent2);}
+.plan-card-top{display:flex;justify-content:space-between;align-items:center;}
+.plan-card-name{font-size:15px;font-weight:700;color:var(--text);}
+.plan-card-badge{font-size:10px;font-weight:700;background:rgba(201,168,76,0.18);color:var(--accent2);border-radius:6px;padding:2px 8px;}
+.plan-card-price{font-size:13px;color:var(--text2);margin-top:4px;}
+.plan-card-stars{font-size:12px;color:var(--text3);}
+/* expired overlay */
+#expired-overlay{display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;}
+#expired-overlay.active{display:flex;}
+.expired-icon{font-size:52px;margin-bottom:16px;}
+.expired-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.expired-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:24px;}
 /* ===== END DEMO/PAYMENT ===== */
 </style>
 </head>
@@ -1424,6 +1439,14 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 
 
   <!-- PAYMENT -->
+  <!-- EXPIRED OVERLAY — показывается при истечении демо -->
+  <div id="expired-overlay">
+    <div class="expired-icon">⏰</div>
+    <div class="expired-title">Демо-доступ закончился</div>
+    <div class="expired-desc">Твой прогресс сохранён. Оформи подписку,<br>чтобы продолжить пользоваться ManClub.</div>
+    <button class="pay-stars-btn" style="width:auto;padding:14px 28px;" onclick="document.getElementById('expired-overlay').classList.remove('active');switchTab('payment');">Выбрать тариф →</button>
+  </div>
+
   <div class="app-screen" id="s-payment" style="overflow-y:auto;">
     <div class="topbar"><div><div class="topbar-logo">Доступ к ManClub</div><div class="topbar-sub">Оформление подписки</div></div></div>
     <div class="pay-hero">
@@ -1432,13 +1455,29 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div class="pay-sub">Все инструменты клуба без ограничений.<br>Твой прогресс из демо сохранится.</div>
       <div id="pay-discount-badge" style="display:none;" class="pay-discount-badge">🎁 У тебя есть скидка <span id="pay-discount-pct"></span></div>
     </div>
-    <div class="pay-price-block">
-      <div class="pay-price-row"><span class="pay-price-label">Стоимость</span><span class="pay-price-val crossed" id="pay-original-price">590 ⭐</span></div>
-      <div id="pay-discount-row" style="display:none;" class="pay-price-row"><span class="pay-price-label">Скидка</span><span class="pay-price-val" style="color:#4caf50;" id="pay-discount-amount"></span></div>
-      <div class="pay-divider"></div>
-      <div class="pay-price-row"><span class="pay-price-label">Итого</span><span class="pay-price-val final" id="pay-final-price">590 ⭐</span></div>
+    <div class="plan-cards-wrap" id="plan-cards-wrap">
+      <div class="plan-card selected" id="plan-1m" onclick="selectMainPlan('1m')">
+        <div class="plan-card-top"><span class="plan-card-name">1 месяц</span></div>
+        <div class="plan-card-price">5 000 ₽ / мес</div>
+        <div class="plan-card-stars">≈ 4 270 ⭐</div>
+      </div>
+      <div class="plan-card" id="plan-3m" onclick="selectMainPlan('3m')">
+        <div class="plan-card-top"><span class="plan-card-name">3 месяца</span><span class="plan-card-badge">−7%</span></div>
+        <div class="plan-card-price">14 000 ₽ / 3 мес</div>
+        <div class="plan-card-stars">≈ 11 965 ⭐</div>
+      </div>
+      <div class="plan-card" id="plan-6m" onclick="selectMainPlan('6m')">
+        <div class="plan-card-top"><span class="plan-card-name">6 месяцев</span><span class="plan-card-badge">−10%</span></div>
+        <div class="plan-card-price">27 000 ₽ / 6 мес</div>
+        <div class="plan-card-stars">≈ 23 077 ⭐</div>
+      </div>
+      <div class="plan-card" id="plan-12m" onclick="selectMainPlan('12m')">
+        <div class="plan-card-top"><span class="plan-card-name">12 месяцев</span><span class="plan-card-badge">−18%</span></div>
+        <div class="plan-card-price">49 000 ₽ / год</div>
+        <div class="plan-card-stars">≈ 41 880 ⭐</div>
+      </div>
     </div>
-    <button class="pay-stars-btn" onclick="startStarsPayment()">⭐ Оплатить через Telegram Stars</button>
+    <button class="pay-stars-btn" id="main-pay-btn" onclick="startStarsPayment()">⭐ Оплатить через Telegram Stars</button>
     <div class="pay-promo-row">
       <input class="pay-promo-input" id="pay-promo-input" placeholder="Промокод (если есть)" />
       <button class="pay-promo-apply" onclick="applyPromoCode()">Применить</button>
@@ -2081,137 +2120,7 @@ function trackEvent(eventName, data) {
 }
 // ===== END ANALYTICS =====
 
-// ===== DEMO MODE =====
-var demoAccessUntil = null;
-var userDiscount = null; // {pct: 15, code: 'PROMO15'} etc
-var BASE_PRICE_STARS = 590;
-
-function initDemoMode() {
-  if(!fbDb) return;
-  var uid = getTgUserId();
-  if(!uid) return;
-  // Check demo access from roulette_active_perks
-  fbDb.collection('roulette_active_perks').doc(uid).get().then(function(doc) {
-    if(!doc.exists) return;
-    var d = doc.data();
-    // Demo access
-    if(d.demoAccessUntil) {
-      var until = new Date(d.demoAccessUntil);
-      var now = new Date();
-      if(until > now) {
-        demoAccessUntil = until;
-        showDemoBanner(until);
-        trackEvent('demo_active', {until: d.demoAccessUntil});
-      }
-    }
-    // Discount from won prize
-    if(d.discountPct) {
-      userDiscount = {pct: d.discountPct, source: 'roulette'};
-    }
-    // Subscription active
-    if(d.freeSubscriptionUntil) {
-      var subUntil = new Date(d.freeSubscriptionUntil);
-      if(subUntil > new Date()) {
-        // Full access — hide demo banner
-        demoAccessUntil = null;
-        document.getElementById('demo-banner').classList.remove('active');
-      }
-    }
-  }).catch(function(){});
-
-  // Also check subscriptionUntil in users doc
-  fbDb.collection('users').doc(uid).get().then(function(doc) {
-    if(!doc.exists) return;
-    var d = doc.data();
-    if(d.subscriptionUntil) {
-      var until = new Date(d.subscriptionUntil);
-      if(until > new Date()) {
-        demoAccessUntil = null;
-        document.getElementById('demo-banner').classList.remove('active');
-      }
-    }
-    if(d.discountPct && !userDiscount) {
-      userDiscount = {pct: d.discountPct, source: 'promo'};
-    }
-  }).catch(function(){});
-}
-
-function showDemoBanner(until) {
-  var banner = document.getElementById('demo-banner');
-  banner.classList.add('active');
-  var now = new Date();
-  var diffMs = until - now;
-  var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  var text = '⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ';
-  document.getElementById('demo-marquee-text').textContent = text;
-  var wrap = document.getElementById('demo-profile-badge-wrap');
-  if(wrap) wrap.innerHTML = '<div class="demo-profile-badge">⚠ Демо-доступ · ' + diffDays + ' ' + pluralDays(diffDays) + '</div>';
-}
-
-function pluralDays(n) {
-  if(n % 10 === 1 && n % 100 !== 11) return 'день';
-  if(n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'дня';
-  return 'дней';
-}
-
-function renderPaymentScreen() {
-  var price = BASE_PRICE_STARS;
-  var discountBadge = document.getElementById('pay-discount-badge');
-  var discountRow = document.getElementById('pay-discount-row');
-  var discountPct = document.getElementById('pay-discount-pct');
-  var discountAmt = document.getElementById('pay-discount-amount');
-  var originalPrice = document.getElementById('pay-original-price');
-  var finalPrice = document.getElementById('pay-final-price');
-
-  if(userDiscount && userDiscount.pct) {
-    var saved = Math.round(price * userDiscount.pct / 100);
-    var final = price - saved;
-    discountBadge.style.display = 'inline-flex';
-    discountPct.textContent = userDiscount.pct + '%';
-    discountRow.style.display = 'flex';
-    discountAmt.textContent = '-' + saved + ' ⭐';
-    originalPrice.textContent = price + ' ⭐';
-    finalPrice.textContent = final + ' ⭐';
-  } else {
-    discountBadge.style.display = 'none';
-    discountRow.style.display = 'none';
-    originalPrice.classList.remove('crossed');
-    finalPrice.textContent = price + ' ⭐';
-  }
-  trackEvent('payment_screen_open', {discount: userDiscount ? userDiscount.pct : 0});
-}
-
-function applyPromoCode() {
-  var code = document.getElementById('pay-promo-input').value.trim().toUpperCase();
-  if(!code) { showToast('Введи промокод'); return; }
-  if(!fbDb) { showToast('Нет соединения'); return; }
-  fbDb.collection('promo_codes').doc(code).get().then(function(doc) {
-    if(doc.exists && doc.data().active) {
-      var pct = doc.data().discountPct || 10;
-      userDiscount = {pct: pct, source: 'promo', code: code};
-      showToast('Промокод применён: -' + pct + '%');
-      renderPaymentScreen();
-      trackEvent('promo_applied', {code: code, pct: pct});
-    } else {
-      showToast('Промокод не найден или недействителен');
-      trackEvent('promo_failed', {code: code});
-    }
-  }).catch(function() { showToast('Ошибка проверки промокода'); });
-}
-
-function startStarsPayment() {
-  var tg = window.Telegram && window.Telegram.WebApp;
-  if(!tg) { showToast('Только в Telegram'); return; }
-  var price = BASE_PRICE_STARS;
-  if(userDiscount && userDiscount.pct) {
-    price = price - Math.round(price * userDiscount.pct / 100);
-  }
-  trackEvent('payment_initiated', {stars: price, discount: userDiscount ? userDiscount.pct : 0});
-  // Open invoice via bot — bot must send invoice first via Telegram Payments API
-  // For now open support to complete payment
-  tg.openTelegramLink('https://t.me/games_lis_bot?start=pay_' + price);
-}
-// ===== END DEMO MODE =====
+// (demo mode — see below)
 
 window.addEventListener('load',function(){
   initFirebase();
@@ -4369,17 +4278,63 @@ function trackEvent(eventName, data) {
 
 // ===== DEMO MODE =====
 var demoAccessUntil = null;
-var userDiscount = null; // {pct: 15, code: 'PROMO15'} etc
-var BASE_PRICE_STARS = 590;
+var userDiscount = null;
+var selectedMainPlan = '1m';
+
+var MAIN_PLANS = {
+  '1m':  {stars: 4270,  label: '1 месяц'},
+  '3m':  {stars: 11965, label: '3 месяца'},
+  '6m':  {stars: 23077, label: '6 месяцев'},
+  '12m': {stars: 41880, label: '12 месяцев'},
+};
+
+function selectMainPlan(plan) {
+  selectedMainPlan = plan;
+  document.querySelectorAll('.plan-card').forEach(function(c){ c.classList.remove('selected'); });
+  var el = document.getElementById('plan-' + plan);
+  if(el) el.classList.add('selected');
+}
 
 function initDemoMode() {
   if(!fbDb) return;
   var uid = getTgUserId();
   if(!uid) return;
-  // Check demo access from roulette_active_perks
-  fbDb.collection('roulette_active_perks').doc(uid).get().then(function(doc) {
-    if(!doc.exists) return;
+
+  // Check subscriptionUntil first (paid subscription)
+  fbDb.collection('users').doc(uid).get().then(function(doc) {
+    if(!doc.exists) { checkDemoPerks(uid); return; }
     var d = doc.data();
+    if(d.subscriptionUntil) {
+      var until = new Date(d.subscriptionUntil);
+      if(until > new Date()) {
+        // Active paid subscription — full access, no banner
+        demoAccessUntil = null;
+        document.getElementById('demo-banner').classList.remove('active');
+        return;
+      }
+    }
+    if(d.discountPct && !userDiscount) {
+      userDiscount = {pct: d.discountPct, source: 'promo'};
+    }
+    checkDemoPerks(uid);
+  }).catch(function(){ checkDemoPerks(uid); });
+}
+
+function checkDemoPerks(uid) {
+  fbDb.collection('roulette_active_perks').doc(uid).get().then(function(doc) {
+    if(!doc.exists) { checkDemoExpired(); return; }
+    var d = doc.data();
+
+    // Free subscription from roulette
+    if(d.freeSubscriptionUntil) {
+      var subUntil = new Date(d.freeSubscriptionUntil);
+      if(subUntil > new Date()) {
+        demoAccessUntil = null;
+        document.getElementById('demo-banner').classList.remove('active');
+        return;
+      }
+    }
+
     // Demo access
     if(d.demoAccessUntil) {
       var until = new Date(d.demoAccessUntil);
@@ -4388,40 +4343,49 @@ function initDemoMode() {
         demoAccessUntil = until;
         showDemoBanner(until);
         trackEvent('demo_active', {until: d.demoAccessUntil});
+      } else {
+        // Demo expired — block app
+        checkDemoExpired();
       }
+    } else {
+      checkDemoExpired();
     }
-    // Discount from won prize
+
     if(d.discountPct) {
       userDiscount = {pct: d.discountPct, source: 'roulette'};
-    }
-    // Subscription active
-    if(d.freeSubscriptionUntil) {
-      var subUntil = new Date(d.freeSubscriptionUntil);
-      if(subUntil > new Date()) {
-        // Full access — hide demo banner
-        demoAccessUntil = null;
-        document.getElementById('demo-banner').classList.remove('active');
-      }
-    }
-  }).catch(function(){});
-
-  // Also check subscriptionUntil in users doc
-  fbDb.collection('users').doc(uid).get().then(function(doc) {
-    if(!doc.exists) return;
-    var d = doc.data();
-    if(d.subscriptionUntil) {
-      var until = new Date(d.subscriptionUntil);
-      if(until > new Date()) {
-        demoAccessUntil = null;
-        document.getElementById('demo-banner').classList.remove('active');
-      }
-    }
-    if(d.discountPct && !userDiscount) {
-      userDiscount = {pct: d.discountPct, source: 'promo'};
     }
   }).catch(function(){});
 }
 
+function checkDemoExpired() {
+  // Если не было демо или истекло — показываем overlay блокировки
+  // (только если пользователь уже был в демо раньше — проверяем по Firestore)
+  var uid = getTgUserId();
+  if(!uid) return;
+  fbDb.collection('roulette_active_perks').doc(uid).get().then(function(doc) {
+    if(!doc.exists) return; // нет записи — новый пользователь, не блокируем
+    var d = doc.data();
+    if(!d.demoAccessUntil) return; // никогда не было демо — не блокируем
+    var until = new Date(d.demoAccessUntil);
+    if(until <= new Date()) {
+      // Демо было и истекло — блокируем
+      document.getElementById('expired-overlay').classList.add('active');
+      trackEvent('demo_expired', {});
+    }
+  }).catch(function(){});
+}
+
+function showDemoBanner(until) {
+  var banner = document.getElementById('demo-banner');
+  banner.classList.add('active');
+  var now = new Date();
+  var diffMs = until - now;
+  var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  var text = '⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ⏳ Демо-доступ закончится через ' + diffDays + ' ' + pluralDays(diffDays) + '        ';
+  document.getElementById('demo-marquee-text').textContent = text;
+  var wrap = document.getElementById('demo-profile-badge-wrap');
+  if(wrap) wrap.innerHTML = '<div class="demo-profile-badge">⚠ Демо-доступ · ' + diffDays + ' ' + pluralDays(diffDays) + '</div>';
+}
 
 function pluralDays(n) {
   if(n % 10 === 1 && n % 100 !== 11) return 'день';
@@ -4430,30 +4394,14 @@ function pluralDays(n) {
 }
 
 function renderPaymentScreen() {
-  var price = BASE_PRICE_STARS;
-  var discountBadge = document.getElementById('pay-discount-badge');
-  var discountRow = document.getElementById('pay-discount-row');
-  var discountPct = document.getElementById('pay-discount-pct');
-  var discountAmt = document.getElementById('pay-discount-amount');
-  var originalPrice = document.getElementById('pay-original-price');
-  var finalPrice = document.getElementById('pay-final-price');
-
+  selectMainPlan(selectedMainPlan || '1m');
   if(userDiscount && userDiscount.pct) {
-    var saved = Math.round(price * userDiscount.pct / 100);
-    var final = price - saved;
-    discountBadge.style.display = 'inline-flex';
-    discountPct.textContent = userDiscount.pct + '%';
-    discountRow.style.display = 'flex';
-    discountAmt.textContent = '-' + saved + ' ⭐';
-    originalPrice.textContent = price + ' ⭐';
-    finalPrice.textContent = final + ' ⭐';
-  } else {
-    discountBadge.style.display = 'none';
-    discountRow.style.display = 'none';
-    originalPrice.classList.remove('crossed');
-    finalPrice.textContent = price + ' ⭐';
+    var badge = document.getElementById('pay-discount-badge');
+    var pctEl = document.getElementById('pay-discount-pct');
+    if(badge) badge.style.display = 'inline-flex';
+    if(pctEl) pctEl.textContent = userDiscount.pct + '%';
   }
-  trackEvent('payment_screen_open', {discount: userDiscount ? userDiscount.pct : 0});
+  trackEvent('payment_screen_open', {});
 }
 
 function applyPromoCode() {
@@ -4477,14 +4425,26 @@ function applyPromoCode() {
 function startStarsPayment() {
   var tg = window.Telegram && window.Telegram.WebApp;
   if(!tg) { showToast('Только в Telegram'); return; }
-  var price = BASE_PRICE_STARS;
-  if(userDiscount && userDiscount.pct) {
-    price = price - Math.round(price * userDiscount.pct / 100);
-  }
-  trackEvent('payment_initiated', {stars: price, discount: userDiscount ? userDiscount.pct : 0});
-  // Open invoice via bot — bot must send invoice first via Telegram Payments API
-  // For now open support to complete payment
-  tg.openTelegramLink('https://t.me/games_lis_bot?start=pay_' + price);
+  var uid = getTgUserId();
+  if(!uid) { showToast('Нет данных пользователя'); return; }
+  var btn = document.getElementById('main-pay-btn');
+  if(btn) { btn.disabled = true; btn.textContent = '⏳ Создаём счёт...'; }
+  fetch('https://llobychev-manproduction-networking-server-6f2d.twc1.net/create-invoice', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({chat_id: uid, plan: selectedMainPlan, bot: 'main'})
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(btn) { btn.disabled = false; btn.innerHTML = '⭐ Оплатить через Telegram Stars'; }
+    if(data.ok) {
+      showToast('Счёт отправлен в чат с ботом');
+      trackEvent('payment_initiated', {plan: selectedMainPlan, bot: 'main'});
+    } else {
+      showToast('Ошибка: ' + (data.error || 'попробуй снова'));
+    }
+  }).catch(function(){
+    if(btn) { btn.disabled = false; btn.innerHTML = '⭐ Оплатить через Telegram Stars'; }
+    showToast('Нет соединения с сервером');
+  });
 }
 // ===== END DEMO MODE =====
 
