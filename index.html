@@ -224,6 +224,13 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .quest-chk{width:13px;height:13px;border-radius:3px;border:1px solid var(--text3);flex-shrink:0;}
 .quest-name{flex:1;font-size:10px;color:var(--text2);}
 .quest-pts{font-size:9px;font-weight:600;color:var(--accent);}
+.quest-full-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;margin-bottom:10px;cursor:pointer;}
+.quest-full-row.done{opacity:0.55;}
+.quest-full-chk{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--text3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--bg);}
+.quest-full-chk.checked{background:var(--accent);border-color:var(--accent);}
+.quest-full-name{flex:1;font-size:14px;color:var(--text);}
+.quest-full-row.done .quest-full-name{text-decoration:line-through;}
+.quest-full-pts{font-size:12px;font-weight:600;color:var(--accent);flex-shrink:0;}
 /* САМОПОЗНАНИЕ */
 .self-tools{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
 /* HABITS */
@@ -281,6 +288,12 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .self-tool-card:active{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.05);}
 .self-tool-card-wide{background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:0.5px solid rgba(201,168,76,0.35);border-radius:16px;padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px;}
 .self-tool-card-wide:active{background:rgba(201,168,76,0.1);}
+.self-tool-row-narrow{display:flex;gap:8px;margin:10px 16px 0;}
+.self-tool-card-narrow{flex:1;display:flex;align-items:center;gap:8px;background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:11px 10px;cursor:pointer;}
+.self-tool-card-narrow:active{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.05);}
+.self-tool-card-narrow-icon{font-size:16px;flex-shrink:0;}
+.self-tool-card-narrow-name{flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.25;}
+.self-tool-card-narrow-arrow{font-size:14px;color:var(--text3);flex-shrink:0;}
 .self-tool-icon{font-size:36px;margin-bottom:10px;}
 .self-tool-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;}
 .self-tool-desc{font-size:11px;color:var(--text3);line-height:1.4;}
@@ -338,14 +351,14 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .logout-btn{margin:16px 0 32px;width:100%;padding:14px;background:rgba(224,85,85,0.08);border:0.5px solid rgba(224,85,85,0.25);border-radius:12px;color:var(--red);font-size:14px;font-weight:600;cursor:pointer;text-align:center;}
 /* NETWORKING */
 .net-tabs{display:flex;gap:10px;padding:16px 16px 0;}
-.net-tab{flex:1;padding:14px;border-radius:14px;border:1.5px solid var(--border);background:var(--bg3);cursor:pointer;text-align:center;}
+.net-tab{flex:1;padding:9px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg3);cursor:pointer;text-align:center;}
 .net-tab.active-men{border-color:#4a90d9;background:rgba(74,144,217,0.08);}
 .net-tab.active-women{border-color:#e879a0;background:rgba(232,121,160,0.08);}
-.net-tab-icon{font-size:28px;margin-bottom:6px;}
-.net-tab-label{font-size:13px;font-weight:600;color:var(--text2);}
+.net-tab-icon{font-size:18px;margin-bottom:2px;}
+.net-tab-label{font-size:12px;font-weight:600;color:var(--text2);}
 .net-tab.active-men .net-tab-label{color:#4a90d9;}
 .net-tab.active-women .net-tab-label{color:#e879a0;}
-.net-tab-count{font-size:11px;color:var(--text3);margin-top:2px;}
+.net-tab-count{font-size:10px;color:var(--text3);margin-top:1px;}
 .net-list{padding:14px 16px 8px;display:flex;flex-direction:column;gap:10px;}
 .net-search-row{display:flex;gap:8px;padding:0 16px 10px;align-items:center;}
 .net-search-input{flex:1;background:var(--bg3);border:0.5px solid var(--border);border-radius:11px;padding:10px 14px;font-size:13px;color:var(--text);outline:none;-webkit-appearance:none;}
@@ -427,11 +440,11 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .fin-chart-wrap{margin:0 16px 16px;background:var(--bg3);border-radius:16px;padding:20px;border:0.5px solid var(--border);}
 .fin-chart-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
 .fin-chart-row{display:flex;align-items:center;gap:16px;}
-.fin-chart-legend{flex:1;display:flex;flex-direction:column;gap:8px;}
-.fin-legend-item{display:flex;align-items:center;gap:8px;font-size:12px;}
+.fin-chart-legend{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.fin-legend-item{display:flex;align-items:center;gap:8px;font-size:12px;min-width:0;}
 .fin-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.fin-legend-label{color:var(--text2);flex:1;}
-.fin-legend-pct{color:var(--text);font-weight:600;}
+.fin-legend-label{color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fin-legend-pct{color:var(--text);font-weight:600;flex-shrink:0;}
 .fin-empty-chart{text-align:center;color:var(--text3);font-size:12px;padding:20px;}
 .fin-records{padding:0 16px 24px;}
 .fin-record{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:12px;margin-bottom:8px;border:0.5px solid var(--border);cursor:pointer;}
@@ -525,6 +538,9 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .cycle-modal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .contact-cycle-btn{width:100%;padding:11px 14px;background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500;}
 .contact-cycle-btn:active{border-color:var(--accent);}
+.cycle-sex-entry-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+.cycle-sex-entry-row .form-input{flex:1;margin-bottom:0;}
+.cycle-sex-entry-del{width:34px;height:34px;border-radius:9px;background:var(--bg2);border:0.5px solid var(--border);color:var(--red);font-size:14px;cursor:pointer;flex-shrink:0;}
 /* GOALS */
 .goal-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:16px;margin:0 16px 12px;}
 .goal-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
@@ -698,13 +714,11 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
           <div><div class="stat-val" id="home-points-val">0</div><div class="stat-label">Баллов</div></div>
           <div onclick="openLeaderboard()" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;background:rgba(201,168,76,0.12);border:0.5px solid rgba(201,168,76,0.3);border-radius:14px;padding:3px 9px;font-size:11px;color:var(--accent2);font-weight:500;">🦁 <span id="home-rank-val">—</span></div>
         </div>
-        <div class="stat-card" id="quests-card" style="padding:8px 10px;">
-          <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:6px;">Квесты дня</div>
-          <div id="quests-list"></div>
+        <div class="stat-card" id="quests-card" style="padding:10px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="openQuestsScreen()">
+          <div><div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:4px;">Квесты дня</div><div style="font-size:14px;font-weight:700;color:var(--text);" id="quests-progress-label">0/0</div></div>
+          <div style="font-size:16px;color:var(--text3);">›</div>
         </div>
       </div>
-      <div class="home-widget-stub"><div class="home-widget-stub-icon">🏆</div><div class="home-widget-stub-text">Скоро тут будут ваши активные челленджи и привычки</div></div>
-      <div class="home-widget-stub"><div class="home-widget-stub-icon">🧩</div><div class="home-widget-stub-text">Скоро здесь можно будет добавлять и убирать виджеты главной страницы</div></div>
       <div class="section-title" id="sched-title">Расписание дня</div>
       <div class="add-event-btn" onclick="openTemplatePicker()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Добавить событие</span></div>
       <div class="cal-header">
@@ -715,6 +729,12 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div class="cal-grid" id="cal-grid"></div>
       <div id="schedule-list"></div>
     </div>
+  </div>
+
+  <!-- QUESTS DAY (полный список) -->
+  <div class="app-screen" id="s-quests-full">
+    <div class="topbar"><div><div class="topbar-logo">Квесты дня</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('home')">← Главная</div></div></div>
+    <div style="padding:12px 16px 24px;" id="quests-full-list"></div>
   </div>
 
   <!-- NEWS -->
@@ -859,17 +879,19 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div style="flex:1;text-align:left;"><div class="self-tool-name">Моя реальность</div><div class="self-tool-desc">Скоро здесь</div></div>
       <div style="font-size:18px;color:var(--text3);">›</div>
     </div>
+    <div class="self-tool-row-narrow">
+      <div class="self-tool-card-narrow" onclick="openSelfTool('morning')">
+        <div class="self-tool-card-narrow-icon">🌅</div>
+        <div class="self-tool-card-narrow-name">Утренние мысли</div>
+        <div class="self-tool-card-narrow-arrow">›</div>
+      </div>
+      <div class="self-tool-card-narrow" onclick="openSelfTool('positivity')">
+        <div class="self-tool-card-narrow-icon">📔</div>
+        <div class="self-tool-card-narrow-name">Дневник позитива</div>
+        <div class="self-tool-card-narrow-arrow">›</div>
+      </div>
+    </div>
     <div class="self-tools">
-      <div class="self-tool-card" onclick="openSelfTool('morning')">
-        <div class="self-tool-icon">🌅</div>
-        <div class="self-tool-name">Утренние мысли</div>
-        <div class="self-tool-desc">Запись мыслей на день</div>
-      </div>
-      <div class="self-tool-card" onclick="openSelfTool('positivity')">
-        <div class="self-tool-icon">📔</div>
-        <div class="self-tool-name">Дневник позитива</div>
-        <div class="self-tool-desc">Практика благодарности</div>
-      </div>
       <div class="self-tool-card" onclick="openSelfTool('habits')">
         <div class="self-tool-icon">🔁</div>
         <div class="self-tool-name">Привычки</div>
@@ -1192,8 +1214,8 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div class="section-title" style="margin:0 16px 10px;">Копилки</div>
       <div style="padding:0 16px;" id="savings-list"></div>
       <div class="add-event-btn" style="margin:0 16px 16px;" onclick="openSavingsModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Новая копилка</span></div>
-      <div class="fin-chart-wrap">
-        <div class="fin-chart-title">Калькулятор: вклад под процент</div>
+      <div class="add-event-btn" id="calc-toggle-btn" style="margin:0 16px 16px;" onclick="toggleCalcPanel()"><span style="font-size:18px;color:var(--accent)">🧮</span><span style="font-size:13px;color:var(--text3)">Калькулятор вкладов</span><span style="margin-left:auto;font-size:13px;color:var(--text3)" id="calc-toggle-arrow">▾</span></div>
+      <div class="fin-chart-wrap" id="calc-panel" style="display:none;">
         <div class="form-group"><div class="form-label">Сумма</div><input class="form-input" id="calc-principal" type="number" placeholder="100000" oninput="calcSavings()"></div>
         <div class="form-row">
           <div class="form-group"><div class="form-label">Ставка, % годовых</div><input class="form-input" id="calc-rate" type="number" placeholder="18" oninput="calcSavings()"></div>
@@ -1327,18 +1349,41 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="app-screen" id="s-profile">
     <div class="topbar"><div><div class="topbar-logo">Профиль</div><div class="topbar-sub">ManClub in Siberia</div></div></div>
     <div class="content">
-      <div class="profile-hero"><div class="hero-level" style="margin:0 auto 14px;display:inline-flex;">⚡ Уровень 1 — Новобранец</div><div class="profile-ava-big" id="profile-ava">МП</div><div class="profile-name" id="profile-name">—</div><div id="demo-profile-badge-wrap"></div><div id="storage-badge-wrap"></div><div class="profile-stats"><div><div class="pstat-val">0</div><div class="pstat-label">Баллов</div></div><div><div class="pstat-val">0/6</div><div class="pstat-label">Модулей</div></div><div><div class="pstat-val">—</div><div class="pstat-label">Рейтинг</div></div></div></div>
+      <div class="profile-hero"><div class="hero-level" style="margin:0 auto 14px;display:inline-flex;">⚡ Уровень 1 — Новобранец</div><div class="profile-ava-big" id="profile-ava">МП</div><div class="profile-name" id="profile-name">—</div><div id="demo-profile-badge-wrap"></div><div id="storage-badge-wrap"></div><div class="profile-stats"><div onclick="openLeaderboard()" style="cursor:pointer;"><div class="pstat-val" id="profile-stat-points">0</div><div class="pstat-label">Баллов</div></div><div onclick="switchTab('lessons')" style="cursor:pointer;"><div class="pstat-val" id="profile-stat-modules">0/8</div><div class="pstat-label">Модулей</div></div><div onclick="openLeaderboard()" style="cursor:pointer;"><div class="pstat-val" id="profile-stat-rank">—</div><div class="pstat-label">Рейтинг</div></div></div></div>
       <div class="section-title">Аккаунт</div>
-      <div class="settings-group"><div class="settings-row" onclick="openPersonalData()"><div class="s-icon" style="background:rgba(59,130,246,0.15)">👤</div><span class="settings-label" id="profile-data-name">Личные данные</span><span class="settings-arrow">›</span></div><div class="settings-row"><div class="s-icon" style="background:rgba(201,168,76,0.15)">⭐</div><span class="settings-label">Тариф и подписка</span><span class="plan-badge" style="margin-right:8px">Pro</span><span class="settings-arrow">›</span></div></div>
+      <div class="settings-group"><div class="settings-row" onclick="openPersonalData()"><div class="s-icon" style="background:rgba(59,130,246,0.15)">👤</div><span class="settings-label" id="profile-data-name">Личные данные</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="openSubscriptionScreen()"><div class="s-icon" style="background:rgba(201,168,76,0.15)">⭐</div><span class="settings-label">Тариф и подписка</span><span class="plan-badge" id="profile-plan-badge" style="margin-right:8px">—</span><span class="settings-arrow">›</span></div></div>
       <div class="section-title">Оформление</div>
-      <div class="settings-group"><div class="settings-row"><div class="s-icon" style="background:rgba(168,85,247,0.15)">🌐</div><span class="settings-label">Язык</span><span class="settings-val">Русский</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="this.querySelector('.toggle').classList.toggle('on')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">🌙</div><span class="settings-label">Тёмная тема</span><div class="toggle on"></div></div></div>
+      <div class="settings-group"><div class="settings-row" onclick="openLanguageStub()"><div class="s-icon" style="background:rgba(168,85,247,0.15)">🌐</div><span class="settings-label">Язык</span><span class="settings-val">Русский</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="this.querySelector('.toggle').classList.toggle('on')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">🌙</div><span class="settings-label">Тёмная тема</span><div class="toggle on"></div></div></div>
       <div class="section-title">Соцсети</div>
-      <div class="settings-group"><div class="settings-row"><div class="s-icon" style="background:rgba(59,130,246,0.15)">📱</div><span class="settings-label">Telegram</span><div style="display:flex;align-items:center;gap:5px;margin-right:4px"><div class="social-dot"></div><span class="settings-val" id="tg-user">@user</span></div><span class="settings-arrow">›</span></div><div class="settings-row"><div class="s-icon" style="background:rgba(249,115,22,0.15)">📸</div><span class="settings-label">Instagram</span><span class="settings-val">Не подключён</span><span class="settings-arrow">›</span></div><div class="settings-row"><div class="s-icon" style="background:rgba(59,130,246,0.15)">💼</div><span class="settings-label">LinkedIn</span><span class="settings-val">Не подключён</span><span class="settings-arrow">›</span></div></div>
+      <div class="settings-group"><div class="settings-row" onclick="openOwnTelegram()"><div class="s-icon" style="background:rgba(59,130,246,0.15)">📱</div><span class="settings-label">Telegram</span><div style="display:flex;align-items:center;gap:5px;margin-right:4px"><div class="social-dot"></div><span class="settings-val" id="tg-user">@user</span></div><span class="settings-arrow">›</span></div><div class="settings-row" onclick="openSocialModal('instagram')"><div class="s-icon" style="background:rgba(249,115,22,0.15)">📸</div><span class="settings-label">Instagram</span><span class="settings-val" id="social-val-instagram">Не подключён</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="openSocialModal('linkedin')"><div class="s-icon" style="background:rgba(59,130,246,0.15)">💼</div><span class="settings-label">LinkedIn</span><span class="settings-val" id="social-val-linkedin">Не подключён</span><span class="settings-arrow">›</span></div></div>
       <div class="section-title">Поддержка</div>
-      <div class="settings-group"><div class="settings-row"><div class="s-icon" style="background:rgba(34,197,94,0.15)">❓</div><span class="settings-label">Помощь</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('offer')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">📜</div><span class="settings-label">Правила клуба</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('privacy')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">🔒</div><span class="settings-label">Политика конфиденциальности</span><span class="settings-arrow">›</span></div></div>
+      <div class="settings-group"><div class="settings-row" onclick="openHelpScreen()"><div class="s-icon" style="background:rgba(34,197,94,0.15)">❓</div><span class="settings-label">Помощь</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('offer')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">📜</div><span class="settings-label">Правила клуба</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('privacy')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">🔒</div><span class="settings-label">Политика конфиденциальности</span><span class="settings-arrow">›</span></div></div>
       <div class="section-title">Данные</div>
       <div class="settings-group"><div class="settings-row" onclick="exportUserData()"><div class="s-icon" style="background:rgba(45,212,191,0.15)">📦</div><span class="settings-label">Выгрузить мои данные</span><span class="settings-arrow">›</span></div></div>
       <div class="logout-btn" onclick="doLogout()">Выйти из аккаунта</div>
+    </div>
+  </div>
+
+  <!-- ТАРИФ И ПОДПИСКА -->
+  <div class="app-screen" id="s-profile-subscription">
+    <div class="topbar"><div><div class="topbar-logo">Тариф и подписка</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('profile')">← Профиль</div></div></div>
+    <div class="content" id="sub-status-wrap" style="padding-top:16px;"></div>
+  </div>
+
+  <!-- ПОМОЩЬ -->
+  <div class="app-screen" id="s-help">
+    <div class="topbar"><div><div class="topbar-logo">Помощь</div><div class="topbar-sub" style="cursor:pointer" onclick="switchTab('profile')">← Профиль</div></div></div>
+    <div class="content" style="padding-top:16px;">
+      <div class="self-tool-card-wide" onclick="openLyovaStub()" style="margin:0 16px 12px;">
+        <div class="self-tool-icon" style="font-size:28px;">🦁</div>
+        <div style="flex:1;text-align:left;"><div class="self-tool-name">Спросить Лёву</div><div class="self-tool-desc">Помощник ответит на частые вопросы прямо в приложении</div></div>
+        <div style="font-size:18px;color:var(--text3);">›</div>
+      </div>
+      <div class="self-tool-card-wide" onclick="contactManagerForHelp()" style="margin:0 16px 12px;">
+        <div class="self-tool-icon" style="font-size:28px;">💬</div>
+        <div style="flex:1;text-align:left;"><div class="self-tool-name">Написать менеджеру</div><div class="self-tool-desc">Для вопросов по оплате, доступу и багам</div></div>
+        <div style="font-size:18px;color:var(--text3);">›</div>
+      </div>
     </div>
   </div>
 
@@ -1461,20 +1506,8 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
           <span>Секс защищённый</span>
         </label>
         <div class="cycle-toggle-content" id="cycle-sex-protected-content">
-          <div class="cycle-modal-row">
-            <div class="form-group">
-              <div class="form-label">Время</div>
-              <input class="form-input" id="cycle-sex-protected-time" type="time">
-            </div>
-            <div class="form-group">
-              <div class="form-label">Длит. (мин)</div>
-              <input class="form-input" id="cycle-sex-protected-duration" type="number">
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-label">Кол-во раз</div>
-            <input class="form-input" id="cycle-sex-protected-freq" type="number">
-          </div>
+          <div id="cycle-sex-protected-entries"></div>
+          <div class="add-event-btn" style="margin-top:4px;" onclick="addCycleSexEntry('protected')"><span style="font-size:16px;color:var(--accent)">＋</span><span style="font-size:12px;color:var(--text3)">Добавить запись</span></div>
         </div>
       </div>
       
@@ -1484,20 +1517,8 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
           <span>Секс незащищённый</span>
         </label>
         <div class="cycle-toggle-content" id="cycle-sex-unprotected-content">
-          <div class="cycle-modal-row">
-            <div class="form-group">
-              <div class="form-label">Время</div>
-              <input class="form-input" id="cycle-sex-unprotected-time" type="time">
-            </div>
-            <div class="form-group">
-              <div class="form-label">Длит. (мин)</div>
-              <input class="form-input" id="cycle-sex-unprotected-duration" type="number">
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-label">Кол-во раз</div>
-            <input class="form-input" id="cycle-sex-unprotected-freq" type="number">
-          </div>
+          <div id="cycle-sex-unprotected-entries"></div>
+          <div class="add-event-btn" style="margin-top:4px;" onclick="addCycleSexEntry('unprotected')"><span style="font-size:16px;color:var(--accent)">＋</span><span style="font-size:12px;color:var(--text3)">Добавить запись</span></div>
         </div>
       </div>
       
@@ -1592,6 +1613,28 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
   <div class="chat-topbar"><div class="chat-back" onclick="closeChatRoom()">←</div><div class="chat-room-ava" id="cr-ava">🔥</div><div class="chat-room-info"><div class="chat-room-name" id="cr-name">Чат</div><div class="chat-room-status" id="cr-status"></div></div></div>
   <div class="messages" id="messages"></div>
   <div class="chat-input-wrap"><textarea class="chat-input" id="chat-input" placeholder="Написать сообщение..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea><button class="chat-send" onclick="sendMsg()">↑</button></div>
+</div>
+
+<!-- MODAL: соцсеть -->
+<div class="modal-overlay" id="social-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="social-modal-title">Привязать аккаунт</div>
+    <input class="modal-input" id="social-modal-input" placeholder="@username или ссылка на профиль">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeSocialModal()">Отмена</button>
+      <button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveSocialLink()">Сохранить и перейти →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: язык -->
+<div class="modal-overlay" id="lang-stub-modal">
+  <div class="modal-box" style="text-align:center;">
+    <div style="font-size:32px;margin-bottom:10px;">🌍</div>
+    <div class="modal-title" style="margin-bottom:8px;">Переводим на другие языки</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;">Сейчас приложение доступно только на русском. Английский и другие языки появятся в одном из ближайших обновлений.</div>
+    <button class="btn-gold" onclick="document.getElementById('lang-stub-modal').classList.remove('active')">Понятно</button>
+  </div>
 </div>
 
 <!-- MODAL: шаблоны -->
@@ -1893,10 +1936,12 @@ var GOALS_KEY='mp_goals_v1';
 var RECURRING_KEY='mp_recurring_v1';
 var DEBTS_KEY='mp_debts_v1';
 var SAVINGS_KEY='mp_savings_v1';
+var QUESTS_DONE_KEY='mp_quests_done_v1';
 var goalsData=[]; // {id,title,sphere,deadline,steps:[{id,text,done}],createdAt}
 var recurringPayments=[]; // {id,title,amount,day,reminderOffset}
 var debts=[]; // {id,direction:'owe'|'owed',amount,contactId,manualName,dateISO,note}
 var savingsGoals=[]; // {id,name,current,target,rate,monthlyTopUp}
+var questsCompletedState={date:'',done:{}};
 var clubUsernames=null; // null = not loaded yet, Set<string> once loaded
 var habitsData={active:[],points:0,earnedBadges:[]}; // active: [{id,catalogId,name,icon,totalDays,doneDates:[],startedAt,lastCheckDate}]
 var CHALLENGES_PROGRESS_KEY='mp_challenges_progress_v1';
@@ -2024,6 +2069,7 @@ function loadAllData(){
         if(d.recurringPayments)recurringPayments=d.recurringPayments;
         if(d.debts)debts=d.debts;
         if(d.savings)savingsGoals=d.savings;
+        if(d.questsDone)questsCompletedState=d.questsDone;
         refreshAllViews();
       }
     })
@@ -2045,6 +2091,7 @@ function saveGoalsStore(){persistKey(GOALS_KEY,goalsData);}
 function saveRecurringStore(){persistKey(RECURRING_KEY,recurringPayments);}
 function saveDebtsStore(){persistKey(DEBTS_KEY,debts);}
 function saveSavingsStore(){persistKey(SAVINGS_KEY,savingsGoals);}
+function saveQuestsDoneStore(){persistKey(QUESTS_DONE_KEY,questsCompletedState);}
 // LEADERBOARD: mirrors each user's total points to a shared Firestore collection
 // so the club-wide ranking can be built from real other-members data.
 function syncLeaderboardPoints(){
@@ -2061,6 +2108,9 @@ function syncLeaderboardPoints(){
 }
 function updateHomeRankDisplay(){
   document.getElementById('home-points-val').textContent=habitsData.points||0;
+  var profPts=document.getElementById('profile-stat-points');
+  if(profPts)profPts.textContent=habitsData.points||0;
+  updateProfileModulesDisplay();
   if(!fbDb)return;
   fbDb.collection('leaderboard').orderBy('points','desc').get().then(function(snap){
     var uid=getTgUserId();
@@ -2071,7 +2121,16 @@ function updateHomeRankDisplay(){
       i++;
     });
     document.getElementById('home-rank-val').textContent=rank?('#'+rank):'—';
+    var profRank=document.getElementById('profile-stat-rank');
+    if(profRank)profRank.textContent=rank?('#'+rank):'—';
   }).catch(function(err){console.warn(err);});
+}
+function updateProfileModulesDisplay(){
+  var el=document.getElementById('profile-stat-modules');
+  if(!el)return;
+  // Реальный трекинг прохождения модулей/уроков пока не реализован в приложении —
+  // показываем общее число сфер до появления полноценной системы прогресса.
+  el.textContent='0/'+SPHERES.length;
 }
 function openLeaderboard(){
   document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
@@ -2147,6 +2206,7 @@ function persistKey(key,value){
   fieldMap[RECURRING_KEY]='recurringPayments';
   fieldMap[DEBTS_KEY]='debts';
   fieldMap[SAVINGS_KEY]='savings';
+  fieldMap[QUESTS_DONE_KEY]='questsDone';
   var fieldName=fieldMap[key]||key;
   var update={};
   update[fieldName]=value;
@@ -3412,11 +3472,40 @@ function openLangDetail(lang){
   });
   openScreen('s-lang-detail');
 }
+function getTodayISO(){return new Date().toISOString().slice(0,10);}
+function ensureQuestsToday(){
+  if(questsCompletedState.date!==getTodayISO()){
+    questsCompletedState={date:getTodayISO(),done:{}};
+    saveQuestsDoneStore();
+  }
+}
+function toggleQuestDone(idx){
+  ensureQuestsToday();
+  questsCompletedState.done[idx]=!questsCompletedState.done[idx];
+  saveQuestsDoneStore();
+  renderQuests();
+}
+function openQuestsScreen(){
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-quests-full').classList.add('active');
+  renderQuests();
+}
 function renderQuests(){
-  var c=document.getElementById('quests-list');if(!c)return;c.innerHTML='';
-  DAILY_QUESTS.forEach(function(q){
-    var d=document.createElement('div');d.className='quest-row';
-    d.innerHTML='<div class="quest-chk"></div><div class="quest-name">'+q.text+'</div><div class="quest-pts">+'+q.pts+'⚡</div>';
+  ensureQuestsToday();
+  var total=DAILY_QUESTS.length;
+  var doneCount=0;
+  for(var k in questsCompletedState.done){if(questsCompletedState.done[k])doneCount++;}
+  var lbl=document.getElementById('quests-progress-label');
+  if(lbl)lbl.textContent=doneCount+'/'+total;
+  var c=document.getElementById('quests-full-list');
+  if(!c)return;
+  c.innerHTML='';
+  if(!total){c.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">Квестов пока нет</div>';return;}
+  DAILY_QUESTS.forEach(function(q,idx){
+    var isDone=!!questsCompletedState.done[idx];
+    var d=document.createElement('div');d.className='quest-full-row'+(isDone?' done':'');
+    d.innerHTML='<div class="quest-full-chk'+(isDone?' checked':'')+'">'+(isDone?'✓':'')+'</div><div class="quest-full-name">'+esc(q.text)+'</div><div class="quest-full-pts">+'+q.pts+'⚡</div>';
+    d.onclick=function(){toggleQuestDone(idx);};
     c.appendChild(d);
   });
 }
@@ -3832,7 +3921,11 @@ function renderFinChart(){
     var deg=pct/100*360;
     gradParts.push(color+' '+angleAcc+'deg '+(angleAcc+deg)+'deg');
     angleAcc+=deg;
-    var cat=findCat(catId,'expense')||{icon:'📦',label:catId};
+    var cat=findCat(catId,'expense');
+    if(!cat){
+      var recWithLabel=financeRecords.find(function(r){return r.cat===catId&&r.catLabel;});
+      cat={icon:'📦',label:(recWithLabel&&recWithLabel.catLabel)||catId};
+    }
     legendHtml+='<div class="fin-legend-item"><div class="fin-legend-dot" style="background:'+color+'"></div><div class="fin-legend-label">'+cat.icon+' '+cat.label+'</div><div class="fin-legend-pct">'+Math.round(pct)+'%</div></div>';
   });
   var pieStyle='background:conic-gradient('+gradParts.join(',')+');width:84px;height:84px;border-radius:50%;flex-shrink:0;';
@@ -3843,7 +3936,7 @@ function renderFinRecords(){
   if(!financeRecords.length){wrap.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">Записей пока нет</div>';return;}
   var sorted=financeRecords.slice().sort(function(a,b){return b.ts-a.ts;});
   sorted.forEach(function(r){
-    var cat=findCat(r.cat,r.type)||{icon:'📦',label:r.cat};
+    var cat=findCat(r.cat,r.type)||{icon:'📦',label:r.catLabel||r.cat};
     var div=document.createElement('div');div.className='fin-record';
     div.innerHTML='<div class="fin-rec-icon '+r.type+'">'+cat.icon+'</div><div class="fin-rec-info"><div class="fin-rec-cat">'+cat.label+'</div><div class="fin-rec-date">'+r.date+'</div></div><div class="fin-rec-amt '+r.type+'">'+(r.type==='income'?'+':'-')+fmtMoney(r.amount)+'</div>';
     div.onclick=function(){openFinModal(r.type,r.id);};
@@ -4226,6 +4319,13 @@ function deleteSavings(){
 }
 // Calculator: simulates monthly compounding with optional fixed monthly top-ups.
 // Purely illustrative client-side math — not persisted as a record.
+function toggleCalcPanel(){
+  var panel=document.getElementById('calc-panel');
+  var arrow=document.getElementById('calc-toggle-arrow');
+  var isOpen=panel.style.display!=='none';
+  panel.style.display=isOpen?'none':'';
+  arrow.textContent=isOpen?'▾':'▴';
+}
 function calcSavings(){
   var principal=parseFloat(document.getElementById('calc-principal').value)||0;
   var rate=parseFloat(document.getElementById('calc-rate').value)||0;
@@ -4250,6 +4350,7 @@ function switchTab(tab){
   if(tab==='fin')renderFinance();
   if(tab==='news'&&!newsFeedLoaded)loadNewsFeed();
   if(tab==='payment')renderPaymentScreen();
+  if(tab==='profile'){updateHomeRankDisplay();updateProfilePlanBadge();renderSocialLinks();}
   trackEvent('tab_switch',{tab:tab});
 }
 
@@ -4269,6 +4370,7 @@ var cycleCurrentDate=new Date();
 var cycleContactId=null;
 var cycleContactName='';
 var cycleData={}; // {contactId: {year: {month: {dayNum: {data}}}}}
+var cycleSexEntries={protected:[],unprotected:[]}; // working entries for currently-open day modal
 
 function initCycleData(){
   if(!fbDb)return;
@@ -4415,15 +4517,13 @@ function openCycleDayModal(dateISO){
   
   document.getElementById('cycle-sex-protected-check').checked=!!(dayData.sexProtected&&dayData.sexProtected.active);
   document.getElementById('cycle-sex-protected-content').classList.toggle('open',!!(dayData.sexProtected&&dayData.sexProtected.active));
-  document.getElementById('cycle-sex-protected-time').value=dayData.sexProtected&&dayData.sexProtected.time?dayData.sexProtected.time:'';
-  document.getElementById('cycle-sex-protected-duration').value=dayData.sexProtected&&dayData.sexProtected.duration?dayData.sexProtected.duration:'';
-  document.getElementById('cycle-sex-protected-freq').value=dayData.sexProtected&&dayData.sexProtected.frequency?dayData.sexProtected.frequency:'';
+  cycleSexEntries.protected=cycleNormalizeSexEntries(dayData.sexProtected);
+  renderCycleSexEntries('protected');
   
   document.getElementById('cycle-sex-unprotected-check').checked=!!(dayData.sexUnprotected&&dayData.sexUnprotected.active);
   document.getElementById('cycle-sex-unprotected-content').classList.toggle('open',!!(dayData.sexUnprotected&&dayData.sexUnprotected.active));
-  document.getElementById('cycle-sex-unprotected-time').value=dayData.sexUnprotected&&dayData.sexUnprotected.time?dayData.sexUnprotected.time:'';
-  document.getElementById('cycle-sex-unprotected-duration').value=dayData.sexUnprotected&&dayData.sexUnprotected.duration?dayData.sexUnprotected.duration:'';
-  document.getElementById('cycle-sex-unprotected-freq').value=dayData.sexUnprotected&&dayData.sexUnprotected.frequency?dayData.sexUnprotected.frequency:'';
+  cycleSexEntries.unprotected=cycleNormalizeSexEntries(dayData.sexUnprotected);
+  renderCycleSexEntries('unprotected');
   
   document.getElementById('cycle-notes').value=dayData.notes||'';
   
@@ -4433,6 +4533,40 @@ function openCycleDayModal(dateISO){
 
 function closeCycleDayModal(){
   document.getElementById('cycle-day-modal').classList.remove('active');
+}
+function cycleNormalizeSexEntries(obj){
+  if(!obj)return [];
+  if(obj.entries&&obj.entries.length)return obj.entries.slice();
+  if(obj.time||obj.duration)return [{time:obj.time||'',duration:obj.duration||''}];
+  return [];
+}
+function addCycleSexEntry(type){
+  cycleSexEntries[type].push({time:'',duration:''});
+  renderCycleSexEntries(type);
+}
+function removeCycleSexEntry(type,idx){
+  cycleSexEntries[type].splice(idx,1);
+  renderCycleSexEntries(type);
+}
+function updateCycleSexEntry(type,idx,field,val){
+  cycleSexEntries[type][idx][field]=val;
+}
+function renderCycleSexEntries(type){
+  var c=document.getElementById('cycle-sex-'+type+'-entries');
+  if(!c)return;
+  c.innerHTML='';
+  cycleSexEntries[type].forEach(function(e,idx){
+    var row=document.createElement('div');row.className='cycle-sex-entry-row';
+    row.innerHTML='<input class="form-input" type="time" placeholder="Время" value="'+(e.time||'')+'"><input class="form-input" type="number" placeholder="Длит, мин" value="'+(e.duration||'')+'"><button type="button" class="cycle-sex-entry-del">✕</button>';
+    var inputs=row.querySelectorAll('input');
+    inputs[0].oninput=function(){updateCycleSexEntry(type,idx,'time',this.value);};
+    inputs[1].oninput=function(){updateCycleSexEntry(type,idx,'duration',this.value);};
+    row.querySelector('button').onclick=function(){removeCycleSexEntry(type,idx);};
+    c.appendChild(row);
+  });
+  if(!cycleSexEntries[type].length){
+    c.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 2px 8px;">Записей пока нет</div>';
+  }
 }
 
 function saveCycleDayData(){
@@ -4464,15 +4598,11 @@ function saveCycleDayData(){
     },
     sexProtected: {
       active: document.getElementById('cycle-sex-protected-check').checked,
-      time: document.getElementById('cycle-sex-protected-time').value||null,
-      duration: parseInt(document.getElementById('cycle-sex-protected-duration').value)||null,
-      frequency: parseInt(document.getElementById('cycle-sex-protected-freq').value)||null
+      entries: cycleSexEntries.protected.filter(function(e){return e.time||e.duration;})
     },
     sexUnprotected: {
       active: document.getElementById('cycle-sex-unprotected-check').checked,
-      time: document.getElementById('cycle-sex-unprotected-time').value||null,
-      duration: parseInt(document.getElementById('cycle-sex-unprotected-duration').value)||null,
-      frequency: parseInt(document.getElementById('cycle-sex-unprotected-freq').value)||null
+      entries: cycleSexEntries.unprotected.filter(function(e){return e.time||e.duration;})
     },
     notes: document.getElementById('cycle-notes').value||null
   };
@@ -4732,6 +4862,148 @@ var MAIN_PLAN_PRICES_RUB = {
   '12m': '49 000 ₽',
 };
 
+var subscriptionInfo=null;
+function loadSubscriptionInfo(cb){
+  if(!fbDb){if(cb)cb(null);return;}
+  var uid=getTgUserId();
+  if(!uid){if(cb)cb(null);return;}
+  fbDb.collection('users').doc(uid).get().then(function(doc){
+    var d=doc.exists?doc.data():{};
+    subscriptionInfo={
+      until: d.subscriptionUntil||null,
+      plan: d.subscriptionPlan||null
+    };
+    if(cb)cb(subscriptionInfo);
+  }).catch(function(){if(cb)cb(null);});
+}
+function fmtDateRu(iso){
+  var d=new Date(iso);
+  if(isNaN(d.getTime()))return '';
+  return d.getDate()+' '+MONTHS_RU[d.getMonth()]+' '+d.getFullYear();
+}
+function updateProfilePlanBadge(){
+  loadSubscriptionInfo(function(info){
+    var badge=document.getElementById('profile-plan-badge');
+    if(!badge)return;
+    var isActive=info&&info.until&&new Date(info.until)>new Date();
+    if(isActive){
+      badge.textContent=(MAIN_PLANS[info.plan]&&MAIN_PLANS[info.plan].label)||'Pro';
+    }else{
+      badge.textContent='Демо';
+    }
+  });
+}
+var UPGRADE_NEXT_TIER={'1m':'3m','3m':'6m','6m':'12m'};
+var SOCIAL_NETWORKS={
+  instagram:{label:'Instagram',urlPrefix:'https://instagram.com/'},
+  linkedin:{label:'LinkedIn',urlPrefix:'https://linkedin.com/in/'}
+};
+var socialModalNetwork=null;
+function normalizeSocialHandle(raw){
+  raw=(raw||'').trim();
+  if(/^https?:\/\//i.test(raw))return raw;
+  return raw.replace(/^@/,'');
+}
+function socialHandleToUrl(network,value){
+  if(/^https?:\/\//i.test(value))return value;
+  return SOCIAL_NETWORKS[network].urlPrefix+value.replace(/^@/,'');
+}
+function openSocialModal(network){
+  socialModalNetwork=network;
+  document.getElementById('social-modal-title').textContent='Привязать '+SOCIAL_NETWORKS[network].label;
+  document.getElementById('social-modal-input').value=personalData[network]||'';
+  document.getElementById('social-modal').classList.add('active');
+}
+function closeSocialModal(){
+  document.getElementById('social-modal').classList.remove('active');
+}
+function saveSocialLink(){
+  var raw=document.getElementById('social-modal-input').value;
+  var value=normalizeSocialHandle(raw);
+  if(!value){showToast('Введи ник или ссылку');return;}
+  personalData[socialModalNetwork]=value;
+  savePersonalDataStore();
+  renderSocialLinks();
+  closeSocialModal();
+  var tg=window.Telegram&&window.Telegram.WebApp;
+  var url=socialHandleToUrl(socialModalNetwork,value);
+  if(tg&&tg.openLink)tg.openLink(url);else window.open(url,'_blank');
+}
+function renderSocialLinks(){
+  Object.keys(SOCIAL_NETWORKS).forEach(function(network){
+    var el=document.getElementById('social-val-'+network);
+    if(!el)return;
+    el.textContent=personalData[network]?('@'+personalData[network].replace(/^https?:\/\/[^/]+\//,'')):'Не подключён';
+  });
+}
+function openOwnTelegram(){
+  var tg=window.Telegram&&window.Telegram.WebApp;
+  var username=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user&&tg.initDataUnsafe.user.username)||'';
+  if(!username){showToast('Username не найден в Telegram');return;}
+  if(tg&&tg.openTelegramLink)tg.openTelegramLink('https://t.me/'+username);else window.open('https://t.me/'+username,'_blank');
+}
+function openHelpScreen(){
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-help').classList.add('active');
+}
+function contactManagerForHelp(){
+  var tg=window.Telegram&&window.Telegram.WebApp;
+  if(!tg){showToast('Только в Telegram');return;}
+  trackEvent('help_manager_contact',{});
+  var text=encodeURIComponent('Здравствуй! Нужна помощь по ManClub.');
+  tg.openTelegramLink('https://t.me/job_bylobychevinsibir?text='+text);
+}
+function openLanguageStub(){
+  document.getElementById('lang-stub-modal').classList.add('active');
+}
+function openSubscriptionScreen(){
+  document.querySelectorAll('.app-screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('s-profile-subscription').classList.add('active');
+  var wrap=document.getElementById('sub-status-wrap');
+  wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">Загрузка...</div>';
+  loadSubscriptionInfo(function(info){
+    var isActive=info&&info.until&&new Date(info.until)>new Date();
+    var html='';
+    if(isActive){
+      var planLabel=(MAIN_PLANS[info.plan]&&MAIN_PLANS[info.plan].label)||'Подписка';
+      html+='<div class="fin-chart-wrap" style="margin:0 16px 16px;">'
+          +'<div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Текущий тариф</div>'
+          +'<div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;">'+planLabel+'</div>'
+          +'<div style="font-size:13px;color:var(--text2);">Активна до '+fmtDateRu(info.until)+'</div>'
+          +'</div>';
+      var nextTier=info.plan&&UPGRADE_NEXT_TIER[info.plan];
+      if(nextTier&&MAIN_PLANS[info.plan]&&MAIN_PLANS[nextTier]){
+        var credit=MAIN_PLANS[info.plan].rub;
+        var fullPrice=MAIN_PLANS[nextTier].rub;
+        var upgradePrice=Math.max(fullPrice-credit,0);
+        html+='<div class="fin-chart-wrap" style="margin:0 16px 16px;border-color:rgba(201,168,76,0.4);">'
+            +'<div style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:8px;">🎁 Выгодный апгрейд</div>'
+            +'<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px;">Перейди на «'+MAIN_PLANS[nextTier].label+'» — мы зачтём уже оплаченные '+fmtNum(credit)+' ₽, и тебе останется доплатить всего '+fmtNum(upgradePrice)+' ₽ вместо '+fmtNum(fullPrice)+' ₽.</div>'
+            +'<button class="btn-gold" onclick="contactManagerForUpgrade(\''+info.plan+'\',\''+nextTier+'\')">Перейти на '+MAIN_PLANS[nextTier].label+' за '+fmtNum(upgradePrice)+' ₽</button>'
+            +'</div>';
+      }else if(info.plan==='12m'){
+        html+='<div class="fin-chart-wrap" style="margin:0 16px 16px;"><div style="font-size:13px;color:var(--text2);text-align:center;">У тебя максимальный тариф клуба 🏆</div></div>';
+      }
+    }else{
+      html+='<div class="fin-chart-wrap" style="margin:0 16px 16px;">'
+          +'<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px;">Сейчас у тебя демо-доступ или подписка не активна.</div>'
+          +'<button class="btn-gold" onclick="switchTab(\'payment\')">Выбрать тариф →</button>'
+          +'</div>';
+    }
+    html+='<div style="padding:0 16px 24px;"><div class="settings-group"><div class="settings-row" onclick="switchTab(\'payment\')"><div class="s-icon" style="background:rgba(201,168,76,0.15)">📋</div><span class="settings-label">Все тарифы</span><span class="settings-arrow">›</span></div></div></div>';
+    wrap.innerHTML=html;
+  });
+}
+function contactManagerForUpgrade(fromPlan,toPlan){
+  var tg=window.Telegram&&window.Telegram.WebApp;
+  if(!tg){showToast('Только в Telegram');return;}
+  var credit=MAIN_PLANS[fromPlan].rub;
+  var fullPrice=MAIN_PLANS[toPlan].rub;
+  var upgradePrice=Math.max(fullPrice-credit,0);
+  trackEvent('payment_upgrade_contact',{from:fromPlan,to:toPlan});
+  var text=encodeURIComponent('Здравствуй! Хочу перейти с тарифа '+MAIN_PLANS[fromPlan].label+' на '+MAIN_PLANS[toPlan].label+' с зачётом оплаченного. Доплачу '+fmtNum(upgradePrice)+' ₽, чек пришлю.');
+  tg.openTelegramLink('https://t.me/job_bylobychevinsibir?text='+text);
+}
 function contactManagerForPayment() {
   var tg = window.Telegram && window.Telegram.WebApp;
   if(!tg) { showToast('Только в Telegram'); return; }
@@ -4872,21 +5144,11 @@ function syncIntimacyToCycle(contactId,dateISO,intimacyData){
   if(!cycleData[contactId][year][month]){cycleData[contactId][year][month]={};}
   if(!cycleData[contactId][year][month][day]){cycleData[contactId][year][month][day]={};}
   
-  if(intimacyData.protected){
-    cycleData[contactId][year][month][day].sexProtected={
-      active: true,
-      time: intimacyData.time,
-      duration: intimacyData.duration,
-      frequency: intimacyData.frequency
-    };
-  }else{
-    cycleData[contactId][year][month][day].sexUnprotected={
-      active: true,
-      time: intimacyData.time,
-      duration: intimacyData.duration,
-      frequency: intimacyData.frequency
-    };
-  }
+  var field=intimacyData.protected?'sexProtected':'sexUnprotected';
+  var dayBucket=cycleData[contactId][year][month][day];
+  if(!dayBucket[field]||!dayBucket[field].entries)dayBucket[field]={active:true,entries:[]};
+  dayBucket[field].active=true;
+  dayBucket[field].entries.push({time:intimacyData.time||'',duration:intimacyData.duration||''});
   
   if(intimacyData.contraceptive){
     cycleData[contactId][year][month][day].contraception={
