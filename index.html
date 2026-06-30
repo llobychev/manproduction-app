@@ -393,10 +393,29 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .phrase-placeholder{color:var(--text3);font-size:13px;}
 /* ФИНАНСЫ */
 .fin-balance-card{margin:16px;background:var(--bg3);border-radius:16px;padding:20px;border:0.5px solid var(--border);text-align:center;}
+.fin-summary-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 16px 6px;}
+.fin-summary-arrow{width:32px;height:32px;border-radius:10px;background:var(--bg3);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text2);cursor:pointer;flex-shrink:0;}
+.fin-summary-period-wrap{flex:1;text-align:center;}
+.fin-summary-period-val{display:inline-block;font-size:15px;font-weight:700;color:var(--text);padding:6px 14px;border-radius:10px;background:rgba(201,168,76,0.1);border:0.5px solid rgba(201,168,76,0.25);cursor:pointer;}
+.fin-summary-cards{display:flex;gap:10px;padding:12px 16px 0;}
+.fin-summary-card{flex:1;background:var(--bg3);border-radius:14px;padding:14px;border:0.5px solid var(--border);}
+.fin-summary-card-label{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.fin-summary-card-val{font-size:17px;font-weight:700;}
+.fin-summary-card-val.income{color:#22c55e;}
+.fin-summary-card-val.expense{color:var(--red);}
+.fin-summary-table{width:100%;border-collapse:collapse;font-size:12px;}
+.fin-summary-table th{text-align:right;color:var(--text3);font-weight:400;padding:6px 0;}
+.fin-summary-table th:first-child{text-align:left;}
+.fin-summary-table td{padding:8px 0;text-align:right;border-top:0.5px solid var(--border);color:var(--text2);}
+.fin-summary-table td:first-child{text-align:left;color:var(--text);}
+.fin-summary-table tr.current td{font-weight:700;color:var(--text);}
+.fin-summary-table td.income{color:#22c55e;}
+.fin-summary-table td.expense{color:var(--red);}
 .fin-balance-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
 .fin-balance-val{font-size:28px;font-weight:700;color:var(--text);}
 .fin-balance-val.neg{color:var(--red);}
 .fin-balance-sub{display:flex;justify-content:center;gap:20px;margin-top:12px;}
+@keyframes cphoto-spin{to{transform:rotate(360deg);}}
 .fin-sub-item{font-size:12px;color:var(--text2);}
 .fin-sub-item span{font-weight:600;}
 .fin-sub-item.income span{color:#22c55e;}
@@ -473,6 +492,8 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .home-widget-stub-icon{font-size:22px;flex-shrink:0;}
 .home-widget-stub-text{font-size:12px;color:var(--text3);line-height:1.5;}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:10px 18px;font-size:12px;color:var(--text);z-index:300;display:none;max-width:80%;text-align:center;}
+.lv-fab{position:fixed;right:14px;bottom:84px;width:50px;height:50px;border-radius:50%;background-color:#c9a84c;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;z-index:120;box-shadow:0 4px 14px rgba(0,0,0,0.35);}
+.lv-fab:active{background-color:#a07830;}
 .toast.show{display:block;}
 /* PERSONAL DATA PAGE */
 .interest-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
@@ -1148,6 +1169,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     <div class="fin-tabs">
       <div class="fin-tab active" id="fin-tab-btn-overview" onclick="setFinTab('overview')">Обзор</div>
       <div class="fin-tab" id="fin-tab-btn-payments" onclick="setFinTab('payments')">Платежи и долги</div>
+      <div class="fin-tab" id="fin-tab-btn-summary" onclick="setFinTab('summary')">Сводка</div>
     </div>
     <div id="fin-tab-overview">
       <div class="rel-item" style="margin:0 16px 12px;" onclick="openFinLessons()"><div class="rel-icon">🎓</div><div class="rel-name">Финансовая грамотность</div><div class="rel-arrow">›</div></div>
@@ -1197,6 +1219,57 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       </div>
       <div style="padding:0 16px;" id="debts-list"></div>
       <div class="add-event-btn" style="margin:0 16px 24px;" onclick="openDebtModal()"><span style="font-size:18px;color:var(--accent)">＋</span><span style="font-size:13px;color:var(--text3)">Новый долг</span></div>
+    </div>
+    <div id="fin-tab-summary" style="display:none;">
+      <div class="fin-summary-nav">
+        <div class="fin-summary-arrow" onclick="finSummaryShift(-1)">‹</div>
+        <div class="fin-summary-period-wrap">
+          <div class="fin-summary-period-val" id="fin-summary-period-label" onclick="finSummaryOpenPicker()">Июнь 2026</div>
+        </div>
+        <div class="fin-summary-arrow" onclick="finSummaryShift(1)">›</div>
+      </div>
+      <div class="fin-tabs" style="margin-top:0;">
+        <div class="fin-tab active" id="fin-summary-mode-btn-month" onclick="setFinSummaryMode('month')">Месяц</div>
+        <div class="fin-tab" id="fin-summary-mode-btn-year" onclick="setFinSummaryMode('year')">Год</div>
+      </div>
+      <div class="fin-summary-cards">
+        <div class="fin-summary-card">
+          <div class="fin-summary-card-label">Доходы</div>
+          <div class="fin-summary-card-val income" id="fin-summary-income">0 ₽</div>
+        </div>
+        <div class="fin-summary-card">
+          <div class="fin-summary-card-label">Расходы</div>
+          <div class="fin-summary-card-val expense" id="fin-summary-expense">0 ₽</div>
+        </div>
+      </div>
+      <div class="fin-balance-card" style="margin-top:0;">
+        <div class="fin-balance-label" id="fin-summary-balance-label">Остаток за месяц</div>
+        <div class="fin-balance-val" id="fin-summary-balance">0 ₽</div>
+      </div>
+      <div id="fin-summary-table-wrap" style="display:none;">
+        <div class="section-title" style="margin:0 16px 10px;">Сводка по месяцам</div>
+        <div style="padding:0 16px 24px;">
+          <table class="fin-summary-table" id="fin-summary-table"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: выбор месяца/года для сводки -->
+  <div class="modal-overlay" id="fin-summary-picker-modal">
+    <div class="modal-box">
+      <div class="modal-title">Выбрать период</div>
+      <div class="form-row" style="display:flex;gap:8px;">
+        <div class="form-group" style="flex:1;" id="fin-summary-picker-month-wrap">
+          <div class="form-label">Месяц</div>
+          <select class="form-input" id="fin-summary-picker-month"></select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <div class="form-label">Год</div>
+          <select class="form-input" id="fin-summary-picker-year"></select>
+        </div>
+      </div>
+      <div class="modal-btns"><button class="btn-cancel" onclick="document.getElementById('fin-summary-picker-modal').classList.remove('active')">Отмена</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="finSummaryApplyPicker()">Применить</button></div>
     </div>
   </div>
 
@@ -1511,6 +1584,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><div class="nav-icon">👤</div><div class="nav-label">Профиль</div></div>
     <div class="nav-item" id="nav-payment" style="display:none;" onclick="switchTab('payment')"><div class="nav-icon">👑</div><div class="nav-label">Доступ</div></div>
   </nav>
+  <div class="lv-fab" id="lv-fab" onclick="openLyovaStub()">🦁</div>
 </div>
 
 <!-- CHAT ROOM -->
@@ -1581,7 +1655,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     <input class="modal-input" id="c-inst" placeholder="@instagram">
     <input class="modal-input" id="c-note" placeholder="Заметка о человеке...">
     <div style="margin-bottom:10px;"><div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Категория</div><div style="display:flex;gap:8px;"><div id="ctype-men" onclick="setCType('men')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #4a90d9;background:rgba(74,144,217,0.1);text-align:center;cursor:pointer;font-size:13px;color:#4a90d9;font-weight:600;">👨 Мужчина</div><div id="ctype-women" onclick="setCType('women')" style="flex:1;padding:10px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);text-align:center;cursor:pointer;font-size:13px;color:var(--text2);">👩 Девушка</div></div></div>
-    <div class="modal-btns"><button class="btn-cancel" onclick="closeContactModal()">Отмена</button><button class="btn-delete" id="c-btn-delete" style="display:none" onclick="deleteContact()">🗑</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" id="c-btn-save" onclick="saveContact()">Сохранить</button></div>
+    <div class="modal-btns"><button class="btn-cancel" id="c-btn-cancel" onclick="closeContactModal()">Отмена</button><button class="btn-delete" id="c-btn-delete" style="display:none" onclick="deleteContact()">🗑</button><button class="btn-gold" style="flex:1;width:auto;padding:12px" id="c-btn-save" onclick="saveContact()">Сохранить</button></div>
   </div>
 </div>
 
@@ -1806,6 +1880,7 @@ var SPHERES=[
 var SCORES=[9,6,4,2];
 var DAYS_RU=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 var MONTHS_RU=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+var MONTHS_FULL_RU=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
 var STORAGE_KEY='mp_user_v1';
 var JOURNAL_KEY='mp_journal_v1';
 var POSITIVITY_KEY='mp_positivity_v1';
@@ -3572,14 +3647,44 @@ function resetContactPhotoPreview(url){
 function handleContactPhotoSelect(e){
   var file=e.target.files&&e.target.files[0];
   if(!file)return;
-  pendingContactPhotoFile=file;
-  var reader=new FileReader();
-  reader.onload=function(ev){
+  compressContactPhoto(file,800,0.8).then(function(blob){
+    pendingContactPhotoFile=blob;
     var preview=document.getElementById('c-photo-preview');
-    preview.style.backgroundImage='url('+ev.target.result+')';
+    var localUrl=URL.createObjectURL(blob);
+    preview.style.backgroundImage='url('+localUrl+')';
     preview.textContent='';
-  };
-  reader.readAsDataURL(file);
+  }).catch(function(err){
+    console.warn('Photo compression failed, using original file',err);
+    pendingContactPhotoFile=file;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var preview=document.getElementById('c-photo-preview');
+      preview.style.backgroundImage='url('+ev.target.result+')';
+      preview.textContent='';
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function compressContactPhoto(file,maxSize,quality){
+  return new Promise(function(resolve,reject){
+    var img=new Image();
+    var url=URL.createObjectURL(file);
+    img.onload=function(){
+      URL.revokeObjectURL(url);
+      var w=img.width,h=img.height;
+      if(w>h){if(w>maxSize){h=Math.round(h*(maxSize/w));w=maxSize;}}
+      else{if(h>maxSize){w=Math.round(w*(maxSize/h));h=maxSize;}}
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      canvas.toBlob(function(blob){
+        if(blob)resolve(blob);else reject(new Error('toBlob failed'));
+      },'image/jpeg',quality);
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('image load failed'));};
+    img.src=url;
+  });
 }
 function openContactModal(){
   editingContactId=null;newContactType='men';
@@ -3611,7 +3716,11 @@ function editContact(id){
   setCType(newContactType);
   document.getElementById('contact-modal').classList.add('active');
 }
-function closeContactModal(){document.getElementById('contact-modal').classList.remove('active');editingContactId=null;}
+function closeContactModal(){
+  var saveBtn=document.getElementById('c-btn-save');
+  if(saveBtn&&saveBtn.disabled)return;
+  document.getElementById('contact-modal').classList.remove('active');editingContactId=null;
+}
 function setCType(t){
   newContactType=t;
   document.getElementById('ctype-men').style.cssText='flex:1;padding:10px;border-radius:10px;border:'+(t==='men'?'1.5px solid #4a90d9':'0.5px solid var(--border)')+';background:'+(t==='men'?'rgba(74,144,217,0.1)':'var(--bg3)')+';text-align:center;cursor:pointer;font-size:13px;color:'+(t==='men'?'#4a90d9':'var(--text2)')+';font-weight:'+(t==='men'?'600':'400');
@@ -3641,21 +3750,39 @@ function saveContact(){
     closeContactModal();setNetTab(newContactType);
   }
   if(pendingContactPhotoFile&&fbStorage){
-    showToast('Загрузка фото...');
+    setContactModalUploading(true);
     var ref=fbStorage.ref().child('contact_photos/'+getTgUserId()+'/'+contactId+'.jpg');
     ref.put(pendingContactPhotoFile).then(function(snapshot){
       return snapshot.ref.getDownloadURL();
     }).then(function(url){
       data.photoUrl=url;
+      setContactModalUploading(false);
       commitContact();
     }).catch(function(err){
       console.warn('Photo upload failed',err);
+      setContactModalUploading(false);
       showToast('Не удалось загрузить фото, контакт сохранён без него');
       data.photoUrl=editingContactId?(findContactById(editingContactId)||{}).photoUrl||null:null;
       commitContact();
     });
   } else {
     commitContact();
+  }
+}
+function setContactModalUploading(isUploading){
+  var saveBtn=document.getElementById('c-btn-save');
+  var cancelBtn=document.getElementById('c-btn-cancel');
+  var deleteBtn=document.getElementById('c-btn-delete');
+  if(isUploading){
+    saveBtn.disabled=true;
+    saveBtn.innerHTML='<span style="width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:6px;animation:cphoto-spin .7s linear infinite;"></span>Загружаю фото...';
+    cancelBtn.disabled=true;
+    deleteBtn.disabled=true;
+  } else {
+    saveBtn.disabled=false;
+    saveBtn.textContent='Сохранить';
+    cancelBtn.disabled=false;
+    deleteBtn.disabled=false;
   }
 }
 function deleteContact(){
@@ -3686,6 +3813,7 @@ function renderFinance(){
   if(finTab==='payments'){renderRecurringList();renderDebtsSummaryAndList();}
 }
 function fmtMoney(n){return Math.round(n).toLocaleString('ru-RU')+' ₽';}
+function openLyovaStub(){showToast('Помощник Лёва скоро будет здесь 🦁');}
 function renderFinChart(){
   var byCategory={};
   financeRecords.filter(function(r){return r.type==='expense';}).forEach(function(r){
@@ -3785,9 +3913,110 @@ function setFinTab(t){
   finTab=t;
   document.getElementById('fin-tab-overview').style.display=t==='overview'?'':'none';
   document.getElementById('fin-tab-payments').style.display=t==='payments'?'':'none';
+  document.getElementById('fin-tab-summary').style.display=t==='summary'?'':'none';
   document.getElementById('fin-tab-btn-overview').classList.toggle('active',t==='overview');
   document.getElementById('fin-tab-btn-payments').classList.toggle('active',t==='payments');
+  document.getElementById('fin-tab-btn-summary').classList.toggle('active',t==='summary');
   if(t==='payments'){renderRecurringList();renderDebtsSummaryAndList();}
+  if(t==='summary'){renderFinSummary();}
+}
+
+// FINANCE SUMMARY (month/year)
+var finSummaryMode='month';
+var finSummaryDate=new Date();
+function setFinSummaryMode(m){
+  finSummaryMode=m;
+  document.getElementById('fin-summary-mode-btn-month').classList.toggle('active',m==='month');
+  document.getElementById('fin-summary-mode-btn-year').classList.toggle('active',m==='year');
+  renderFinSummary();
+}
+function finSummaryShift(dir){
+  if(finSummaryMode==='month'){
+    finSummaryDate=new Date(finSummaryDate.getFullYear(),finSummaryDate.getMonth()+dir,1);
+  } else {
+    finSummaryDate=new Date(finSummaryDate.getFullYear()+dir,finSummaryDate.getMonth(),1);
+  }
+  renderFinSummary();
+}
+function finSummaryOpenPicker(){
+  var monthSel=document.getElementById('fin-summary-picker-month');
+  var yearSel=document.getElementById('fin-summary-picker-year');
+  monthSel.innerHTML='';
+  MONTHS_FULL_RU.forEach(function(name,i){
+    var opt=document.createElement('option');opt.value=i;opt.textContent=name.charAt(0).toUpperCase()+name.slice(1);
+    if(i===finSummaryDate.getMonth())opt.selected=true;
+    monthSel.appendChild(opt);
+  });
+  document.getElementById('fin-summary-picker-month-wrap').style.display=finSummaryMode==='year'?'none':'';
+  yearSel.innerHTML='';
+  var curYear=new Date().getFullYear();
+  for(var y=curYear-5;y<=curYear+1;y++){
+    var opt=document.createElement('option');opt.value=y;opt.textContent=y;
+    if(y===finSummaryDate.getFullYear())opt.selected=true;
+    yearSel.appendChild(opt);
+  }
+  document.getElementById('fin-summary-picker-modal').classList.add('active');
+}
+function finSummaryApplyPicker(){
+  var m=parseInt(document.getElementById('fin-summary-picker-month').value,10);
+  var y=parseInt(document.getElementById('fin-summary-picker-year').value,10);
+  finSummaryDate=new Date(y,finSummaryMode==='year'?0:m,1);
+  document.getElementById('fin-summary-picker-modal').classList.remove('active');
+  renderFinSummary();
+}
+function finRecordsForMonth(year,month){
+  return financeRecords.filter(function(r){
+    var d=new Date(r.ts);
+    return d.getFullYear()===year&&d.getMonth()===month;
+  });
+}
+function finRecordsForYear(year){
+  return financeRecords.filter(function(r){return new Date(r.ts).getFullYear()===year;});
+}
+function finSumIncomeExpense(records){
+  var income=0,expense=0;
+  records.forEach(function(r){if(r.type==='income')income+=r.amount;else expense+=r.amount;});
+  return {income:income,expense:expense,balance:income-expense};
+}
+function renderFinSummary(){
+  var year=finSummaryDate.getFullYear();
+  var month=finSummaryDate.getMonth();
+  var labelEl=document.getElementById('fin-summary-period-label');
+  var balanceLabelEl=document.getElementById('fin-summary-balance-label');
+  var tableWrap=document.getElementById('fin-summary-table-wrap');
+  var totals;
+  if(finSummaryMode==='month'){
+    labelEl.textContent=MONTHS_FULL_RU[month].charAt(0).toUpperCase()+MONTHS_FULL_RU[month].slice(1)+' '+year;
+    balanceLabelEl.textContent='Остаток за месяц';
+    totals=finSumIncomeExpense(finRecordsForMonth(year,month));
+    tableWrap.style.display='none';
+  } else {
+    labelEl.textContent=year;
+    balanceLabelEl.textContent='Остаток за год';
+    totals=finSumIncomeExpense(finRecordsForYear(year));
+    tableWrap.style.display='';
+    renderFinSummaryTable(year);
+  }
+  document.getElementById('fin-summary-income').textContent='+'+fmtMoney(totals.income);
+  document.getElementById('fin-summary-expense').textContent='−'+fmtMoney(totals.expense);
+  var balEl=document.getElementById('fin-summary-balance');
+  balEl.textContent=fmtMoney(totals.balance);
+  balEl.className='fin-balance-val'+(totals.balance<0?' neg':'');
+}
+function renderFinSummaryTable(year){
+  var table=document.getElementById('fin-summary-table');
+  var curDate=new Date();
+  var rows='<tr><th>Месяц</th><th>Доход</th><th>Расход</th><th>Остаток</th></tr>';
+  for(var m=0;m<12;m++){
+    var t=finSumIncomeExpense(finRecordsForMonth(year,m));
+    var isCurrent=(year===curDate.getFullYear()&&m===curDate.getMonth());
+    rows+='<tr class="'+(isCurrent?'current':'')+'">'+
+      '<td>'+MONTHS_FULL_RU[m].charAt(0).toUpperCase()+MONTHS_FULL_RU[m].slice(1)+'</td>'+
+      '<td class="income">'+fmtMoney(t.income)+'</td>'+
+      '<td class="expense">'+fmtMoney(t.expense)+'</td>'+
+      '<td>'+fmtMoney(t.balance)+'</td></tr>';
+  }
+  table.innerHTML=rows;
 }
 
 // РЕГУЛЯРНЫЕ ПЛАТЕЖИ
