@@ -1262,7 +1262,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div class="section-title">Соцсети</div>
       <div class="settings-group"><div class="settings-row"><div class="s-icon" style="background:rgba(59,130,246,0.15)">📱</div><span class="settings-label">Telegram</span><div style="display:flex;align-items:center;gap:5px;margin-right:4px"><div class="social-dot"></div><span class="settings-val" id="tg-user">@user</span></div><span class="settings-arrow">›</span></div><div class="settings-row"><div class="s-icon" style="background:rgba(249,115,22,0.15)">📸</div><span class="settings-label">Instagram</span><span class="settings-val">Не подключён</span><span class="settings-arrow">›</span></div><div class="settings-row"><div class="s-icon" style="background:rgba(59,130,246,0.15)">💼</div><span class="settings-label">LinkedIn</span><span class="settings-val">Не подключён</span><span class="settings-arrow">›</span></div></div>
       <div class="section-title">Поддержка</div>
-      <div class="settings-group"><div class="settings-row"><div class="s-icon" style="background:rgba(34,197,94,0.15)">❓</div><span class="settings-label">Помощь</span><span class="settings-arrow">›</span></div><div class="settings-row"><div class="s-icon" style="background:rgba(100,100,100,0.15)">📜</div><span class="settings-label">Правила клуба</span><span class="settings-arrow">›</span></div></div>
+      <div class="settings-group"><div class="settings-row"><div class="s-icon" style="background:rgba(34,197,94,0.15)">❓</div><span class="settings-label">Помощь</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('offer')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">📜</div><span class="settings-label">Правила клуба</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('privacy')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">🔒</div><span class="settings-label">Политика конфиденциальности</span><span class="settings-arrow">›</span></div></div>
       <div class="section-title">Данные</div>
       <div class="settings-group"><div class="settings-row" onclick="exportUserData()"><div class="s-icon" style="background:rgba(45,212,191,0.15)">📦</div><span class="settings-label">Выгрузить мои данные</span><span class="settings-arrow">›</span></div></div>
       <div class="logout-btn" onclick="doLogout()">Выйти из аккаунта</div>
@@ -1496,7 +1496,8 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <button class="pay-promo-apply" onclick="applyPromoCode()">Применить</button>
     </div>
     <div style="padding:0 16px 32px;font-size:11px;color:var(--text3);text-align:center;line-height:1.6;">
-      После перевода напиши менеджеру и пришли чек.<br>Доступ откроют вручную в течение часа.
+      После перевода напиши менеджеру и пришли чек.<br>Доступ откроют вручную в течение часа.<br>
+      Оплачивая подписку, ты соглашаешься с <span class="cp-legal-link" onclick="cpOpenLegal('offer')">условиями оферты</span> и <span class="cp-legal-link" onclick="cpOpenLegal('privacy')">политикой конфиденциальности</span>.
     </div>
   </div>
 
@@ -2139,6 +2140,7 @@ window.addEventListener('load',function(){
   initFirebase();
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(tg){tg.ready();tg.expand();}
+  if(window.initCopyProtection)window.initCopyProtection(getTgUserId());
   pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;
   // Auth then migrate then load
   firebaseAuth(function(){
@@ -4747,5 +4749,158 @@ function runMigration(db,callback){
 // ===== END MIGRATION =====
 
 </script>
+
+<!-- ===== ЗАЩИТА ОТ КОПИРОВАНИЯ ===== -->
+<style>
+*{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text;}
+img,svg{-webkit-user-drag:none;user-drag:none;}
+#cp-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;overflow:hidden;opacity:0.05;display:flex;flex-wrap:wrap;align-content:flex-start;transform:rotate(-28deg) scale(1.4);transform-origin:center center;}
+#cp-watermark span{font-size:11px;font-weight:600;color:#fff;white-space:nowrap;margin:22px;letter-spacing:0.5px;}
+body.cp-blur #root{filter:blur(22px);}
+#root{transition:filter .15s ease;}
+</style>
+<div id="cp-watermark"></div>
+<script>
+(function(){
+  function initCopyProtection(uid){
+    // watermark
+    var wm=document.getElementById('cp-watermark');
+    if(wm){
+      var d=new Date();
+      var label='MANCLUB · '+(uid||'guest')+' · '+d.toLocaleDateString('ru-RU');
+      var html='';
+      for(var i=0;i<60;i++)html+='<span>'+label+'</span>';
+      wm.innerHTML=html;
+    }
+    // block context menu (save image / inspect via long press menu on desktop)
+    document.addEventListener('contextmenu',function(e){e.preventDefault();},false);
+    // block text selection start as a fallback to CSS
+    document.addEventListener('selectstart',function(e){
+      var t=e.target;
+      if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))return;
+      e.preventDefault();
+    },false);
+    // block dragging images out of the app
+    document.addEventListener('dragstart',function(e){e.preventDefault();},false);
+    // blur content when app loses focus / goes to background (app switcher screenshots, screen recording overlays)
+    document.addEventListener('visibilitychange',function(){
+      document.body.classList.toggle('cp-blur',document.hidden);
+    },false);
+    window.addEventListener('blur',function(){document.body.classList.add('cp-blur');},false);
+    window.addEventListener('focus',function(){document.body.classList.remove('cp-blur');},false);
+  }
+  window.initCopyProtection=initCopyProtection;
+})();
+</script>
+<!-- ===== /ЗАЩИТА ОТ КОПИРОВАНИЯ ===== -->
+
+
+<!-- ===== ЮРИДИЧЕСКИЕ ДОКУМЕНТЫ ===== -->
+<style>
+#cp-legal-overlay{position:fixed;inset:0;background:rgba(8,12,20,0.92);z-index:100000;display:none;flex-direction:column;backdrop-filter:blur(4px);}
+#cp-legal-overlay.active{display:flex;}
+.cp-legal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;flex-shrink:0;}
+.cp-legal-title{font-size:15px;font-weight:600;color:var(--text,#fff);}
+.cp-legal-close{background:var(--bg3,#222);border:0.5px solid var(--border,#333);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--text2,#aaa);cursor:pointer;font-size:14px;}
+.cp-legal-tabs{display:flex;gap:8px;padding:0 16px 12px;flex-shrink:0;}
+.cp-legal-tab{flex:1;text-align:center;padding:9px 6px;border-radius:8px;background:var(--bg3,#222);border:0.5px solid var(--border,#333);color:var(--text2,#aaa);font-size:12px;cursor:pointer;}
+.cp-legal-tab.active{background:var(--accent,#C9A84C);color:#15110a;font-weight:600;border-color:transparent;}
+.cp-legal-body{flex:1;overflow-y:auto;padding:4px 16px 28px;font-size:12.5px;line-height:1.6;color:var(--text2,#ccc);-webkit-user-select:text;user-select:text;}
+.cp-legal-body h3{font-size:13.5px;color:var(--text,#fff);margin:16px 0 6px;}
+.cp-legal-body h3:first-child{margin-top:4px;}
+.cp-legal-body p{margin:0 0 8px;}
+.cp-legal-doc{display:none;}
+.cp-legal-doc.active{display:block;}
+.cp-legal-link{color:var(--accent,#C9A84C);text-decoration:underline;cursor:pointer;font-size:11px;}
+</style>
+
+<div id="cp-legal-overlay">
+  <div class="cp-legal-head">
+    <div class="cp-legal-title">Документы</div>
+    <div class="cp-legal-close" onclick="document.getElementById('cp-legal-overlay').classList.remove('active')">✕</div>
+  </div>
+  <div class="cp-legal-tabs">
+    <div class="cp-legal-tab active" id="cp-tab-offer" onclick="cpShowLegal('offer')">Оферта</div>
+    <div class="cp-legal-tab" id="cp-tab-privacy" onclick="cpShowLegal('privacy')">Конфиденциальность</div>
+    <div class="cp-legal-tab" id="cp-tab-consent" onclick="cpShowLegal('consent')">Согласие на ПД</div>
+  </div>
+  <div class="cp-legal-body">
+
+    <div class="cp-legal-doc active" id="cp-doc-offer">
+      <h3>Публичная оферта на оказание услуг ManClub in Siberia</h3>
+      <p>Настоящий документ является публичной офертой (предложением) физического лица — организатора проекта ManClub in Siberia (далее «Исполнитель»), адресованной любому заинтересованному лицу (далее «Пользователь»), о заключении договора на изложенных ниже условиях.</p>
+      <h3>1. Предмет договора</h3>
+      <p>Исполнитель предоставляет Пользователю доступ к цифровому продукту — мини-приложению в Telegram, включающему диагностические инструменты, образовательные материалы, чек-листы и сообщество (далее «Сервис»), на условиях платной подписки или демо-доступа.</p>
+      <h3>2. Порядок оформления и оплаты</h3>
+      <p>Оплата производится через Telegram Stars или банковским переводом по реквизитам, указанным в Сервисе. Доступ открывается после подтверждения оплаты Исполнителем, в течение времени, указанного в интерфейсе Сервиса.</p>
+      <h3>3. Демо-доступ</h3>
+      <p>Пользователю может предоставляться временный демо-доступ к ограниченному функционалу Сервиса. По истечении срока демо-доступа функционал блокируется до оформления платной подписки.</p>
+      <h3>4. Срок действия подписки</h3>
+      <p>Подписка предоставляется на срок, выбранный Пользователем при оплате (1, 3, 6 или 12 месяцев), и не продлевается автоматически.</p>
+      <h3>5. Возврат средств</h3>
+      <p>Возврат денежных средств возможен в течение 24 часов с момента оплаты при условии, что Пользователь не воспользовался платным функционалом Сервиса. Для оформления возврата необходимо обратиться к Исполнителю.</p>
+      <h3>6. Ограничение ответственности</h3>
+      <p>Сервис не является медицинской, психологической или юридической консультацией. Все материалы носят информационно-образовательный характер. Исполнитель не несёт ответственности за решения, принятые Пользователем на основе материалов Сервиса.</p>
+      <h3>7. Интеллектуальная собственность</h3>
+      <p>Все материалы Сервиса (тексты, чек-листы, видео, дизайн) являются объектами авторского права Исполнителя. Копирование, распространение и публикация материалов без письменного согласия Исполнителя запрещены.</p>
+      <h3>8. Контакты</h3>
+      <p>По всем вопросам, связанным с настоящей офертой, Пользователь может обратиться к Исполнителю через Telegram-бота Сервиса.</p>
+      <p style="color:var(--text3,#777);font-size:11px;margin-top:14px;">Документ опубликован в информационных целях. Перед публичным запуском требуется проверка юристом на соответствие законодательству РФ.</p>
+    </div>
+
+    <div class="cp-legal-doc" id="cp-doc-privacy">
+      <h3>Политика конфиденциальности</h3>
+      <p>Настоящая Политика определяет порядок обработки персональных данных Пользователей мини-приложения ManClub in Siberia (далее «Сервис»).</p>
+      <h3>1. Какие данные собираются</h3>
+      <p>Имя, фамилия, username и идентификатор Telegram, данные о прохождении диагностики и чек-листов, история активности в Сервисе, данные об оплате (без хранения реквизитов карт).</p>
+      <h3>2. Цели обработки</h3>
+      <p>Предоставление доступа к функционалу Сервиса, персонализация контента, начисление бонусов и промокодов, связь с Пользователем по вопросам подписки.</p>
+      <h3>3. Хранение данных</h3>
+      <p>Данные хранятся в облачной базе данных Firebase Firestore. Доступ к данным имеет только Исполнитель.</p>
+      <h3>4. Передача третьим лицам</h3>
+      <p>Данные не передаются третьим лицам, за исключением случаев, предусмотренных законодательством РФ, либо технических партнёров (Telegram, Firebase), необходимых для работы Сервиса.</p>
+      <h3>5. Права пользователя</h3>
+      <p>Пользователь вправе запросить выгрузку своих данных или их удаление, обратившись к Исполнителю через Telegram-бота. Выгрузка данных также доступна в разделе «Выгрузить мои данные» в профиле.</p>
+      <h3>6. Срок хранения</h3>
+      <p>Данные хранятся в течение всего срока использования Сервиса Пользователем и удаляются по запросу либо в течение 12 месяцев после прекращения использования.</p>
+      <p style="color:var(--text3,#777);font-size:11px;margin-top:14px;">Документ опубликован в информационных целях. Перед публичным запуском требуется проверка юристом на соответствие 152-ФЗ.</p>
+    </div>
+
+    <div class="cp-legal-doc" id="cp-doc-consent">
+      <h3>Согласие на обработку персональных данных</h3>
+      <p>Используя Сервис, Пользователь даёт согласие Исполнителю на обработку следующих персональных данных: имя, фамилия, username и идентификатор Telegram, результаты диагностики, данные об активности в Сервисе.</p>
+      <h3>Цель обработки</h3>
+      <p>Обеспечение работы функционала Сервиса, персонализация контента, информирование о статусе подписки и акциях.</p>
+      <h3>Способы обработки</h3>
+      <p>Автоматизированная обработка с использованием средств вычислительной техники, без передачи данных третьим лицам за пределы целей, указанных в Политике конфиденциальности.</p>
+      <h3>Срок действия согласия</h3>
+      <p>Согласие действует с момента начала использования Сервиса до момента его отзыва Пользователем путём обращения к Исполнителю.</p>
+      <h3>Отзыв согласия</h3>
+      <p>Пользователь может отозвать согласие в любой момент, обратившись через Telegram-бота Сервиса. Отзыв согласия влечёт прекращение доступа к Сервису.</p>
+      <p style="color:var(--text3,#777);font-size:11px;margin-top:14px;">Документ опубликован в информационных целях. Перед публичным запуском требуется проверка юристом на соответствие 152-ФЗ.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function cpOpenLegal(doc){
+  document.getElementById('cp-legal-overlay').classList.add('active');
+  cpShowLegal(doc||'offer');
+}
+function cpShowLegal(doc){
+  document.querySelectorAll('.cp-legal-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.cp-legal-doc').forEach(function(d){d.classList.remove('active');});
+  var tab=document.getElementById('cp-tab-'+doc);
+  var body=document.getElementById('cp-doc-'+doc);
+  if(tab)tab.classList.add('active');
+  if(body)body.classList.add('active');
+  var bodyWrap=document.querySelector('.cp-legal-body');
+  if(bodyWrap)bodyWrap.scrollTop=0;
+}
+</script>
+<!-- ===== /ЮРИДИЧЕСКИЕ ДОКУМЕНТЫ ===== -->
+
 </body>
 </html>
