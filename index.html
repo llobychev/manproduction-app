@@ -1360,7 +1360,7 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <div class="settings-group"><div class="settings-row" onclick="openHelpScreen()"><div class="s-icon" style="background:rgba(34,197,94,0.15)">❓</div><span class="settings-label">Помощь</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('offer')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">📜</div><span class="settings-label">Правила клуба</span><span class="settings-arrow">›</span></div><div class="settings-row" onclick="cpOpenLegal('privacy')"><div class="s-icon" style="background:rgba(100,100,100,0.15)">🔒</div><span class="settings-label">Политика конфиденциальности</span><span class="settings-arrow">›</span></div></div>
       <div class="section-title">Данные</div>
       <div class="settings-group"><div class="settings-row" onclick="exportUserData()"><div class="s-icon" style="background:rgba(45,212,191,0.15)">📦</div><span class="settings-label">Выгрузить мои данные</span><span class="settings-arrow">›</span></div></div>
-      <div class="logout-btn" onclick="doLogout()">Выйти из аккаунта</div>
+      <div class="logout-btn" onclick="openLogoutConfirm()">Выйти из аккаунта</div>
     </div>
   </div>
 
@@ -1624,6 +1624,29 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
       <button class="btn-cancel" onclick="closeSocialModal()">Отмена</button>
       <button class="btn-gold" style="flex:1;width:auto;padding:12px" onclick="saveSocialLink()">Сохранить и перейти →</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: подтверждение выхода -->
+<div class="modal-overlay" id="logout-confirm-modal">
+  <div class="modal-box" style="text-align:center;">
+    <div style="font-size:32px;margin-bottom:10px;">🚪</div>
+    <div class="modal-title" style="margin-bottom:8px;">Точно выйти из аккаунта?</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;">В Telegram Mini App нет настоящего выхода из аккаунта — это просто перезагрузка сессии приложения. Все твои данные сохранятся, и при следующем открытии ты автоматически окажешься в том же аккаунте.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeLogoutConfirm()">Отмена</button>
+      <button class="btn-gold" style="flex:1;width:auto;padding:12px;background:var(--red);" onclick="doLogout()">Да, выйти</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: начисление баллов (Лёва) -->
+<div class="modal-overlay" id="lyova-points-modal">
+  <div class="modal-box" style="text-align:center;max-height:50vh;">
+    <div style="font-size:40px;margin-bottom:8px;">🦁</div>
+    <div style="font-size:24px;font-weight:700;color:var(--accent);margin-bottom:8px;" id="lyova-points-amount">+10 баллов</div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.5;margin-bottom:18px;" id="lyova-points-phrase">Газ, бро!</div>
+    <button class="btn-gold" onclick="closeLyovaPointsModal()">Хорошо</button>
   </div>
 </div>
 
@@ -2087,6 +2110,53 @@ function saveSchedulesStore(){persistKey(SCHEDULES_KEY,schedules);}
 function saveFinanceStore(){persistKey(FINANCE_KEY,financeRecords);}
 function savePersonalDataStore(){persistKey(PERSONAL_DATA_KEY,personalData);}
 function saveHabitsStore(){persistKey(HABITS_KEY,habitsData);}
+var LYOVA_POINT_PHRASES=[
+  'Газ, бро! Так держать',
+  'Красавчик, погнали дальше',
+  'Малая будет гордиться 😏',
+  'Вот это режим, уважение',
+  'Хэндс ап, ты в деле',
+  'Чётко. Не в лом было — видно',
+  'Дисциплина решает, респект',
+  'Ещё один шаг к новой версии себя',
+  'Норм темп, не сбавляй',
+  'Вот так и качаем все 5 сфер',
+  'Огонь. Завтра повторим?',
+  'Без поблажек себе — это путь',
+  'Система работает, когда ты работаешь',
+  'Заслуженно, бро',
+  'Маленький шаг, но он считается',
+  'Молодец, щас будет ещё больше',
+  'Ты делаешь это не для галочки — видно',
+  'Уважение за стабильность',
+  'Это и есть мужской подход к делу',
+  'Продолжай в том же духе, погнали'
+];
+function awardPoints(amount){
+  if(!amount)return;
+  habitsData.points=(habitsData.points||0)+amount;
+  saveHabitsStore();
+  syncLeaderboardPoints();
+  updateHomeRankDisplay();
+  showLyovaPointsModal(amount);
+}
+function awardDailyOncePoints(type,amount){
+  habitsData.dailyAwardDates=habitsData.dailyAwardDates||{};
+  var today=getTodayISO();
+  if(habitsData.dailyAwardDates[type]===today)return false;
+  habitsData.dailyAwardDates[type]=today;
+  awardPoints(amount);
+  return true;
+}
+function showLyovaPointsModal(amount){
+  var phrase=LYOVA_POINT_PHRASES[Math.floor(Math.random()*LYOVA_POINT_PHRASES.length)];
+  document.getElementById('lyova-points-amount').textContent='+'+amount+' баллов';
+  document.getElementById('lyova-points-phrase').textContent=phrase;
+  document.getElementById('lyova-points-modal').classList.add('active');
+}
+function closeLyovaPointsModal(){
+  document.getElementById('lyova-points-modal').classList.remove('active');
+}
 function saveGoalsStore(){persistKey(GOALS_KEY,goalsData);}
 function saveRecurringStore(){persistKey(RECURRING_KEY,recurringPayments);}
 function saveDebtsStore(){persistKey(DEBTS_KEY,debts);}
@@ -2354,7 +2424,13 @@ function finishReg(){
   var data={first:first,last:last,fullName:fullName,initials:initials,tgUsername:tgUsername,name:fullName,registeredAt:Date.now()};
   saveToStorage(data);applyUserData(data);loadAllData();launchApp();
 }
-function doLogout(){clearStorage();location.reload();}
+function openLogoutConfirm(){
+  document.getElementById('logout-confirm-modal').classList.add('active');
+}
+function closeLogoutConfirm(){
+  document.getElementById('logout-confirm-modal').classList.remove('active');
+}
+function doLogout(){location.reload();}
 
 // ВЫГРУЗКА ДАННЫХ
 function exportUserData(){
@@ -2851,6 +2927,7 @@ function saveMorning(){
   var now=new Date();
   morningEntries.unshift({text:text,date:fmtDate(now),time:fmtTime(now),ts:now.getTime()});
   saveJournal();document.getElementById('morning-input').value='';renderMorningEntries();
+  awardDailyOncePoints('journal',10);
 }
 function renderMorningEntries(){
   var c=document.getElementById('morning-entries');c.innerHTML='';
@@ -2867,6 +2944,7 @@ function savePositivity(){
   savePositivityStore();
   document.getElementById('pos-self').value='';document.getElementById('pos-others').value='';document.getElementById('pos-world').value='';
   renderPositivityEntries();
+  awardDailyOncePoints('positivity',15);
 }
 function renderPositivityEntries(){
   var c=document.getElementById('positivity-entries');c.innerHTML='';
@@ -2990,22 +3068,22 @@ function checkInHabit(id){
   var today=todayStr();
   if(h.doneDates.indexOf(today)>=0)return;
   h.doneDates.push(today);
-  habitsData.points=(habitsData.points||0)+10;
+  var earned=10;
   var streak=calcStreak(h);
   HABIT_BADGES.forEach(function(b){
     if(streak>=b.need&&(habitsData.earnedBadges||[]).indexOf(b.id)<0){
       habitsData.earnedBadges=habitsData.earnedBadges||[];
       habitsData.earnedBadges.push(b.id);
-      habitsData.points+=25;
+      earned+=25;
       showToast('Новый бейдж: '+b.icon+' '+b.label+'!');
     }
   });
   if(h.doneDates.length>=h.totalDays){
-    habitsData.points+=50;
+    earned+=50;
     habitsData.active=habitsData.active.filter(function(x){return x.id!==id;});
-    showToast('Курс завершён! +50 бонусных баллов 🎉');
+    showToast('Курс завершён! 🎉');
   }
-  saveHabitsStore();syncLeaderboardPoints();
+  awardPoints(earned);
   renderHabitsScreen();
 }
 function stopHabit(id){
@@ -3134,7 +3212,7 @@ function checkInChallenge(challengeId){
   progress.doneDates=progress.doneDates||[];
   progress.doneDates.push(today);
   var c=challengesCatalog.find(function(x){return x._id===challengeId;});
-  habitsData.points=(habitsData.points||0)+10;
+  var earned=10;
   if(fbDb){
     var uid=getTgUserId();
     fbDb.collection('challenge_progress').doc(challengeId+'_'+uid).set({
@@ -3151,11 +3229,11 @@ function checkInChallenge(challengeId){
       .catch(function(err){console.warn('Failed to sync team progress',err);});
   }
   if(c&&progress.doneDates.length>=c.durationDays){
-    habitsData.points+=(c.points||0);
-    showToast('Челлендж завершён! +'+(c.points||0)+' баллов 🎉');
+    earned+=(c.points||0);
+    showToast('Челлендж завершён! 🎉');
   }
   saveChallengesProgress();
-  saveHabitsStore();syncLeaderboardPoints();
+  awardPoints(earned);
   renderChallengesList();
 }
 
@@ -3481,7 +3559,16 @@ function ensureQuestsToday(){
 }
 function toggleQuestDone(idx){
   ensureQuestsToday();
-  questsCompletedState.done[idx]=!questsCompletedState.done[idx];
+  var wasDone=!!questsCompletedState.done[idx];
+  questsCompletedState.done[idx]=!wasDone;
+  if(!wasDone&&questsCompletedState.done[idx]){
+    questsCompletedState.awarded=questsCompletedState.awarded||{};
+    if(!questsCompletedState.awarded[idx]){
+      questsCompletedState.awarded[idx]=true;
+      var pts=(DAILY_QUESTS[idx]&&DAILY_QUESTS[idx].pts)||0;
+      if(pts>0)awardPoints(pts);
+    }
+  }
   saveQuestsDoneStore();
   renderQuests();
 }
@@ -3987,12 +4074,14 @@ function saveFinRecord(){
       list.push({id:catId,icon:'📦',label:customCat});
     }
   }
+  var isNew=!finEditId;
   if(finEditId){
     var idx=financeRecords.findIndex(function(r){return r.id===finEditId;});
     if(idx>=0)financeRecords[idx]=rec;
   } else financeRecords.push(rec);
   saveFinanceStore();
   closeFinModal();renderFinance();
+  if(isNew)awardDailyOncePoints('finance',5);
 }
 function deleteFinRecord(){
   if(!finEditId)return;
