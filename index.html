@@ -1477,13 +1477,19 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
         <div class="plan-card-stars">≈ 41 880 ⭐</div>
       </div>
     </div>
-    <button class="pay-stars-btn" id="main-pay-btn" onclick="startStarsPayment()">⭐ Оплатить через Telegram Stars</button>
+    <div style="margin:0 16px 16px;background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:16px;">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Переведи на карту</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:1px;margin-bottom:4px;" id="pay-card-number">2200 0117 9022 3078</div>
+      <div style="font-size:12px;color:var(--text3);">Газпромбанк · Оксана Л.</div>
+      <button style="margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text2);font-size:12px;cursor:pointer;" onclick="copyCardNumber()">📋 Скопировать номер</button>
+    </div>
+    <button class="pay-stars-btn" id="main-pay-btn" onclick="contactManagerForPayment()">💬 Написать менеджеру и отправить чек</button>
     <div class="pay-promo-row">
       <input class="pay-promo-input" id="pay-promo-input" placeholder="Промокод (если есть)" />
       <button class="pay-promo-apply" onclick="applyPromoCode()">Применить</button>
     </div>
     <div style="padding:0 16px 32px;font-size:11px;color:var(--text3);text-align:center;line-height:1.6;">
-      После оплаты доступ активируется мгновенно.<br>Вопросы? Пиши в поддержку.
+      После перевода напиши менеджеру и пришли чек.<br>Доступ откроют вручную в течение часа.
     </div>
   </div>
 
@@ -4422,29 +4428,30 @@ function applyPromoCode() {
   }).catch(function() { showToast('Ошибка проверки промокода'); });
 }
 
-function startStarsPayment() {
+function copyCardNumber() {
+  var cardText = document.getElementById('pay-card-number').textContent.replace(/\s/g,'');
+  if(navigator.clipboard) {
+    navigator.clipboard.writeText(cardText).then(function(){ showToast('Номер карты скопирован'); }).catch(function(){ showToast('Не удалось скопировать'); });
+  } else {
+    showToast('Скопируй номер вручную');
+  }
+}
+
+var MAIN_PLAN_PRICES_RUB = {
+  '1m': '5 000 ₽',
+  '3m': '14 000 ₽',
+  '6m': '27 000 ₽',
+  '12m': '49 000 ₽',
+};
+
+function contactManagerForPayment() {
   var tg = window.Telegram && window.Telegram.WebApp;
   if(!tg) { showToast('Только в Telegram'); return; }
-  var uid = getTgUserId();
-  if(!uid) { showToast('Нет данных пользователя'); return; }
-  var btn = document.getElementById('main-pay-btn');
-  if(btn) { btn.disabled = true; btn.textContent = '⏳ Создаём счёт...'; }
-  fetch('https://llobychev-manproduction-networking-server-6f2d.twc1.net/create-invoice', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({chat_id: uid, plan: selectedMainPlan, bot: 'main'})
-  }).then(function(r){ return r.json(); }).then(function(data){
-    if(btn) { btn.disabled = false; btn.innerHTML = '⭐ Оплатить через Telegram Stars'; }
-    if(data.ok) {
-      showToast('Счёт отправлен в чат с ботом');
-      trackEvent('payment_initiated', {plan: selectedMainPlan, bot: 'main'});
-    } else {
-      showToast('Ошибка: ' + (data.error || 'попробуй снова'));
-    }
-  }).catch(function(){
-    if(btn) { btn.disabled = false; btn.innerHTML = '⭐ Оплатить через Telegram Stars'; }
-    showToast('Нет соединения с сервером');
-  });
+  var planLabel = (MAIN_PLANS[selectedMainPlan] && MAIN_PLANS[selectedMainPlan].label) || selectedMainPlan;
+  var priceLabel = MAIN_PLAN_PRICES_RUB[selectedMainPlan] || '';
+  trackEvent('payment_manager_contact', {plan: selectedMainPlan});
+  var text = encodeURIComponent('Здравствуй! Хочу оформить подписку ManClub на ' + planLabel + ' (' + priceLabel + '). Перевёл на карту, чек прикладываю.');
+  tg.openTelegramLink('https://t.me/job_bylobychevinsibir?text=' + text);
 }
 // ===== END DEMO MODE =====
 
