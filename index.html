@@ -576,6 +576,9 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
 .pay-divider{height:0.5px;background:var(--border);margin:12px 0;}
 .pay-stars-btn{margin:0 16px 12px;width:calc(100% - 32px);padding:15px;background:var(--accent);border:none;border-radius:14px;font-size:15px;font-weight:700;color:#1a0f00;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
 .pay-promo-row{margin:0 16px 24px;display:flex;gap:8px;}
+.plan-card-old-price{text-decoration:line-through;color:var(--text3);font-size:12px;margin-right:6px;}
+.plan-card-new-price{color:var(--accent);font-weight:700;}
+.plan-card-savings{margin-top:4px;font-size:11px;color:#7ed68a;font-weight:600;}
 .pay-promo-input{flex:1;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:13px;outline:none;}
 .pay-promo-apply{background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:11px 16px;color:var(--text2);font-size:13px;cursor:pointer;}
 /* plan cards */
@@ -1458,23 +1461,27 @@ html,body{height:100%;background:var(--bg);font-family:-apple-system,'SF Pro Dis
     <div class="plan-cards-wrap" id="plan-cards-wrap">
       <div class="plan-card selected" id="plan-1m" onclick="selectMainPlan('1m')">
         <div class="plan-card-top"><span class="plan-card-name">1 месяц</span></div>
-        <div class="plan-card-price">5 000 ₽ / мес</div>
-        <div class="plan-card-stars">≈ 4 270 ⭐</div>
+        <div class="plan-card-price" id="plan-price-1m">5 000 ₽ / мес</div>
+        <div class="plan-card-stars" id="plan-stars-1m">≈ 4 270 ⭐</div>
+        <div class="plan-card-savings" id="plan-savings-1m" style="display:none;"></div>
       </div>
       <div class="plan-card" id="plan-3m" onclick="selectMainPlan('3m')">
         <div class="plan-card-top"><span class="plan-card-name">3 месяца</span><span class="plan-card-badge">−7%</span></div>
-        <div class="plan-card-price">14 000 ₽ / 3 мес</div>
-        <div class="plan-card-stars">≈ 11 965 ⭐</div>
+        <div class="plan-card-price" id="plan-price-3m">14 000 ₽ / 3 мес</div>
+        <div class="plan-card-stars" id="plan-stars-3m">≈ 11 965 ⭐</div>
+        <div class="plan-card-savings" id="plan-savings-3m" style="display:none;"></div>
       </div>
       <div class="plan-card" id="plan-6m" onclick="selectMainPlan('6m')">
         <div class="plan-card-top"><span class="plan-card-name">6 месяцев</span><span class="plan-card-badge">−10%</span></div>
-        <div class="plan-card-price">27 000 ₽ / 6 мес</div>
-        <div class="plan-card-stars">≈ 23 077 ⭐</div>
+        <div class="plan-card-price" id="plan-price-6m">27 000 ₽ / 6 мес</div>
+        <div class="plan-card-stars" id="plan-stars-6m">≈ 23 077 ⭐</div>
+        <div class="plan-card-savings" id="plan-savings-6m" style="display:none;"></div>
       </div>
       <div class="plan-card" id="plan-12m" onclick="selectMainPlan('12m')">
         <div class="plan-card-top"><span class="plan-card-name">12 месяцев</span><span class="plan-card-badge">−18%</span></div>
-        <div class="plan-card-price">49 000 ₽ / год</div>
-        <div class="plan-card-stars">≈ 41 880 ⭐</div>
+        <div class="plan-card-price" id="plan-price-12m">49 000 ₽ / год</div>
+        <div class="plan-card-stars" id="plan-stars-12m">≈ 41 880 ⭐</div>
+        <div class="plan-card-savings" id="plan-savings-12m" style="display:none;"></div>
       </div>
     </div>
     <div style="margin:0 16px 16px;background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;padding:16px;">
@@ -4288,11 +4295,39 @@ var userDiscount = null;
 var selectedMainPlan = '1m';
 
 var MAIN_PLANS = {
-  '1m':  {stars: 4270,  label: '1 месяц'},
-  '3m':  {stars: 11965, label: '3 месяца'},
-  '6m':  {stars: 23077, label: '6 месяцев'},
-  '12m': {stars: 41880, label: '12 месяцев'},
+  '1m':  {stars: 4270,  rub: 5000,  rubLabel: '5 000 ₽ / мес',   label: '1 месяц'},
+  '3m':  {stars: 11965, rub: 14000, rubLabel: '14 000 ₽ / 3 мес', label: '3 месяца'},
+  '6m':  {stars: 23077, rub: 27000, rubLabel: '27 000 ₽ / 6 мес', label: '6 месяцев'},
+  '12m': {stars: 41880, rub: 49000, rubLabel: '49 000 ₽ / год',   label: '12 месяцев'},
 };
+
+function fmtNum(n){return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');}
+
+function renderPlanPrices() {
+  var pct = (userDiscount && userDiscount.pct) ? userDiscount.pct : 0;
+  Object.keys(MAIN_PLANS).forEach(function(key) {
+    var p = MAIN_PLANS[key];
+    var priceEl = document.getElementById('plan-price-' + key);
+    var starsEl = document.getElementById('plan-stars-' + key);
+    var savingsEl = document.getElementById('plan-savings-' + key);
+    if(!priceEl) return;
+    if(pct > 0) {
+      var newRub = Math.round(p.rub * (1 - pct / 100));
+      var newStars = Math.round(p.stars * (1 - pct / 100));
+      var savedRub = p.rub - newRub;
+      priceEl.innerHTML = '<span class="plan-card-old-price">' + fmtNum(p.rub) + ' ₽</span><span class="plan-card-new-price">' + fmtNum(newRub) + ' ₽</span>';
+      starsEl.textContent = '≈ ' + fmtNum(newStars) + ' ⭐';
+      if(savingsEl) {
+        savingsEl.style.display = 'block';
+        savingsEl.textContent = '🎉 Выгода ' + fmtNum(savedRub) + ' ₽ (−' + pct + '%)';
+      }
+    } else {
+      priceEl.textContent = p.rubLabel;
+      starsEl.textContent = '≈ ' + fmtNum(p.stars) + ' ⭐';
+      if(savingsEl) savingsEl.style.display = 'none';
+    }
+  });
+}
 
 function selectMainPlan(plan) {
   selectedMainPlan = plan;
@@ -4326,9 +4361,11 @@ function initDemoMode() {
   }).catch(function(){ checkDemoPerks(uid); });
 }
 
+var DEMO_DAYS_DEFAULT = 21;
+
 function checkDemoPerks(uid) {
   fbDb.collection('roulette_active_perks').doc(uid).get().then(function(doc) {
-    if(!doc.exists) { checkDemoExpired(); return; }
+    if(!doc.exists) { grantDefaultDemo(uid); return; }
     var d = doc.data();
 
     // Free subscription from roulette
@@ -4354,12 +4391,25 @@ function checkDemoPerks(uid) {
         checkDemoExpired();
       }
     } else {
-      checkDemoExpired();
+      // Запись о юзере есть (например после рулетки начислили discountPct),
+      // но демо ещё ни разу не выдавалось — выдаём дефолтный демо-доступ
+      grantDefaultDemo(uid);
     }
 
     if(d.discountPct) {
       userDiscount = {pct: d.discountPct, source: 'roulette'};
     }
+  }).catch(function(){});
+}
+
+function grantDefaultDemo(uid) {
+  var until = new Date(Date.now() + DEMO_DAYS_DEFAULT * 24 * 60 * 60 * 1000);
+  fbDb.collection('roulette_active_perks').doc(uid).set({
+    demoAccessUntil: until.toISOString()
+  }, {merge: true}).then(function() {
+    demoAccessUntil = until;
+    showDemoBanner(until);
+    trackEvent('demo_granted_default', {until: until.toISOString()});
   }).catch(function(){});
 }
 
@@ -4407,6 +4457,7 @@ function renderPaymentScreen() {
     if(badge) badge.style.display = 'inline-flex';
     if(pctEl) pctEl.textContent = userDiscount.pct + '%';
   }
+  renderPlanPrices();
   trackEvent('payment_screen_open', {});
 }
 
@@ -4414,7 +4465,10 @@ function applyPromoCode() {
   var code = document.getElementById('pay-promo-input').value.trim().toUpperCase();
   if(!code) { showToast('Введи промокод'); return; }
   if(!fbDb) { showToast('Нет соединения'); return; }
+  var btn = document.querySelector('.pay-promo-apply');
+  if(btn) { btn.disabled = true; btn.textContent = '...'; }
   fbDb.collection('promo_codes').doc(code).get().then(function(doc) {
+    if(btn) { btn.disabled = false; btn.textContent = 'Применить'; }
     if(doc.exists && doc.data().active) {
       var pct = doc.data().discountPct || 10;
       userDiscount = {pct: pct, source: 'promo', code: code};
@@ -4425,7 +4479,10 @@ function applyPromoCode() {
       showToast('Промокод не найден или недействителен');
       trackEvent('promo_failed', {code: code});
     }
-  }).catch(function() { showToast('Ошибка проверки промокода'); });
+  }).catch(function() {
+    if(btn) { btn.disabled = false; btn.textContent = 'Применить'; }
+    showToast('Ошибка проверки промокода');
+  });
 }
 
 function copyCardNumber() {
