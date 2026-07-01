@@ -1830,12 +1830,18 @@ var fbDb=null;
 var fbStorage=null;
 function initFirebase(){
   try{
-    if(window.firebase&&!fbDb){
+    if(window.firebase&&firebase.apps&&firebase.apps.length===0){
       firebase.initializeApp(firebaseConfig);
+    }
+  }catch(e){console.warn('Firebase init failed',e);}
+}
+function initFirestoreAfterAuth(){
+  try{
+    if(window.firebase&&!fbDb){
       fbDb=firebase.firestore();
       fbStorage=firebase.storage();
     }
-  }catch(e){console.warn('Firebase init failed',e);}
+  }catch(e){console.warn('Firestore init failed',e);}
 }
 // Loads telegram usernames of all registered club members (from the `users`
 // collection) once per session, so contact cards can show a "в клубе" badge
@@ -2311,8 +2317,8 @@ function firebaseAuth(callback){
         var data=JSON.parse(xhr.responseText);
         if(data.token){
           firebase.auth().signInWithCustomToken(data.token)
-            .then(function(){console.log('Firebase Auth: signed in as',firebase.auth().currentUser.uid);callback();})
-            .catch(function(err){console.warn('Auth signIn error:',err);callback();});
+            .then(function(){console.log('Firebase Auth: signed in as',firebase.auth().currentUser.uid);initFirestoreAfterAuth();callback();})
+            .catch(function(err){console.warn('Auth signIn error:',err);initFirestoreAfterAuth();callback();});
         }else{callback();}
       }catch(e){console.warn('Auth parse error:',e);callback();}
     }else{console.warn('Auth server error:',xhr.status);callback();}
