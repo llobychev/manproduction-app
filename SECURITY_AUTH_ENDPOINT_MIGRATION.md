@@ -1,16 +1,16 @@
 # Main App auth endpoint migration
 
-Status: draft; production code is unchanged.
+Status: ready for production rollout; backend `/auth/app` is deployed on Timeweb.
 
-## Required code change
+## Implemented code change
 
-In `index.html`, inside `firebaseAuth`, replace:
+In `index.html`, inside `firebaseAuth`, the legacy endpoint:
 
 ```js
 xhr.open('POST', AUTH_SERVER + '/auth', true);
 ```
 
-with:
+was replaced with:
 
 ```js
 xhr.open('POST', AUTH_SERVER + '/auth/app', true);
@@ -30,8 +30,8 @@ The current client continues after authentication errors. Before strict Firestor
 
 ## Rollout order
 
-1. Deploy backend with `/auth/app` while keeping legacy `/auth`.
-2. Smoke-test `/auth/app`.
-3. Merge this client endpoint migration.
+1. Backend with `/auth/app` deployed while keeping legacy `/auth`. ✅
+2. Main App endpoint changed to `/auth/app`. ✅
+3. Merge this client migration.
 4. Verify app launch, profile load, personal data, events and analytics.
-5. Keep legacy `/auth` until both clients are migrated.
+5. Keep legacy `/auth` until both Main App and Admin App are migrated.
