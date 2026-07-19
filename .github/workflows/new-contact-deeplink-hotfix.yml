@@ -1,0 +1,69 @@
+name: New contact deeplink hotfix
+
+on:
+  push:
+    branches:
+      - fix/new-contact-deeplink
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/new-contact-deeplink
+          fetch-depth: 0
+
+      - name: Patch deeplink resolver
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old = "  pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;"
+          new = "  var urlParams=new URLSearchParams(window.location.search);\n  pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||urlParams.get('startapp')||urlParams.get('tgWebAppStartParam')||null;"
+          if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('Expected pendingStartParam assignment not found')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate deeplink flow
+        run: |
+          grep -F "urlParams.get('startapp')" index.html
+          grep -F "urlParams.get('tgWebAppStartParam')" index.html
+          grep -F "if(pendingStartParam==='new_contact')" index.html
+          grep -F "openContactModal();" index.html
+
+      - name: Validate embedded JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = []
+          for attrs, body in re.findall(r'<script([^>]*)>(.*?)</script>', html, flags=re.S | re.I):
+              if 'src=' not in attrs.lower():
+                  scripts.append(body)
+          Path('/tmp/manclub-inline.js').write_text('\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/manclub-inline.js
+
+      - name: Commit generated hotfix
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No index.html changes required'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix: honor new_contact deeplink from bot web app button'
+          git push origin HEAD:fix/new-contact-deeplink

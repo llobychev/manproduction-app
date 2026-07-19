@@ -2422,7 +2422,8 @@ window.addEventListener('load',function(){
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(tg){tg.ready();tg.expand();}
   if(window.initCopyProtection)window.initCopyProtection(getTgUserId());
-  pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||null;
+  var urlParams=new URLSearchParams(window.location.search);
+  pendingStartParam=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param)||urlParams.get('startapp')||urlParams.get('tgWebAppStartParam')||null;
   // Auth then migrate then load
   firebaseAuth(function(){
     runMigration(fbDb, function(){
