@@ -2429,7 +2429,7 @@ window.addEventListener('load',function(){
     runMigration(fbDb, function(){
       loadFromStorage(function(saved){
         document.getElementById('splash').style.display='none';
-        if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();}
+        if(saved&&saved.first){applyUserData(saved);loadAllData();launchApp();setTimeout(handleStartParam,0);}
         else{
           if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user){var u=tg.initDataUnsafe.user;if(u.first_name)document.getElementById('inp-first').value=u.first_name;if(u.last_name)document.getElementById('inp-last').value=u.last_name;}
           showScreen('ob-welcome');
