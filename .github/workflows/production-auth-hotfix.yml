@@ -1,0 +1,79 @@
+name: Production auth backend hotfix
+
+on:
+  push:
+    branches:
+      - fix/production-auth-backend-2026-07-19
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/production-auth-backend-2026-07-19
+          fetch-depth: 0
+
+      - name: Patch production auth flow
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old_url = "var AUTH_SERVER='https://llobychev-manproduction-networking-server-6f2d.twc1.net';"
+          new_url = "var AUTH_SERVER='https://llobychev-manproduction-networking-server-0fdf.twc1.net';"
+          if old_url in text:
+              text = text.replace(old_url, new_url, 1)
+          elif new_url not in text:
+              raise SystemExit('Expected AUTH_SERVER declaration not found')
+
+          old_send = "  xhr.onerror=function(){console.warn('Auth network error');callback();};\n  xhr.send(JSON.stringify({initData:tg.initData}));"
+          new_send = "  xhr.onerror=function(){console.warn('Auth network error');callback();};\n  xhr.ontimeout=function(){console.warn('Auth request timeout');callback();};\n  xhr.timeout=15000;\n  xhr.send(JSON.stringify({initData:tg.initData}));"
+          if old_send in text:
+              text = text.replace(old_send, new_send, 1)
+          elif new_send not in text:
+              raise SystemExit('Expected auth request tail not found')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate production URL and auth route
+        run: |
+          grep -F "var AUTH_SERVER='https://llobychev-manproduction-networking-server-0fdf.twc1.net';" index.html
+          grep -F "xhr.open('POST',AUTH_SERVER+'/auth/app',true);" index.html
+          grep -F "xhr.timeout=15000;" index.html
+          if grep -Fq 'llobychev-manproduction-networking-server-6f2d.twc1.net' index.html; then
+            echo 'Legacy Timeweb URL is still present' >&2
+            exit 1
+          fi
+
+      - name: Validate embedded JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = []
+          for attrs, body in re.findall(r'<script([^>]*)>(.*?)</script>', html, flags=re.S | re.I):
+              if 'src=' not in attrs.lower():
+                  scripts.append(body)
+          Path('/tmp/manclub-inline.js').write_text('\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/manclub-inline.js
+
+      - name: Commit generated hotfix
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No index.html changes required'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix: point Main App auth to active production backend'
+          git push origin HEAD:fix/production-auth-backend-2026-07-19
