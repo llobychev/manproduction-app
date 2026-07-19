@@ -2371,7 +2371,7 @@ document.addEventListener('focusin',function(e){
 
 
 // ===== FIREBASE AUTH =====
-var AUTH_SERVER='https://llobychev-manproduction-networking-server-6f2d.twc1.net';
+var AUTH_SERVER='https://llobychev-manproduction-networking-server-0fdf.twc1.net';
 function firebaseAuth(callback){
   callback=callback||function(){};
   var tg=window.Telegram&&window.Telegram.WebApp;
@@ -2392,6 +2392,8 @@ function firebaseAuth(callback){
     }else{console.warn('Auth server error:',xhr.status);callback();}
   };
   xhr.onerror=function(){console.warn('Auth network error');callback();};
+  xhr.ontimeout=function(){console.warn('Auth request timeout');callback();};
+  xhr.timeout=15000;
   xhr.send(JSON.stringify({initData:tg.initData}));
 }
 // ===== END FIREBASE AUTH =====
