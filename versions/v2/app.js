@@ -360,7 +360,7 @@ async function bootstrap() {
     const authenticated = await authenticateTelegram({ firebase:window.firebase, telegram });
     setAuthenticatedRuntime(authenticated);
     renderLifecycle('loadingCoreData');
-    const access = await ensureCurrentAccess(authenticated.db, authenticated.user.uid);
+    const access = await ensureCurrentAccess(authenticated.db, authenticated.user.uid, new Date(), authenticated.serverApi);
     setAccessContext(access);
     homeState={status:'loading',data:null,error:null};
     try{homeState={status:'ready',data:await loadHomeDashboard(authenticated.db,authenticated.user.uid,{telegramUser:telegram?.initDataUnsafe?.user||null}),error:null};}
@@ -571,7 +571,7 @@ async function handleQuestToggle(questId){
   const runtime=getRuntimeContext(),quest=homeState.data?.quests.items.find(item=>item.id===questId);
   if(!runtime.fbDb||!runtime.firebaseUser||!quest)return;
   const controls=[...document.querySelectorAll(`[data-quest-id="${CSS.escape(questId)}"]`)];controls.forEach(button=>button.disabled=true);
-  try{const result=await toggleDailyQuest(runtime.fbDb,runtime.firebaseUser.uid,quest);homeState.data.quests.done=result.quests.done;homeState.data.quests.awarded=result.quests.awarded;homeState.data.points=result.points;announcer.textContent=result.reward?`Квест выполнен. Начислено ${result.reward} баллов`:'Статус квеста обновлён';render(navigation.current);}
+  try{const result=await toggleDailyQuest(runtime.serverApi,quest,Boolean(homeState.data.quests.done[quest.id]));homeState.data.quests.done=result.quests.done;homeState.data.quests.awarded=result.quests.awarded;homeState.data.points=result.points;announcer.textContent=result.reward?`Квест выполнен. Начислено ${result.reward} баллов`:'Статус квеста обновлён';render(navigation.current);}
   catch(error){announcer.textContent='Не удалось обновить квест';controls.forEach(button=>button.disabled=false);}
 }
 modalRoot.addEventListener('click', event => {

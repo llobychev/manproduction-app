@@ -28,12 +28,13 @@ test('candidate rules keep entitlements and reward-bearing progress server-owned
   assert.match(rules,/match \/roulette_active_perks\/\{uid\}[\s\S]*allow create, update, delete: if canManage\('demoAccess'\)/);
   assert.match(rules,/match \/leaderboard\/\{uid\}[\s\S]*allow create, update, delete: if canManage\('users'\)/);
   assert.match(rules,/match \/challenge_progress\/\{progressId\}[\s\S]*allow create, update, delete: if canManage\('challenges'\)/);
+  assert.match(rules,/match \/reward_balances\/\{uid\}[\s\S]*allow read, write: if false/);
   assert.match(rules,/request\.resource\.data\.get\('doneCount', 0\) == 0/);
 });
 
 test('candidate rules cover every audited V1 collection and deny unreviewed V2 state',async()=>{
   const rules=await read('firestore.rules');
-  for(const collection of ['users','user_data','cycle_data','events','news','leaderboard','challenge_progress','challenges','daily_quests','analytics','roulette_active_perks','promo_codes','migration_backup','admin_users'])assert.match(rules,new RegExp(`match \/${collection}`),collection);
+  for(const collection of ['users','user_data','cycle_data','events','news','leaderboard','reward_balances','challenge_progress','challenges','daily_quests','analytics','roulette_active_perks','promo_codes','migration_backup','admin_users'])assert.match(rules,new RegExp(`match \/${collection}`),collection);
   assert.doesNotMatch(rules,/match \/(?:v2_|path_progress|widget_layouts|public_profiles|lyova_runtime)/);
 });
 

@@ -3,6 +3,7 @@ const context = {
   firebaseUser: null,
   fbDb: null,
   fbStorage: null,
+  serverApi: null,
   access: null
 };
 
@@ -14,11 +15,12 @@ export function setLifecycle(lifecycle) {
   context.lifecycle = lifecycle;
 }
 
-export function setAuthenticatedRuntime({ user, db, storage }) {
+export function setAuthenticatedRuntime({ user, db, storage, serverApi }) {
   if (!user || !db) throw new Error('Authenticated Firebase user and Firestore are required');
   context.firebaseUser = user;
   context.fbDb = db;
   context.fbStorage = storage || null;
+  context.serverApi = serverApi || null;
 }
 
 export function setAccessContext(access) {
@@ -30,5 +32,6 @@ export function resetRuntimeContext() {
   context.firebaseUser = null;
   context.fbDb = null;
   context.fbStorage = null;
+  context.serverApi = null;
   context.access = null;
 }

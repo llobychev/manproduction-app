@@ -2,11 +2,11 @@
 
 Date: 2026-08-01
 
-Status: Package 9 client gate implemented. New physical write adapters remain disabled because the authoritative Firestore Rules source/revision is not available in the audited repositories.
+Status: Package 11B server-owned demo/reward boundary implemented in code. New physical domain adapters remain disabled because the authoritative deployed Firestore Rules revision is still unproven.
 
 ## Audit result
 
-No deployable `firestore.rules` or equivalent authoritative Rules source was found in `manproduction-app`, `manproduction-networking-server`, or `manproduction-admin`. Client UI code cannot prove authorization by itself.
+A deployable-format `firestore.rules` candidate and emulator matrix now exist in `manproduction-app`. They are not evidence of the Rules actually deployed to production. Client UI code and a repository candidate cannot prove production authorization by themselves.
 
 ## Accepted adapter envelope
 
@@ -34,10 +34,10 @@ The claimed revision must also match the domain's exact compile-time allowlist e
 
 Physical collection names remain unselected until the Rules-owning repository and deployment revision are identified. This avoids creating a schema that cannot be enforced or rolled back safely.
 
-## Existing V1-compatible client writes
+## Server-owned V2 writes
 
-V2 currently reuses two pre-existing logical write paths: default demo merge in `roulette_active_perks/{uid}` and transactional daily-quest state in `user_data/{uid}`. Package 9 does not rename or duplicate them. Their current deployment Rules still require external evidence before controlled V2 activation.
+V2 has no direct demo or reward-bearing Firestore writes. Package 11B moves default demo creation and daily-quest reward mutation behind an authenticated server API. The server derives uid from the verified Firebase ID token, requires the `main_app` contour, chooses quest points from server-owned definitions and transactionally deduplicates rewards. The adapter allowlist remains empty for the other domains.
 
 ## Activation blocker
 
-Package 9 cannot declare production security complete until the owner provides or identifies the deployed Firestore Rules source and revision, then validates every path with authenticated owner, other-user, unauthenticated and malformed-field tests.
+Package 11B cannot declare production security complete until the server module is merged and tested in its own repository, the exact deployed Firestore Rules source/revision is identified, and every path is validated with authenticated owner, other-user, unauthenticated and malformed-field tests. V1 client writes, challenge progress and the shared member directory also require migration before the candidate Rules can be deployed.

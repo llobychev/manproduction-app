@@ -4,10 +4,7 @@ export const V1_IMMUTABILITY = Object.freeze({
   'versions/v1/index.html':'5bfb2634f08f5a4a29d07e4d61da7f6d401d5992ada0961306d1bf418d43062c'
 });
 
-export const DIRECT_V2_WRITE_ALLOWLIST = Object.freeze({
-  'versions/v2/access.js':Object.freeze(['roulette_active_perks']),
-  'versions/v2/home.js':Object.freeze(['user_data'])
-});
+export const DIRECT_V2_WRITE_ALLOWLIST = Object.freeze({});
 
 export const AUTOMATED_ACCEPTANCE_GATES = Object.freeze([
   'javascript-syntax',
@@ -16,7 +13,7 @@ export const AUTOMATED_ACCEPTANCE_GATES = Object.freeze([
   'auth-fail-closed',
   'paid-perk-demo-expired-access-matrix',
   'payment-no-false-success',
-  'quest-transaction-reward-deduplication',
+  'server-owned-demo-and-quest-reward-contract',
   'events-path-widgets-profile-lyova-fail-closed',
   'public-profile-sensitive-field-denial',
   'logout-retains-data',

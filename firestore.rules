@@ -107,6 +107,10 @@ service cloud.firestore {
       allow create, update, delete: if canManage('users');
     }
 
+    match /reward_balances/{uid} {
+      allow read, write: if false;
+    }
+
     match /challenge_progress/{progressId} {
       allow read: if signedIn();
       allow create, update, delete: if canManage('challenges');

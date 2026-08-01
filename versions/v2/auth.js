@@ -1,4 +1,6 @@
-export const AUTH_SERVER = 'https://llobychev-manproduction-networking-server-0fdf.twc1.net';
+import { MAIN_APP_API_BASE, createMainAppServerApi } from './server-api.js';
+
+export const AUTH_SERVER = MAIN_APP_API_BASE;
 
 export const FIREBASE_CONFIG = Object.freeze({
   apiKey: 'AIzaSyD195j33cTr6labXodSH_jTeZsvs4L3U4w',
@@ -60,5 +62,6 @@ export async function authenticateTelegram({ firebase, telegram, fetchImpl = fet
   // The database boundary is deliberately crossed only after custom-token sign-in succeeds.
   const db = firebase.firestore();
   const storage = typeof firebase.storage === 'function' ? firebase.storage() : null;
-  return Object.freeze({ user, db, storage });
+  const serverApi=createMainAppServerApi({ firebaseUser:user, fetchImpl });
+  return Object.freeze({ user, db, storage, serverApi });
 }

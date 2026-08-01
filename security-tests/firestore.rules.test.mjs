@@ -73,6 +73,8 @@ test('leaderboard and reward-bearing progress are server-owned',async()=>{
   await assertFails(setDoc(doc(alice,'leaderboard','bob'),{...valid,userId:'bob'}));
   await assertFails(setDoc(doc(alice,'challenge_progress','c1_alice'),{challengeId:'c1',userId:'alice',doneCount:100,updatedAt:1}));
   await assertFails(setDoc(doc(alice,'user_data','alice'),{habits:{points:1000000}}));
+  await assertFails(getDoc(doc(alice,'reward_balances','alice')));
+  await assertFails(setDoc(doc(alice,'reward_balances','alice'),{migrated:true,points:1000000}));
 });
 
 test('member cannot publish admin content; approved permission can',async()=>{
