@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>MenClub Launcher</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:#0f0f0f;color:#f0ece4;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Arial,sans-serif}body{display:grid;place-items:center;padding:24px}.box{width:100%;max-width:390px;text-align:center}.brand{color:#c9a84c;font-size:13px;font-weight:800;letter-spacing:.12em}.sub{font-size:11px;color:#777;margin-top:5px;text-transform:uppercase;letter-spacing:.08em}.card{margin-top:18px;background:#242424;border:1px solid rgba(201,168,76,.2);border-radius:18px;padding:18px}.spin{width:34px;height:34px;border:2px solid rgba(201,168,76,.2);border-top-color:#c9a84c;border-radius:50%;animation:s .8s linear infinite;margin:0 auto 14px}@keyframes s{to{transform:rotate(360deg)}}p{font-size:12px;line-height:1.5;color:#aaa39a}.actions{display:grid;gap:8px;margin-top:15px}.btn{display:block;text-decoration:none;border-radius:13px;padding:12px;font-size:11px;font-weight:800;background:#c9a84c;color:#1b1205}.btn.secondary{background:#181818;color:#f0ece4;border:1px solid rgba(201,168,76,.2)}
+</style>
+</head>
+<body>
+<main class="box">
+<div class="brand">MENCLUB IN SIBERIA</div>
+<div class="sub">Dual-version launcher</div>
+<section class="card"><div class="spin"></div><p id="state">Определяю активную версию…</p><div class="actions"><a class="btn" href="./app.html?version=v1">Открыть V1 Stable</a><a class="btn secondary" href="./app.html?version=v2">Открыть V2 Development</a><a class="btn secondary" href="./versions.html">Сравнить версии</a></div></section>
+</main>
+<script>
+(function(){
+  'use strict';
+  var allowed={v1:true,v2:true};
+  var params=new URLSearchParams(location.search);
+  var forced=params.get('version');
+  function go(version){
+    var safe=allowed[version]?version:'v1';
+    document.getElementById('state').textContent='Открываю '+safe.toUpperCase()+'…';
+    var suffix=location.search||location.hash?'':'?launcher=1';
+    location.replace('./versions/'+safe+'/index.html'+suffix);
+  }
+  if(allowed[forced]){go(forced);return;}
+  fetch('./versions/active.json?ts='+Date.now(),{cache:'no-store'})
+    .then(function(response){if(!response.ok)throw new Error('manifest unavailable');return response.json();})
+    .then(function(config){go(config&&config.activeVersion);})
+    .catch(function(){go('v1');});
+})();
+</script>
+</body>
+</html>
