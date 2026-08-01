@@ -8,6 +8,7 @@ import { getRuntimeContext, resetRuntimeContext, setAccessContext, setAuthentica
 import { loadHomeDashboard, toggleDailyQuest } from './home.js';
 import { EVENT_FILTERS, createEventRepository, filterEvents, loadEventsExperience } from './events.js';
 import { chapterStatus, createPathRepository, findChapter, findPath, loadPathExperience } from './path.js';
+import { WidgetLayoutEditor, createWidgetRepository, widgetById } from './widgets.js';
 
 const outlet = document.querySelector('#route-outlet');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -27,6 +28,9 @@ let eventRepository = createEventRepository();
 let eventsState = { status:'loading', items:[], capabilities:{reads:false,writes:false}, filter:'all', selectedEventId:null, actionState:'idle', message:'' };
 let pathRepository = createPathRepository();
 let pathState = { status:'loading', spheres:[], capabilities:{reads:false,writes:false}, selectedSphereId:'finance', selectedPathId:'finance.foundation', selectedChapterId:null, actionState:'idle' };
+let widgetRepository=createWidgetRepository();
+let widgetEditor=new WidgetLayoutEditor();
+let widgetState={status:'loading',capabilities:{reads:false,writes:false},selectedWidgetId:null,actionState:'idle'};
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -48,6 +52,7 @@ function rootMarkup(meta) {
   if(meta.id==='home')return homeMarkup();
   if(meta.id==='events.list')return eventsMarkup();
   if(meta.id==='path.home')return pathHomeMarkup();
+  if(meta.id==='widgets.home')return widgetsHomeMarkup();
   const links = rootCards[meta.parentTab] || [];
   return `<section class="foundation-hero"><span class="eyebrow">V2 FOUNDATION</span><h2>${meta.title}</h2><p>Изолированная оболочка готова к подключению экранного пакета. Реальные пользовательские данные и бизнес-действия здесь ещё не подключены.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Безопасный режим</strong><p>V1 остаётся активной. Эта версия не выполняет Firestore-записи и не меняет production.</p></section>`;
 }
@@ -159,11 +164,40 @@ function pathInnerMarkup(meta){
   return `<article class="path-lesson"><span class="eyebrow">${escapeHtml(selected.sphere.title)} · ${escapeHtml(selected.path.name)}</span><h2>${escapeHtml(selected.chapter.title)}</h2><p>Практическая глава продвинутой Карты жизни. Содержание и ответы будут подключены через отдельный content adapter без потери структуры V1.</p><div class="path-lesson-meta"><span>~${selected.chapter.durationMinutes} мин</span><span>+${selected.chapter.xp} XP</span><span>${done?'Пройдено':'Доступно'}</span></div>${pathState.capabilities.writes?`<button class="secondary-button full-width" type="button" data-path-bookmark="${selected.chapter.id}">${bookmarked?'Убрать из закладок':'В закладки'}</button>`:''}${done?'':pathState.capabilities.writes?`<button class="primary-button full-width" type="button" data-path-complete="${selected.chapter.id}">Завершить главу</button>`:renderContentState('disabled',{title:'Завершение пока недоступно',message:'Награда, прогресс и закладки появятся только после подтверждённой серверной записи.'})}</article>`;
 }
 
+function widgetCard(item,editing=false){
+  const widget=widgetById(item.widgetId);if(!widget)return '';
+  if(editing)return `<article class="widget-card editing size-${item.size}"><div class="widget-drag">••• ПЕРЕТАЩИ</div><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(item.size)}</small></div></div><div class="widget-controls"><button type="button" data-widget-move="-1" data-widget-id="${widget.id}" aria-label="Выше">↑</button><button type="button" data-widget-move="1" data-widget-id="${widget.id}" aria-label="Ниже">↓</button><button type="button" data-widget-resize="${widget.id}">Размер</button><button type="button" data-widget-hide="${widget.id}">Скрыть</button></div></article>`;
+  return `<button class="widget-card size-${item.size}" type="button" data-widget-open="${widget.id}"><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(widget.description)}</small></div></div><i>Открыть →</i></button>`;
+}
+function widgetsHomeMarkup(){
+  if(widgetState.status==='loading')return renderContentState('loading',{title:'Загружаем рабочую панель'});
+  if(widgetState.status==='error')return renderContentState('error',{title:'Виджеты не загрузились',actionLabel:'Повторить'});
+  return `<section class="widgets-hero"><span class="eyebrow">РАБОЧАЯ ПАНЕЛЬ</span><h2>Виджеты</h2><p>Инструменты в утверждённой вертикальной компоновке.</p><div><button class="secondary-button" type="button" data-navigate="widgets.edit">Изменить</button><button class="primary-button" type="button" data-navigate="widgets.gallery">+ Добавить</button></div></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item)).join('')}</section>`;
+}
+function widgetToolMarkup(meta){
+  if(meta.id==='widgets.contactNew')return `<section class="inner-intro"><span class="eyebrow">КОНТАКТЫ</span><h2>Новый контакт</h2><p>Deep link new_contact приводит прямо сюда.</p></section><section class="widget-form"><input placeholder="Имя" disabled><input placeholder="Telegram" disabled><textarea placeholder="Заметка" disabled></textarea>${renderContentState('disabled',{title:'Сохранение подключится через V1 adapter',message:'Форма не сообщает об успехе без подтверждённой записи.'})}</section>`;
+  if(meta.id==='widgets.quickActions')return `<section class="inner-intro"><span class="eyebrow">БЫСТРЫЕ ДЕЙСТВИЯ</span><h2>Что сделать?</h2><p>Каждая активная кнопка ведёт в реальный маршрут.</p></section><section class="quick-action-grid"><button data-navigate="widgets.contactNew">Новый контакт</button><button data-navigate="widgets.finance">Финансы</button><button data-navigate="events.list">Мероприятия</button><button data-navigate="widgets.notes">Заметка</button></section>`;
+  const widgetId={
+    'widgets.mind':'mind','widgets.contacts':'contacts','widgets.finance':'finance','widgets.habits':'habits','widgets.health':'health','widgets.events':'events','widgets.notes':'notes','widgets.media':'media'
+  }[meta.id]||widgetState.selectedWidgetId;
+  const widget=widgetById(widgetId);
+  if(!widget)return null;
+  const action=widget.id==='contacts'?'<button class="primary-button full-width" type="button" data-navigate="widgets.contactNew">+ Новый контакт</button>':widget.id==='events'?'<button class="primary-button full-width" type="button" data-navigate="events.list">Открыть мероприятия</button>':'';
+  return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ИНСТРУМЕНТ V1</span><h2>${escapeHtml(widget.title)}</h2><p>${escapeHtml(widget.description)}. Существующая бизнес-логика будет подключена через совместимый adapter в Package 9.</p></div></section>${action}${renderContentState(widget.id==='media'?'empty':'disabled',{title:widget.id==='media'?'Медиа пока пусто':'Данные пока не подключены',message:'Экран не подменяет реальные данные примерами.'})}`;
+}
+function widgetInnerMarkup(meta){
+  if(!meta.id.startsWith('widgets.'))return null;
+  if(meta.id==='widgets.edit')return `<section class="inner-intro"><span class="eyebrow">РЕДАКТОР</span><h2>Настрой панель</h2><p>Порядок, размер и видимость изменяются в черновике до сохранения.</p></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item,true)).join('')}</section><div class="widget-edit-actions"><button class="secondary-button" type="button" data-widget-reset>Сбросить</button><button class="secondary-button" type="button" data-widget-cancel>Отмена</button><button class="primary-button" type="button" data-widget-save ${widgetState.capabilities.writes?'':'disabled'}>Сохранить</button></div>${!widgetState.capabilities.writes?renderContentState('stale',{title:'Сохранение пока отключено',message:'Layout сохраняется только в Firestore после schema/security approval. Черновик можно проверить и отменить.'}):''}`;
+  if(meta.id==='widgets.gallery')return `<section class="inner-intro"><span class="eyebrow">ГАЛЕРЕЯ</span><h2>Скрытые виджеты</h2><p>Восстанови модуль в рабочую панель.</p></section>${widgetEditor.hidden().length?`<section class="widget-gallery">${widgetEditor.hidden().map(item=>{const widget=widgetById(item.widgetId);return `<button type="button" data-widget-restore="${widget.id}"><span>${widget.icon}</span><b>${escapeHtml(widget.title)}</b><small>Восстановить</small></button>`;}).join('')}</section>`:renderContentState('empty',{title:'Все виджеты на панели'})}`;
+  return widgetToolMarkup(meta);
+}
+
 function innerMarkup(meta) {
   if (meta.id.startsWith('payment.')) return paymentMarkup(meta.id);
   const homeInner=homeInnerMarkup(meta);if(homeInner)return homeInner;
   const eventInner=eventInnerMarkup(meta);if(eventInner)return eventInner;
   const pathInner=pathInnerMarkup(meta);if(pathInner)return pathInner;
+  const widgetInner=widgetInnerMarkup(meta);if(widgetInner)return widgetInner;
   const specialState = meta.id === 'path.lockedReason' ? 'locked' : meta.id === 'payment.error' ? 'error' : meta.id === 'lyova.history' ? 'empty' : 'disabled';
   return `<section class="inner-intro"><span class="eyebrow">${meta.id}</span><h2>${meta.title}</h2><p>Route зарегистрирован, связан с вкладкой «${meta.parentTab}» и готов к экранной реализации следующего пакета.</p></section>${renderContentState(specialState, specialState === 'disabled' ? { title: 'Экран подключится следующим пакетом', message: 'Foundation не изображает работу ещё не подключённой функции.' } : {})}${meta.critical ? '<button class="primary-button destructive-demo" type="button" data-confirm-demo>Проверить безопасное подтверждение</button>' : ''}`;
 }
@@ -264,6 +298,9 @@ async function bootstrap() {
     eventsState={...(await loadEventsExperience(eventRepository,{db:authenticated.db,uid:authenticated.user.uid})),filter:'all',selectedEventId:null,actionState:'idle'};
     pathRepository=createPathRepository(window.MENCLUB_V2_PATH_ADAPTER||null);
     pathState={...(await loadPathExperience(pathRepository,{db:authenticated.db,uid:authenticated.user.uid})),selectedSphereId:'finance',selectedPathId:'finance.foundation',selectedChapterId:null,actionState:'idle'};
+    widgetRepository=createWidgetRepository(window.MENCLUB_V2_WIDGET_ADAPTER||null);
+    try{widgetEditor=new WidgetLayoutEditor(await widgetRepository.load({db:authenticated.db,uid:authenticated.user.uid}));widgetState={status:'ready',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'idle'};}
+    catch(error){widgetState={status:'error',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'failed'};}
     const readyState=navigator.onLine ? 'ready' : 'offlineReady';
     setLifecycle(readyState);
     document.querySelector('#app').dataset.lifecycle=readyState;
@@ -276,14 +313,24 @@ async function bootstrap() {
   }
 }
 
-function navigate(routeId) {
+function navigate(routeId, options={}) {
+  if(!options.bypassWidgetGuard&&navigation.current==='widgets.edit'&&widgetEditor.dirty&&routeId!=='widgets.edit'){openWidgetDiscardConfirmation(routeId);return;}
   closeModal();
   const outcome = navigation.navigate(routeId, { currentScroll: outlet.scrollTop });
   render(outcome.routeId, outcome);
 }
 
+function openWidgetConfirmation(kind,pendingRoute=null){
+  if(modalState)return;const trigger=document.activeElement;
+  const reset=kind==='widget-reset';
+  const dialog=createConfirmationDialog({title:reset?'Сбросить расположение?':'Отменить изменения?',body:reset?'Панель вернётся к утверждённому начальному составу и порядку.':'Несохранённый порядок, размеры и скрытые виджеты будут потеряны.',primaryLabel:reset?'Сбросить':'Выйти без сохранения',destructive:true,critical:true});
+  modalRoot.append(dialog);modalState={dialog,trigger,releaseFocusTrap:trapDialogFocus(dialog),kind,pendingRoute};telegramBack.sync(true);
+}
+function openWidgetDiscardConfirmation(routeId){openWidgetConfirmation('widget-discard',routeId);}
+
 function goBack() {
   if (modalState) { closeModal(); return; }
+  if(navigation.current==='widgets.edit'&&widgetEditor.dirty){openWidgetConfirmation('widget-discard-back');return;}
   const previous = navigation.back();
   if (previous) render(previous);
 }
@@ -321,6 +368,14 @@ bottomNav.addEventListener('click', event => {
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
+  const widgetOpen=event.target.closest('[data-widget-open]');if(widgetOpen){widgetState.selectedWidgetId=widgetOpen.dataset.widgetOpen;navigate(widgetById(widgetState.selectedWidgetId)?.route||'widgets.widget');return;}
+  const widgetMove=event.target.closest('[data-widget-move]');if(widgetMove){widgetEditor.move(widgetMove.dataset.widgetId,Number(widgetMove.dataset.widgetMove));render('widgets.edit');return;}
+  const widgetResize=event.target.closest('[data-widget-resize]');if(widgetResize){widgetEditor.resize(widgetResize.dataset.widgetResize);render('widgets.edit');return;}
+  const widgetHide=event.target.closest('[data-widget-hide]');if(widgetHide){widgetEditor.hide(widgetHide.dataset.widgetHide);render('widgets.edit');return;}
+  const widgetRestore=event.target.closest('[data-widget-restore]');if(widgetRestore){widgetEditor.restore(widgetRestore.dataset.widgetRestore);navigate('widgets.edit');return;}
+  if(event.target.closest('[data-widget-reset]')){openWidgetConfirmation('widget-reset');return;}
+  if(event.target.closest('[data-widget-cancel]')){widgetEditor.cancel();navigate('widgets.home',{bypassWidgetGuard:true});return;}
+  if(event.target.closest('[data-widget-save]')){saveWidgetLayout();return;}
   const pathSphere=event.target.closest('[data-path-sphere]');
   if(pathSphere){pathState.selectedSphereId=pathSphere.dataset.pathSphere;const sphere=pathState.spheres.find(item=>item.id===pathState.selectedSphereId);pathState.selectedPathId=sphere?.paths[0]?.id||pathState.selectedPathId;navigate('path.sphere');return;}
   const pathRoute=event.target.closest('[data-path-id]');
@@ -359,7 +414,20 @@ outlet.addEventListener('click', event => {
   if(event.target.closest('[data-state-action]')&&homeState.status==='error')reloadHome();
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('events.'))reloadEvents();
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('path.'))reloadPath();
+  if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('widgets.'))reloadWidgets();
 });
+
+async function reloadWidgets(){
+  const runtime=getRuntimeContext();widgetState={...widgetState,status:'loading'};render(navigation.current);
+  try{widgetEditor=new WidgetLayoutEditor(await widgetRepository.load({db:runtime.fbDb,uid:runtime.firebaseUser?.uid}));widgetState={...widgetState,status:'ready',actionState:'idle'};}
+  catch(error){widgetState={...widgetState,status:'error',actionState:'failed'};}render(navigation.current);
+}
+
+async function saveWidgetLayout(){
+  if(widgetState.actionState==='working'||!widgetState.capabilities.writes)return;widgetState.actionState='working';const runtime=getRuntimeContext();
+  try{const layout=await widgetRepository.save({db:runtime.fbDb,uid:runtime.firebaseUser?.uid},widgetEditor.draft);widgetEditor.accept(layout);widgetState.actionState='succeeded';announcer.textContent='Расположение виджетов сохранено';navigate('widgets.home',{bypassWidgetGuard:true});}
+  catch(error){widgetState.actionState='failed';announcer.textContent='Расположение не подтверждено';render('widgets.edit');}
+}
 
 async function reloadPath(){
   const runtime=getRuntimeContext();pathState={...pathState,status:'loading'};render(navigation.current);
@@ -411,6 +479,9 @@ async function handleQuestToggle(questId){
 modalRoot.addEventListener('click', event => {
   if (event.target.closest('[data-dialog-cancel]')) closeModal();
   if (event.target.closest('[data-dialog-confirm]')) {
+    if(modalState?.kind==='widget-reset'){widgetEditor.reset();closeModal();render('widgets.edit');return;}
+    if(modalState?.kind==='widget-discard'){const route=modalState.pendingRoute;widgetEditor.cancel();closeModal();navigate(route,{bypassWidgetGuard:true});return;}
+    if(modalState?.kind==='widget-discard-back'){widgetEditor.cancel();closeModal();const previous=navigation.back();if(previous)render(previous);return;}
     announcer.textContent = 'Демонстрация подтверждена. Запись не выполнялась.';
     closeModal();
   }
