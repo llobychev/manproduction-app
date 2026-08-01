@@ -10,6 +10,7 @@ import { EVENT_FILTERS, createEventRepository, filterEvents, loadEventsExperienc
 import { chapterStatus, createPathRepository, findChapter, findPath, loadPathExperience } from './path.js';
 import { WidgetLayoutEditor, createWidgetRepository, widgetById } from './widgets.js';
 import { LYOVA_ACTIONS, LYOVA_RECOMMENDATIONS, LYOVA_TABS, LyovaSession, createLyovaActionRepository } from './lyova.js';
+import { CABINET_SECTIONS, PUBLIC_PROFILE_DEFAULTS, createProfileRepository, loadProfileExperience, publicProfileView, visibilitySummary } from './profile.js';
 
 const outlet = document.querySelector('#route-outlet');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -35,6 +36,9 @@ let widgetState={status:'loading',capabilities:{reads:false,writes:false},select
 let lyovaSession=new LyovaSession();
 let lyovaActions=createLyovaActionRepository();
 let pendingLyovaActionId=null;
+let profileRepository=createProfileRepository();
+let profileState={status:'loading',data:null,capabilities:profileRepository.capabilities,actionState:'idle'};
+let publicProfileDraft={...PUBLIC_PROFILE_DEFAULTS};
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -58,6 +62,7 @@ function rootMarkup(meta) {
   if(meta.id==='path.home')return pathHomeMarkup();
   if(meta.id==='widgets.home')return widgetsHomeMarkup();
   if(meta.id==='lyova.chat')return lyovaMarkup('chat');
+  if(meta.id==='profile.cabinet')return profileCabinetMarkup();
   const links = rootCards[meta.parentTab] || [];
   return `<section class="foundation-hero"><span class="eyebrow">V2 FOUNDATION</span><h2>${meta.title}</h2><p>Изолированная оболочка готова к подключению экранного пакета. Реальные пользовательские данные и бизнес-действия здесь ещё не подключены.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Безопасный режим</strong><p>V1 остаётся активной. Эта версия не выполняет Firestore-записи и не меняет production.</p></section>`;
 }
@@ -208,6 +213,52 @@ function lyovaMarkup(active){
 }
 function lyovaInnerMarkup(meta){if(!meta.id.startsWith('lyova.'))return null;return lyovaMarkup({ 'lyova.recommendations':'recommendations','lyova.history':'history','lyova.actions':'actions','lyova.settings':'settings' }[meta.id]||'chat');}
 
+function profileAvatar(identity,big=false){
+  if(identity.avatarUrl)return `<img class="profile-avatar${big?' big':''}" src="${escapeHtml(identity.avatarUrl)}" alt="">`;
+  return `<span class="profile-avatar${big?' big':''}">${escapeHtml(identity.initials)}</span>`;
+}
+function accessLabel(subscription){
+  return {fullPaid:'Оплаченная подписка',fullPerk:'Клубный доступ',demoActive:'Демо-доступ',demoExpired:'Демо завершено'}[subscription.accessClass]||'Статус уточняется';
+}
+function profileDate(value){return value instanceof Date?value.toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}):'без даты окончания';}
+function profileCabinetMarkup(){
+  if(profileState.status==='loading')return renderContentState('loading',{title:'Загружаем кабинет'});
+  if(profileState.status==='error')return renderContentState('error',{title:'Кабинет не загрузился',message:'Профиль не заменяется тестовыми данными.',actionLabel:'Повторить'});
+  const p=profileState.data;
+  return `<section class="profile-hero">${profileAvatar(p.identity,true)}<div><span class="eyebrow">МОЙ КАБИНЕТ</span><h2>${escapeHtml(p.identity.displayName)}</h2><p>${escapeHtml(p.title)}</p></div><button class="secondary-button" type="button" data-navigate="profile.publicPreview">Публичный профиль</button></section><section class="profile-metrics"><div><b>${p.level||'—'}</b><span>уровень</span></div><div><b>${p.points}</b><span>баллов</span></div><div><b>${p.streak}</b><span>серия</span></div></section><section class="profile-access"><div><span class="eyebrow">ДОСТУП</span><h3>${escapeHtml(accessLabel(p.subscription))}</h3><p>${p.subscription.plan?`Тариф ${escapeHtml(p.subscription.plan)} · `:''}${escapeHtml(profileDate(p.subscription.until))}</p><small>Источник: ${escapeHtml(p.subscription.source)}</small></div><button class="secondary-button" type="button" data-navigate="profile.subscription">Управление</button></section>${CABINET_SECTIONS.map(section=>`<section class="profile-section"><h3>${escapeHtml(section.title)}</h3><div class="profile-list">${section.items.map(item=>`<button type="button" data-navigate="${item.route}"><span>${item.icon}</span><b>${escapeHtml(item.label)}</b>${item.value?`<small>${escapeHtml(item.value)}</small>`:''}<i>›</i></button>`).join('')}</div></section>`).join('')}<section class="profile-future"><span>🦁</span><div><b>Образ и примерка</b><small>Скоро · отдельный будущий модуль</small></div></section><button class="profile-danger-link" type="button" data-navigate="profile.logoutConfirm">Выйти из аккаунта</button><button class="profile-reset-link" type="button" data-navigate="profile.dataReset">Сбросить данные</button>`;
+}
+function hiddenValue(label){return `<div class="profile-hidden"><b>${escapeHtml(label)}</b><span>Скрыто настройками видимости</span></div>`;}
+function publicPreviewMarkup(){
+  const p=profileState.data,view=publicProfileView({...p,visibility:publicProfileDraft});
+  const spheres=pathState.spheres?.slice(0,5)||[];
+  return `<section class="public-notice">Так профиль видят участники MenClub. Внешняя web-публикация отключена.</section><section class="public-cover">${profileAvatar(view.identity,true)}<div><h2>${escapeHtml(view.identity.displayName)}</h2><p>${escapeHtml(view.title)}</p>${view.identity.username?`<small>@${escapeHtml(view.identity.username)}</small>`:''}</div></section><section class="public-actions"><button class="primary-button" type="button" data-navigate="profile.publicEdit">Редактировать</button><button class="secondary-button" type="button" data-profile-share ${profileState.capabilities.memberShare?'':'disabled'}>Поделиться</button></section><section class="visibility-summary"><b>Видят участники</b><p>${escapeHtml(visibilitySummary(publicProfileDraft).join(', '))}</p><small>${profileState.capabilities.publicProfileWrites?'Изменения можно сохранить':'Сохранение подключится после schema/security approval'}</small></section><section class="profile-section"><h3>О себе</h3>${view.about?`<p class="profile-copy">${escapeHtml(view.about)}</p>`:hiddenValue('Описание')}</section><section class="profile-section"><h3>Пять сфер</h3><div class="public-spheres">${spheres.length?spheres.map(sphere=>`<div><span>${sphere.icon}</span><b>${escapeHtml(sphere.title)}</b>${view.spherePercentages?`<small>${sphere.progress}%</small>`:'<small>без точного процента</small>'}</div>`).join(''):renderContentState('empty',{title:'Карта сфер загружается'})}</div></section><section class="profile-section"><h3>Достижения</h3>${view.achievements.length?`<div class="public-chips">${view.achievements.map(item=>`<span>${escapeHtml(item.title||'Достижение')}</span>`).join('')}</div>`:renderContentState('empty',{title:'Нет опубликованных достижений'})}</section><section class="profile-section"><h3>Моменты</h3>${view.moments.length?`<div class="public-chips">${view.moments.map(item=>`<span>${escapeHtml(item.title||'Момент')}</span>`).join('')}</div>`:renderContentState('empty',{title:'Нет опубликованных моментов'})}</section><section class="profile-section"><h3>Друзья / игроки</h3>${view.friendsList===null?hiddenValue('Список друзей'):renderContentState('empty',{title:'Список пока пуст'})}</section>`;
+}
+function publicEditMarkup(){
+  const labels={username:'Показывать username',city:'Показывать город',totalPoints:'Показывать баллы',streak:'Показывать серию',about:'Показывать «О себе»',spherePercentages:'Показывать проценты сфер',friendsList:'Показывать список друзей'};
+  return `<section class="inner-intro"><span class="eyebrow">PUBLIC PROFILE</span><h2>Видимость профиля</h2><p>Имя, аватар, уровень и названия сфер видны участникам по умолчанию. Чувствительные данные никогда не публикуются.</p></section><form class="profile-visibility-form" data-profile-visibility-form>${Object.entries(labels).map(([field,label])=>`<label><input type="checkbox" name="${field}" ${publicProfileDraft[field]?'checked':''}><span>${escapeHtml(label)}</span></label>`).join('')}<div class="profile-edit-actions"><button class="secondary-button" type="button" data-profile-preview>Предпросмотр</button><button class="primary-button" type="submit" ${profileState.capabilities.publicProfileWrites?'':'disabled'}>Сохранить</button></div></form>${!profileState.capabilities.publicProfileWrites?renderContentState('disabled',{title:'Сохранение пока отключено',message:'Черновик можно проверить в preview. Физическая запись появится только после Package 9 и проверки Security Rules.'}):''}`;
+}
+function profileInnerMarkup(meta){
+  if(!meta.id.startsWith('profile.'))return null;
+  if(profileState.status!=='ready')return profileCabinetMarkup();
+  const p=profileState.data;
+  if(meta.id==='profile.publicPreview')return publicPreviewMarkup();
+  if(meta.id==='profile.publicEdit')return publicEditMarkup();
+  if(meta.id==='profile.personalData')return `<section class="inner-intro"><span class="eyebrow">ЛИЧНЫЕ ДАННЫЕ</span><h2>${escapeHtml(p.identity.displayName)}</h2><p>Город: ${escapeHtml(p.city||'не указан')}. Интересы: ${escapeHtml(p.interests.join(', ')||'не указаны')}.</p></section>${renderContentState('stale',{title:'Редактирование подключится безопасно',message:'Email и телефон не подставляются. Существующие V1-данные остаются без изменений.'})}`;
+  if(meta.id==='profile.subscription')return `<section class="inner-intro"><span class="eyebrow">ТАРИФ И ПОДПИСКА</span><h2>${escapeHtml(accessLabel(p.subscription))}</h2><p>${p.subscription.plan?`Тариф ${escapeHtml(p.subscription.plan)}. `:''}Действует ${escapeHtml(profileDate(p.subscription.until))}. Источник: ${escapeHtml(p.subscription.source)}.</p></section><button class="primary-button full-width" type="button" data-navigate="payment.plans">Посмотреть тарифы</button>`;
+  if(meta.id==='profile.payments')return renderContentState('empty',{title:'История платежей не подключена',message:'Приложение не строит историю из неподтверждённых данных.'});
+  if(meta.id==='profile.clubAccess')return `<section class="inner-intro"><span class="eyebrow">КЛУБНЫЙ ДОСТУП</span><h2>${escapeHtml(accessLabel(p.subscription))}</h2><p>Текущий источник доступа: ${escapeHtml(p.subscription.source)}.</p></section>`;
+  if(meta.id==='profile.language')return `<section class="inner-intro"><span class="eyebrow">ЯЗЫК</span><h2>Русский</h2><p>Текущий язык интерфейса. Другие языки пока не подключены.</p></section>`;
+  if(meta.id==='profile.achievements')return p.selectedAchievements.length?`<section class="profile-section"><h3>Выбранные достижения</h3><div class="public-chips">${p.selectedAchievements.map(item=>`<span>${escapeHtml(item.title||'Достижение')}</span>`).join('')}</div></section>`:renderContentState('empty',{title:'Достижений для публикации пока нет'});
+  if(meta.id==='profile.help')return `<section class="inner-intro"><span class="eyebrow">ПОМОЩЬ</span><h2>Мы рядом</h2><p>Спроси Лёву или напиши менеджеру по вопросам доступа, оплаты и ошибок.</p></section><div class="profile-support-actions"><button class="secondary-button" type="button" data-navigate="lyova.chat">Спросить Лёву</button><button class="primary-button" type="button" data-profile-help>Написать менеджеру</button></div>`;
+  if(meta.id==='profile.about')return `<section class="inner-intro"><span class="eyebrow">MENCLUB IN SIBERIA</span><h2>О приложении</h2><p>Личный кабинет, Путь, мероприятия, инструменты и интерфейс Лёвы в единой системе клуба.</p></section>`;
+  if(meta.id==='profile.version')return `<section class="inner-intro"><span class="eyebrow">ВЕРСИЯ</span><h2>V2 Development</h2><p>V1 остаётся активной и fallback-версией до контролируемой активации.</p></section><a class="secondary-button profile-version-link" href="../../versions.html">Открыть переключатель версий</a>`;
+  if(meta.id==='profile.logoutConfirm')return `<section class="inner-intro"><span class="eyebrow">ВЫХОД</span><h2>Выйти из аккаунта?</h2><p>Облачные данные, прогресс и подписка сохранятся. Это действие ничего не удаляет.</p></section><button class="primary-button destructive full-width" type="button" data-profile-logout>Выйти</button>`;
+  if(meta.id==='profile.dataReset')return `<section class="inner-intro"><span class="eyebrow">ОПАСНОЕ ДЕЙСТВИЕ</span><h2>Сброс данных</h2><p>Это не выход. Сброс может удалить личные данные и прогресс и требует отдельного двойного подтверждения.</p></section><button class="primary-button destructive full-width" type="button" data-profile-reset-first>Продолжить к подтверждению</button>`;
+  if(meta.id==='profile.dataResetConfirm')return `<section class="inner-intro"><span class="eyebrow">ФИНАЛЬНОЕ ПОДТВЕРЖДЕНИЕ</span><h2>Удалить данные без возможности отмены?</h2><p>Package 8 не выполняет удаление без проверенного deletion contract и Security Rules.</p></section><button class="primary-button destructive full-width" type="button" data-profile-reset-second ${profileState.capabilities.dataReset?'':'disabled'}>Удалить мои данные</button>${!profileState.capabilities.dataReset?renderContentState('disabled',{title:'Удаление не подключено',message:'Никакие данные не были удалены.'}):''}`;
+  if(meta.id==='profile.settings'||meta.id==='profile.notifications'||meta.id==='profile.privacy'||meta.id==='profile.security'||meta.id==='profile.invite'||meta.id==='profile.giftCards')return `<section class="inner-intro"><span class="eyebrow">${escapeHtml(meta.id)}</span><h2>${escapeHtml(meta.title)}</h2><p>Экран зарегистрирован. Изменения не сохраняются без утверждённого schema/security contract.</p></section>${renderContentState('disabled',{title:'Настройки пока только для просмотра'})}`;
+  return null;
+}
+
 function innerMarkup(meta) {
   if (meta.id.startsWith('payment.')) return paymentMarkup(meta.id);
   const homeInner=homeInnerMarkup(meta);if(homeInner)return homeInner;
@@ -215,6 +266,7 @@ function innerMarkup(meta) {
   const pathInner=pathInnerMarkup(meta);if(pathInner)return pathInner;
   const widgetInner=widgetInnerMarkup(meta);if(widgetInner)return widgetInner;
   const lyovaInner=lyovaInnerMarkup(meta);if(lyovaInner)return lyovaInner;
+  const profileInner=profileInnerMarkup(meta);if(profileInner)return profileInner;
   const specialState = meta.id === 'path.lockedReason' ? 'locked' : meta.id === 'payment.error' ? 'error' : meta.id === 'lyova.history' ? 'empty' : 'disabled';
   return `<section class="inner-intro"><span class="eyebrow">${meta.id}</span><h2>${meta.title}</h2><p>Route зарегистрирован, связан с вкладкой «${meta.parentTab}» и готов к экранной реализации следующего пакета.</p></section>${renderContentState(specialState, specialState === 'disabled' ? { title: 'Экран подключится следующим пакетом', message: 'Foundation не изображает работу ещё не подключённой функции.' } : {})}${meta.critical ? '<button class="primary-button destructive-demo" type="button" data-confirm-demo>Проверить безопасное подтверждение</button>' : ''}`;
 }
@@ -319,6 +371,9 @@ async function bootstrap() {
     try{widgetEditor=new WidgetLayoutEditor(await widgetRepository.load({db:authenticated.db,uid:authenticated.user.uid}));widgetState={status:'ready',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'idle'};}
     catch(error){widgetState={status:'error',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'failed'};}
     lyovaSession=new LyovaSession(window.MENCLUB_V2_LYOVA_RUNTIME||null);lyovaActions=createLyovaActionRepository(window.MENCLUB_V2_LYOVA_ACTION_ADAPTER||null);
+    profileRepository=createProfileRepository(window.MENCLUB_V2_PROFILE_ADAPTER||null);
+    try{const data=await loadProfileExperience(authenticated.db,authenticated.user.uid,{access,telegramUser:telegram?.initDataUnsafe?.user||null});profileState={status:'ready',data,capabilities:profileRepository.capabilities,actionState:'idle'};publicProfileDraft={...data.visibility};}
+    catch(error){profileState={status:'error',data:null,capabilities:profileRepository.capabilities,actionState:'failed'};}
     const readyState=navigator.onLine ? 'ready' : 'offlineReady';
     setLifecycle(readyState);
     document.querySelector('#app').dataset.lifecycle=readyState;
@@ -386,6 +441,12 @@ bottomNav.addEventListener('click', event => {
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
+  if(event.target.closest('[data-profile-preview]')){navigate('profile.publicPreview');return;}
+  if(event.target.closest('[data-profile-share]')){announcer.textContent='Member-safe ссылка пока недоступна';return;}
+  if(event.target.closest('[data-profile-help]')){const telegram=window.Telegram?.WebApp,link='https://t.me/job_bylobychevinsibir?text='+encodeURIComponent('Здравствуй! Нужна помощь по MenClub.');if(telegram?.openTelegramLink)telegram.openTelegramLink(link);else location.href=link;return;}
+  if(event.target.closest('[data-profile-logout]')){performLogout();return;}
+  if(event.target.closest('[data-profile-reset-first]')){navigate('profile.dataResetConfirm');return;}
+  if(event.target.closest('[data-profile-reset-second]')){performDataReset();return;}
   const lyovaAction=event.target.closest('[data-lyova-action]');if(lyovaAction){pendingLyovaActionId=lyovaAction.dataset.lyovaAction;openLyovaActionPreview();return;}
   if(event.target.closest('[data-state-action]')&&navigation.current==='lyova.chat'){retryLyova();return;}
   const widgetOpen=event.target.closest('[data-widget-open]');if(widgetOpen){widgetState.selectedWidgetId=widgetOpen.dataset.widgetOpen;navigate(widgetById(widgetState.selectedWidgetId)?.route||'widgets.widget');return;}
@@ -435,13 +496,22 @@ outlet.addEventListener('click', event => {
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('events.'))reloadEvents();
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('path.'))reloadPath();
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('widgets.'))reloadWidgets();
+  if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('profile.')&&profileState.status==='error')reloadProfile();
 });
-outlet.addEventListener('submit',event=>{if(event.target.matches('[data-lyova-form]')){event.preventDefault();const input=event.target.elements.message,text=input.value.trim();if(text){input.value='';sendLyova(text);}}});
+outlet.addEventListener('change',event=>{if(event.target.form?.matches('[data-profile-visibility-form]')&&event.target.name in publicProfileDraft)publicProfileDraft[event.target.name]=event.target.checked;});
+outlet.addEventListener('submit',event=>{
+  if(event.target.matches('[data-lyova-form]')){event.preventDefault();const input=event.target.elements.message,text=input.value.trim();if(text){input.value='';sendLyova(text);}return;}
+  if(event.target.matches('[data-profile-visibility-form]')){event.preventDefault();savePublicProfile();}
+});
 
 async function sendLyova(text){try{await lyovaSession.send(text,{uid:getRuntimeContext().firebaseUser?.uid});}catch(error){}render('lyova.chat');}
 async function retryLyova(){const last=[...lyovaSession.messages].reverse().find(item=>item.role==='user');if(last)await sendLyova(last.text);}
 function openLyovaActionPreview(){const action=LYOVA_ACTIONS.find(item=>item.id===pendingLyovaActionId);if(!action||modalState)return;const dialog=createConfirmationDialog({title:action.title,body:`Предпросмотр: ${action.effect}. ${lyovaActions.capabilities.actions?'Подтверди выполнение.':'Runtime не подключён — действие выполнено не будет.'}`,primaryLabel:lyovaActions.capabilities.actions?'Подтвердить':'Понятно',critical:true});modalRoot.append(dialog);modalState={dialog,trigger:document.activeElement,releaseFocusTrap:trapDialogFocus(dialog),kind:'lyova-action'};telegramBack.sync(true);}
 async function executeLyovaAction(){if(!lyovaActions.capabilities.actions){announcer.textContent='Действие не выполнялось';closeModal();return;}const runtime=getRuntimeContext();try{await lyovaActions.execute({actionId:pendingLyovaActionId,uid:runtime.firebaseUser?.uid,db:runtime.fbDb});announcer.textContent='Действие подтверждено runtime';}catch(error){announcer.textContent='Действие не подтверждено';}closeModal();}
+async function savePublicProfile(){if(profileState.actionState==='working'||!profileState.capabilities.publicProfileWrites)return;profileState.actionState='working';const runtime=getRuntimeContext();try{const result=await profileRepository.savePublicProfile({db:runtime.fbDb,uid:runtime.firebaseUser?.uid,visibility:{...publicProfileDraft}});profileState={...profileState,data:{...profileState.data,visibility:result.visibility||{...publicProfileDraft}},actionState:'succeeded'};announcer.textContent='Публичный профиль сохранён';navigate('profile.publicPreview');}catch(error){profileState.actionState='failed';announcer.textContent='Изменения не подтверждены';render('profile.publicEdit');}}
+async function performLogout(){const control=document.querySelector('[data-profile-logout]');if(control)control.disabled=true;try{await window.firebase.auth().signOut();resetRuntimeContext();location.reload();}catch(error){if(control)control.disabled=false;announcer.textContent='Не удалось завершить сессию';}}
+async function performDataReset(){if(profileState.actionState==='working'||!profileState.capabilities.dataReset)return;profileState.actionState='working';const runtime=getRuntimeContext();try{await profileRepository.resetData({db:runtime.fbDb,uid:runtime.firebaseUser?.uid,confirmed:true});announcer.textContent='Сброс подтверждён сервером';await window.firebase.auth().signOut();resetRuntimeContext();location.reload();}catch(error){profileState.actionState='failed';announcer.textContent='Данные не удалены';render('profile.dataResetConfirm');}}
+async function reloadProfile(){const runtime=getRuntimeContext();profileState={...profileState,status:'loading'};render(navigation.current);try{const data=await loadProfileExperience(runtime.fbDb,runtime.firebaseUser?.uid,{access:runtime.access,telegramUser:window.Telegram?.WebApp?.initDataUnsafe?.user||null});profileState={status:'ready',data,capabilities:profileRepository.capabilities,actionState:'idle'};publicProfileDraft={...data.visibility};}catch(error){profileState={status:'error',data:null,capabilities:profileRepository.capabilities,actionState:'failed'};}render(navigation.current);}
 
 async function reloadWidgets(){
   const runtime=getRuntimeContext();widgetState={...widgetState,status:'loading'};render(navigation.current);
