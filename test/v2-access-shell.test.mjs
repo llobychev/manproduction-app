@@ -7,7 +7,7 @@ import { getRuntimeContext, resetRuntimeContext, setAuthenticatedRuntime } from 
 
 function firebaseMock({ signInReject = null } = {}) {
   const calls=[];
-  const firebase={apps:[],initializeApp:()=>{calls.push('initialize');firebase.apps.push({});},auth:()=>({currentUser:null,signInWithCustomToken:async token=>{calls.push(`signIn:${token}`);if(signInReject)throw signInReject;return {user:{uid:'42'}};}}),firestore:()=>{calls.push('firestore');return {kind:'db'};},storage:()=>{calls.push('storage');return {kind:'storage'};}};
+  const firebase={apps:[],initializeApp:()=>{calls.push('initialize');firebase.apps.push({});},auth:()=>({currentUser:null,signInWithCustomToken:async token=>{calls.push(`signIn:${token}`);if(signInReject)throw signInReject;return {user:{uid:'42',getIdToken:async()=>'id-token'}};}}),firestore:()=>{calls.push('firestore');return {kind:'db'};},storage:()=>{calls.push('storage');return {kind:'storage'};}};
   return {firebase,calls};
 }
 
@@ -38,16 +38,18 @@ test('access priority is paid, free perk, active demo, then expired demo', () =>
   assert.equal(resolveAccessSnapshot({user:{},perks:{demoAccessUntil:'2026-07-01T00:00:00Z'},now}).accessClass,'demoExpired');
 });
 
-test('new user receives the preserved 21-day demo through a merge write', async () => {
-  const writes=[];
+test('new user receives the preserved 21-day demo only through the verified server API', async () => {
   const empty={exists:false,data:()=>({})};
-  const db={collection:name=>({doc:uid=>({get:async()=>empty,set:async(data,options)=>writes.push({name,uid,data,options})})})};
+  const db={collection:()=>({doc:()=>({get:async()=>empty})})};
   const now=new Date('2026-08-01T00:00:00Z');
-  const access=await ensureCurrentAccess(db,'42',now);
+  let calls=0;
+  const serverApi={uid:'42',ensureDemo:async()=>{calls++;return {ok:true,newlyGranted:true,user:{},perks:{demoAccessUntil:'2026-08-22T00:00:00.000Z'}};}};
+  const access=await ensureCurrentAccess(db,'42',now,serverApi);
   assert.equal(access.accessClass,'demoActive');
   assert.equal(DEFAULT_DEMO_DAYS,21);
   assert.equal(access.until.toISOString(),'2026-08-22T00:00:00.000Z');
-  assert.deepEqual(writes[0].options,{merge:true});
+  assert.equal(calls,1);
+  await assert.rejects(ensureCurrentAccess(db,'42',now),/Verified server demo API is required/);
 });
 
 test('expired demo permits only payment and limited account routes', () => {

@@ -38,18 +38,21 @@ test('a reviewed compile-time revision activates only its named domain', () => {
   assert.equal(registry.adapter('events'),null);
 });
 
-test('application uses only the centralized registry and preserves known direct writes', async () => {
-  const [app,access,home,contract,manifest]=await Promise.all([
+test('application uses only the centralized registry and has no direct reward writes', async () => {
+  const [app,access,home,serverApi,contract,manifest]=await Promise.all([
     readFile(new URL('../versions/v2/app.js',import.meta.url),'utf8'),
     readFile(new URL('../versions/v2/access.js',import.meta.url),'utf8'),
     readFile(new URL('../versions/v2/home.js',import.meta.url),'utf8'),
+    readFile(new URL('../versions/v2/server-api.js',import.meta.url),'utf8'),
     readFile(new URL('../docs/contracts/main-app-v2-data-adapter-security-gate.md',import.meta.url),'utf8'),
     readFile(new URL('../versions/active.json',import.meta.url),'utf8')
   ]);
   assert.match(app,/createV2AdapterRegistry\(window\.MENCLUB_V2_ADAPTERS/);
   assert.doesNotMatch(app,/window\.MENCLUB_V2_(EVENT|PATH|WIDGET|PROFILE|LYOVA_ACTION)_ADAPTER/);
-  assert.match(access,/roulette_active_perks/);
-  assert.match(home,/runTransaction/);
-  assert.match(contract,/No deployable `firestore\.rules`/);
+  assert.doesNotMatch(access,/\.set\s*\(|runTransaction/);
+  assert.doesNotMatch(home,/\.set\s*\(|runTransaction/);
+  assert.match(serverApi,/ensure-demo/);
+  assert.match(serverApi,/quests\/\$\{encodeURIComponent\(questId\)\}\/state/);
+  assert.match(contract,/V2 has no direct demo or reward-bearing Firestore writes/);
   assert.equal(JSON.parse(manifest).activeVersion,'v1');
 });

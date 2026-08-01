@@ -30,17 +30,15 @@ test('Home falls back to the existing V1 default quests when catalog is empty',a
   assert.deepEqual(home.quests.items,DEFAULT_DAILY_QUESTS);
 });
 
-test('quest transaction awards once and preserves existing user_data fields',async()=>{
-  let state={finance:[{amount:10}],habits:{points:100},questsDone:{date:'2026-08-01',done:{},awarded:{}}};
-  let written;
-  const ref={};
-  const db={collection:()=>({doc:()=>ref}),runTransaction:async work=>work({get:async()=>doc(state),set:(target,data,options)=>{written={target,data,options};state={...state,...data};}})};
-  const quest={id:'lesson',text:'Посмотри урок',points:50},now=new Date('2026-08-01T12:00:00Z');
-  const first=await toggleDailyQuest(db,'42',quest,now);
-  assert.equal(first.reward,50);assert.equal(first.points,150);assert.deepEqual(written.options,{merge:true});assert.deepEqual(state.finance,[{amount:10}]);
-  await toggleDailyQuest(db,'42',quest,now);
-  const third=await toggleDailyQuest(db,'42',quest,now);
-  assert.equal(third.reward,0);assert.equal(third.points,150);
+test('quest state and reward come only from the verified server API',async()=>{
+  const calls=[];
+  const serverApi={setDailyQuest:async(id,done)=>{calls.push({id,done});return {done,reward:done?50:0,points:150,quests:{date:'2026-08-01',done:{lesson:done},awarded:{lesson:true}}};}};
+  const quest={id:'lesson',text:'Посмотри урок',points:999999};
+  const first=await toggleDailyQuest(serverApi,quest,false);
+  const second=await toggleDailyQuest(serverApi,quest,true);
+  assert.equal(first.reward,50);assert.equal(first.points,150);
+  assert.equal(second.reward,0);assert.deepEqual(calls,[{id:'lesson',done:true},{id:'lesson',done:false}]);
+  await assert.rejects(toggleDailyQuest(null,quest),/Verified server quest API is required/);
 });
 
 test('schedule deduplicates local and cloud mirror entries',async()=>{

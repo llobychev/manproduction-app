@@ -83,26 +83,9 @@ export async function loadHomeDashboard(db, uid, { now = new Date(), telegramUse
   });
 }
 
-export async function toggleDailyQuest(db, uid, quest, now = new Date()) {
-  if(!db||!uid||!quest?.id)throw new Error('Quest write requires db, uid and quest');
-  const ref=db.collection('user_data').doc(uid);
-  return db.runTransaction(async transaction=>{
-    const doc=await transaction.get(ref);
-    const data=valueOf(doc);
-    const today=todayIso(now);
-    const quests=data.questsDone?.date===today?structuredClone(data.questsDone):{date:today,done:{},awarded:{}};
-    quests.done=quests.done||{};quests.awarded=quests.awarded||{};
-    const wasDone=Boolean(quests.done[quest.id]);
-    quests.done[quest.id]=!wasDone;
-    const habits=structuredClone(data.habits||{});
-    habits.points=Number(habits.points)||0;
-    let reward=0;
-    if(!wasDone&&!quests.awarded[quest.id]){
-      quests.awarded[quest.id]=true;
-      reward=Math.max(0,Number(quest.points)||0);
-      habits.points+=reward;
-    }
-    transaction.set(ref,{questsDone:quests,habits},{merge:true});
-    return Object.freeze({done:quests.done[quest.id],reward,points:habits.points,quests});
-  });
+export async function toggleDailyQuest(serverApi, quest, currentlyDone = false) {
+  if(!serverApi||typeof serverApi.setDailyQuest!=='function'||!quest?.id)throw new Error('Verified server quest API is required');
+  const result=await serverApi.setDailyQuest(quest.id,!Boolean(currentlyDone));
+  if(!result?.quests||typeof result.points!=='number')throw new Error('Server returned an invalid quest state');
+  return Object.freeze({done:Boolean(result.done),reward:Math.max(0,Number(result.reward)||0),points:result.points,quests:result.quests});
 }

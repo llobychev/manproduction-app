@@ -41,14 +41,16 @@ export async function loadAccessSnapshot(db, uid) {
   };
 }
 
-export async function ensureCurrentAccess(db, uid, now = new Date()) {
+export async function ensureCurrentAccess(db, uid, now = new Date(), serverApi = null) {
   const snapshot = await loadAccessSnapshot(db, uid);
   const resolved = resolveAccessSnapshot({ ...snapshot, now });
   if (resolved.accessClass !== 'newUser') return resolved;
 
-  const until = new Date(now.getTime() + DEFAULT_DEMO_DAYS * 24 * 60 * 60 * 1000);
-  await db.collection('roulette_active_perks').doc(uid).set({ demoAccessUntil: until.toISOString() }, { merge:true });
-  return Object.freeze({ accessClass:'demoActive', until, source:'defaultDemo', discountPct:resolved.discountPct, newlyGranted:true });
+  if (!serverApi || serverApi.uid !== String(uid) || typeof serverApi.ensureDemo !== 'function') throw new Error('Verified server demo API is required');
+  const payload = await serverApi.ensureDemo();
+  const access = resolveAccessSnapshot({ user:payload.user || {}, perks:payload.perks || {}, now });
+  if (access.accessClass === 'newUser') throw new Error('Server did not establish an access state');
+  return Object.freeze({ ...access, source:payload.newlyGranted ? 'defaultDemo' : access.source, newlyGranted:Boolean(payload.newlyGranted) });
 }
 
 export function accessDecision(routeId, access) {

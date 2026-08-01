@@ -31,7 +31,7 @@ test('V2 has no browser persistence and only allowlisted direct Firestore writes
 
 test('network, auth and adapter boundaries stay centralized', async () => {
   const names=(await readdir(new URL('versions/v2/',root))).filter(name=>name.endsWith('.js'));
-  for(const name of names){const source=await read(`versions/v2/${name}`);if(name==='auth.js')assert.match(source,/fetchImpl/);else assert.doesNotMatch(source,/\bfetch\s*\(/,name);}
+  for(const name of names){const source=await read(`versions/v2/${name}`);if(name==='auth.js'||name==='server-api.js')assert.match(source,/fetchImpl/);else assert.doesNotMatch(source,/\bfetch\s*\(/,name);}
   const [app,registry]=await Promise.all([read('versions/v2/app.js'),read('versions/v2/adapter-registry.js')]);
   assert.match(app,/createV2AdapterRegistry/);
   assert.match(registry,/APPROVED_SECURITY_REVISIONS = Object\.freeze\(\{\}\)/);
