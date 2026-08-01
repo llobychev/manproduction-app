@@ -11,6 +11,7 @@ import { chapterStatus, createPathRepository, findChapter, findPath, loadPathExp
 import { WidgetLayoutEditor, createWidgetRepository, widgetById } from './widgets.js';
 import { LYOVA_ACTIONS, LYOVA_RECOMMENDATIONS, LYOVA_TABS, LyovaSession, createLyovaActionRepository } from './lyova.js';
 import { CABINET_SECTIONS, PUBLIC_PROFILE_DEFAULTS, createProfileRepository, loadProfileExperience, publicProfileView, visibilitySummary } from './profile.js';
+import { createV2AdapterRegistry } from './adapter-registry.js';
 
 const outlet = document.querySelector('#route-outlet');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -39,6 +40,7 @@ let pendingLyovaActionId=null;
 let profileRepository=createProfileRepository();
 let profileState={status:'loading',data:null,capabilities:profileRepository.capabilities,actionState:'idle'};
 let publicProfileDraft={...PUBLIC_PROFILE_DEFAULTS};
+const adapterRegistry=createV2AdapterRegistry(window.MENCLUB_V2_ADAPTERS||{});
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -363,15 +365,15 @@ async function bootstrap() {
     homeState={status:'loading',data:null,error:null};
     try{homeState={status:'ready',data:await loadHomeDashboard(authenticated.db,authenticated.user.uid,{telegramUser:telegram?.initDataUnsafe?.user||null}),error:null};}
     catch(error){homeState={status:'error',data:null,error};}
-    eventRepository=createEventRepository(window.MENCLUB_V2_EVENT_ADAPTER||null);
+    eventRepository=createEventRepository(adapterRegistry.adapter('events'));
     eventsState={...(await loadEventsExperience(eventRepository,{db:authenticated.db,uid:authenticated.user.uid})),filter:'all',selectedEventId:null,actionState:'idle'};
-    pathRepository=createPathRepository(window.MENCLUB_V2_PATH_ADAPTER||null);
+    pathRepository=createPathRepository(adapterRegistry.adapter('path'));
     pathState={...(await loadPathExperience(pathRepository,{db:authenticated.db,uid:authenticated.user.uid})),selectedSphereId:'finance',selectedPathId:'finance.foundation',selectedChapterId:null,actionState:'idle'};
-    widgetRepository=createWidgetRepository(window.MENCLUB_V2_WIDGET_ADAPTER||null);
+    widgetRepository=createWidgetRepository(adapterRegistry.adapter('widgets'));
     try{widgetEditor=new WidgetLayoutEditor(await widgetRepository.load({db:authenticated.db,uid:authenticated.user.uid}));widgetState={status:'ready',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'idle'};}
     catch(error){widgetState={status:'error',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'failed'};}
-    lyovaSession=new LyovaSession(window.MENCLUB_V2_LYOVA_RUNTIME||null);lyovaActions=createLyovaActionRepository(window.MENCLUB_V2_LYOVA_ACTION_ADAPTER||null);
-    profileRepository=createProfileRepository(window.MENCLUB_V2_PROFILE_ADAPTER||null);
+    lyovaSession=new LyovaSession(adapterRegistry.adapter('lyovaRuntime'));lyovaActions=createLyovaActionRepository(adapterRegistry.adapter('lyovaActions'));
+    profileRepository=createProfileRepository(adapterRegistry.adapter('profile'));
     try{const data=await loadProfileExperience(authenticated.db,authenticated.user.uid,{access,telegramUser:telegram?.initDataUnsafe?.user||null});profileState={status:'ready',data,capabilities:profileRepository.capabilities,actionState:'idle'};publicProfileDraft={...data.visibility};}
     catch(error){profileState={status:'error',data:null,capabilities:profileRepository.capabilities,actionState:'failed'};}
     const readyState=navigator.onLine ? 'ready' : 'offlineReady';
