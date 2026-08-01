@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>MenClub V1 Stable</title>
+<style>
+html,body{height:100%;margin:0;background:#0f0f0f;color:#f0ece4;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Arial,sans-serif}body{display:grid;place-items:center;padding:24px;text-align:center}.box{max-width:380px}.spin{width:34px;height:34px;border:2px solid rgba(201,168,76,.2);border-top-color:#c9a84c;border-radius:50%;animation:s .8s linear infinite;margin:0 auto 16px}@keyframes s{to{transform:rotate(360deg)}}h1{font-size:17px;margin:0 0 8px;color:#c9a84c}p{font-size:12px;line-height:1.5;color:#aaa39a}a{color:#c9a84c}
+</style>
+</head>
+<body>
+<div class="box" id="status"><div class="spin"></div><h1>MenClub V1 Stable</h1><p>Загружается зафиксированная рабочая версия.</p></div>
+<script>
+(function(){
+  'use strict';
+  var SOURCE='https://raw.githubusercontent.com/llobychev/manproduction-app/abbab1139e4eeeea40f977ab4e34753ee0ace103/index.html';
+  fetch(SOURCE,{cache:'no-store'})
+    .then(function(response){if(!response.ok)throw new Error('HTTP '+response.status);return response.text();})
+    .then(function(html){
+      if(!/<!doctype html/i.test(html)&&!/<html/i.test(html))throw new Error('Invalid HTML');
+      html=html.replace(/<head([^>]*)>/i,'<head$1><base href="../../">');
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .catch(function(error){
+      document.getElementById('status').innerHTML='<h1>V1 временно не загрузилась</h1><p>Зафиксированный исходник сохранён на коммите <code>abbab113…</code>. Обнови страницу или открой <a href="../../versions.html">переключатель версий</a>.</p><p style="opacity:.55">'+String(error.message||error)+'</p>';
+    });
+})();
+</script>
+</body>
+</html>
