@@ -6,6 +6,7 @@ import { accessDecision, daysRemaining, ensureCurrentAccess } from './access.js'
 import { PAYMENT_PLANS, TRANSFER_CARD_DISPLAY, discountedPlan, formatRub, managerPaymentLink } from './payment.js';
 import { getRuntimeContext, resetRuntimeContext, setAccessContext, setAuthenticatedRuntime, setLifecycle } from './runtime-context.js';
 import { loadHomeDashboard, toggleDailyQuest } from './home.js';
+import { EVENT_FILTERS, createEventRepository, filterEvents, loadEventsExperience } from './events.js';
 
 const outlet = document.querySelector('#route-outlet');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -21,6 +22,8 @@ const navigation = new NavigationStack(initialRoute());
 let modalState = null;
 let selectedPlan = '1m';
 let homeState = { status:'loading', data:null, error:null };
+let eventRepository = createEventRepository();
+let eventsState = { status:'loading', items:[], capabilities:{reads:false,writes:false}, filter:'all', selectedEventId:null, actionState:'idle', message:'' };
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -40,6 +43,7 @@ function initialRoute() {
 
 function rootMarkup(meta) {
   if(meta.id==='home')return homeMarkup();
+  if(meta.id==='events.list')return eventsMarkup();
   const links = rootCards[meta.parentTab] || [];
   return `<section class="foundation-hero"><span class="eyebrow">V2 FOUNDATION</span><h2>${meta.title}</h2><p>Изолированная оболочка готова к подключению экранного пакета. Реальные пользовательские данные и бизнес-действия здесь ещё не подключены.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Безопасный режим</strong><p>V1 остаётся активной. Эта версия не выполняет Firestore-записи и не меняет production.</p></section>`;
 }
@@ -55,7 +59,7 @@ function homeMarkup(){
   if(homeState.status==='error')return renderContentState('error',{title:'Главная не загрузилась',message:'Данные не заменяются примерами. Попробуй ещё раз.',actionLabel:'Повторить'});
   const d=homeState.data;
   const questItems=d.quests.items||[],questDone=questItems.filter(q=>d.quests.done[q.id]).length;
-  return `<section class="home-welcome"><span class="eyebrow">ДОБРО ПОЖАЛОВАТЬ</span><h2>Привет, ${escapeHtml(d.identity.displayName)}</h2><p>Сегодня — ещё один шаг к сильной версии себя.</p><div class="home-metrics"><div><b>${d.points}</b><span>баллов</span></div><div><b>${d.level??'—'}</b><span>уровень</span></div><div><b>${d.streak}</b><span>серия</span></div></div></section><section class="home-card path-card"><div><span class="eyebrow">ПУТЬ</span><h3>${escapeHtml(d.path.title)}</h3><p>${escapeHtml(d.path.message)}</p></div><button class="primary-button" type="button" data-navigate="path.home">Продолжить</button></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КВЕСТ ДНЯ</span><h3>${questDone} из ${questItems.length}</h3></div><button class="secondary-button" type="button" data-navigate="quest.detail">Все задания</button></div>${d.quests.state==='error'?contentBlockState(d.quests,'Квесты'):questItems.slice(0,3).map(q=>`<button class="quest-item${d.quests.done[q.id]?' done':''}" type="button" data-quest-id="${escapeHtml(q.id)}"><span>${d.quests.done[q.id]?'✓':'○'}</span><b>${escapeHtml(q.text)}</b><small>+${q.points}</small></button>`).join('')}</section><section class="home-grid"><article class="home-card"><span class="eyebrow">БЛИЖАЙШЕЕ СОБЫТИЕ</span>${renderContentState('empty',{title:'Пока не подключено',message:d.nearestEvent.message})}</article><article class="home-card"><span class="eyebrow">ЛЁВА РЕКОМЕНДУЕТ</span>${renderContentState('disabled',{title:'Без выдуманных советов',message:d.recommendation.message})}</article></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">СЕГОДНЯ</span><h3>Расписание</h3></div><button class="secondary-button" type="button" data-navigate="schedule.today">Открыть</button></div>${contentBlockState(d.schedule,'Расписание')||d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КЛУБ</span><h3>Новости</h3></div><button class="secondary-button" type="button" data-navigate="news.list">Все новости</button></div>${contentBlockState(d.news,'Новости')||d.news.items.map(item=>`<button class="news-item" type="button" data-news-id="${escapeHtml(item.id)}"><b>${escapeHtml(item.title||'Новость')}</b><span>${escapeHtml((item.body||'').slice(0,100))}</span></button>`).join('')}</section>`;
+  return `<section class="home-welcome"><span class="eyebrow">ДОБРО ПОЖАЛОВАТЬ</span><h2>Привет, ${escapeHtml(d.identity.displayName)}</h2><p>Сегодня — ещё один шаг к сильной версии себя.</p><div class="home-metrics"><div><b>${d.points}</b><span>баллов</span></div><div><b>${d.level??'—'}</b><span>уровень</span></div><div><b>${d.streak}</b><span>серия</span></div></div></section><section class="home-card path-card"><div><span class="eyebrow">ПУТЬ</span><h3>${escapeHtml(d.path.title)}</h3><p>${escapeHtml(d.path.message)}</p></div><button class="primary-button" type="button" data-navigate="path.home">Продолжить</button></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КВЕСТ ДНЯ</span><h3>${questDone} из ${questItems.length}</h3></div><button class="secondary-button" type="button" data-navigate="quest.detail">Все задания</button></div>${d.quests.state==='error'?contentBlockState(d.quests,'Квесты'):questItems.slice(0,3).map(q=>`<button class="quest-item${d.quests.done[q.id]?' done':''}" type="button" data-quest-id="${escapeHtml(q.id)}"><span>${d.quests.done[q.id]?'✓':'○'}</span><b>${escapeHtml(q.text)}</b><small>+${q.points}</small></button>`).join('')}</section><section class="home-grid"><article class="home-card"><span class="eyebrow">БЛИЖАЙШЕЕ СОБЫТИЕ</span>${homeNearestEventMarkup(d.nearestEvent)}</article><article class="home-card"><span class="eyebrow">ЛЁВА РЕКОМЕНДУЕТ</span>${renderContentState('disabled',{title:'Без выдуманных советов',message:d.recommendation.message})}</article></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">СЕГОДНЯ</span><h3>Расписание</h3></div><button class="secondary-button" type="button" data-navigate="schedule.today">Открыть</button></div>${contentBlockState(d.schedule,'Расписание')||d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КЛУБ</span><h3>Новости</h3></div><button class="secondary-button" type="button" data-navigate="news.list">Все новости</button></div>${contentBlockState(d.news,'Новости')||d.news.items.map(item=>`<button class="news-item" type="button" data-news-id="${escapeHtml(item.id)}"><b>${escapeHtml(item.title||'Новость')}</b><span>${escapeHtml((item.body||'').slice(0,100))}</span></button>`).join('')}</section>`;
 }
 
 function homeInnerMarkup(meta){
@@ -71,9 +75,58 @@ function homeInnerMarkup(meta){
   return null;
 }
 
+function eventDate(value){
+  if(!value)return 'Дата уточняется';
+  return value.toLocaleString('ru-RU',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Irkutsk'});
+}
+function homeNearestEventMarkup(fallback){
+  const nearest=eventsState.status==='ready'?filterEvents(eventsState.items,'upcoming')[0]:null;
+  if(!nearest)return renderContentState(eventsState.status==='error'?'error':'empty',{title:'Пока не подключено',message:eventsState.message||fallback.message});
+  return `<div class="home-event"><h3>${escapeHtml(nearest.title)}</h3><p>${escapeHtml(eventDate(nearest.startsAt))}</p><button class="secondary-button" type="button" data-event-id="${escapeHtml(nearest.id)}">Подробнее</button></div>`;
+}
+function attendanceCopy(event){
+  return {registered:'Ты участвуешь',waitlist:'Лист ожидания',full:'Мест нет',cancelled:'Отменено',completed:'Завершено',archive:'В архиве'}[event.attendanceState]||{full:'Мест нет',cancelled:'Отменено',completed:'Завершено',archive:'В архиве'}[event.state]||'Можно записаться';
+}
+function eventAction(event,compact=false){
+  if(!eventsState.capabilities.writes)return `<span class="event-action-note">Запись скоро</span>`;
+  if(event.attendanceState==='registered'||event.attendanceState==='waitlist')return `<button class="${compact?'event-link':'secondary-button'}" type="button" data-event-action="cancel" data-event-id="${escapeHtml(event.id)}">Отменить</button>`;
+  if(['full','cancelled','completed','archive'].includes(event.state))return `<span class="event-action-note">${attendanceCopy(event)}</span>`;
+  return `<button class="${compact?'event-link':'primary-button'}" type="button" data-event-action="register" data-event-id="${escapeHtml(event.id)}">Записаться</button>`;
+}
+function eventCard(event){
+  return `<article class="event-card"><button class="event-card-main" type="button" data-event-id="${escapeHtml(event.id)}"><span class="event-format">${event.format==='online'?'ОНЛАЙН':'ОФФЛАЙН'}</span><strong>${escapeHtml(event.title)}</strong><small>${escapeHtml(eventDate(event.startsAt))}${event.location?` · ${escapeHtml(event.location)}`:''}</small><span class="attendance-state state-${escapeHtml(event.attendanceState)}">${escapeHtml(attendanceCopy(event))}</span></button>${eventAction(event,true)}</article>`;
+}
+function eventFiltersMarkup(){
+  return `<div class="event-toolbar"><div class="event-filters" role="group" aria-label="Фильтры мероприятий">${EVENT_FILTERS.map(filter=>`<button type="button" data-event-filter="${filter.id}" class="${eventsState.filter===filter.id?'active':''}">${filter.label}</button>`).join('')}</div><button class="secondary-button" type="button" data-navigate="events.mine">Мои записи</button></div>`;
+}
+function eventsMarkup(){
+  const intro='<section class="events-hero"><span class="eyebrow">КЛУБНАЯ АФИША</span><h2>Мероприятия</h2><p>События клуба и твои подтверждённые записи.</p></section>';
+  if(eventsState.status==='loading')return intro+eventFiltersMarkup()+renderContentState('loading',{title:'Загружаем мероприятия'});
+  if(eventsState.status==='error')return intro+eventFiltersMarkup()+renderContentState('error',{title:'Каталог не загрузился',message:eventsState.message,actionLabel:'Повторить'});
+  const visible=filterEvents(eventsState.items,eventsState.filter);
+  if(!visible.length)return intro+eventFiltersMarkup()+renderContentState('empty',{title:eventsState.filter==='mine'?'Записей пока нет':'Мероприятий пока нет',message:eventsState.message});
+  const nearest=filterEvents(eventsState.items,'upcoming')[0];
+  return `${nearest&&eventsState.filter==='all'?`<section class="event-feature"><span class="eyebrow">БЛИЖАЙШЕЕ СОБЫТИЕ</span><h2>${escapeHtml(nearest.title)}</h2><p>${escapeHtml(eventDate(nearest.startsAt))}${nearest.location?` · ${escapeHtml(nearest.location)}`:''}</p><div class="participant-preview" aria-label="Участники">${nearest.participants.length?nearest.participants.map(person=>`<span title="${escapeHtml(person.name)}">${escapeHtml(person.name.slice(0,1))}</span>`).join(''):'<small>Состав участников уточняется</small>'}</div><div class="event-feature-actions"><button class="secondary-button" type="button" data-event-id="${escapeHtml(nearest.id)}">Подробнее</button>${eventAction(nearest)}</div></section>`:intro}${eventFiltersMarkup()}<section class="event-list">${visible.map(eventCard).join('')}</section>`;
+}
+
+function selectedEvent(){return eventsState.items.find(event=>event.id===eventsState.selectedEventId)||null;}
+function eventInnerMarkup(meta){
+  if(!meta.id.startsWith('events.'))return null;
+  if(meta.id==='events.mine'){
+    const mine=filterEvents(eventsState.items,'mine');
+    return `<section class="inner-intro"><span class="eyebrow">МОИ ЗАПИСИ</span><h2>Твои мероприятия</h2><p>Только подтверждённые записи и лист ожидания.</p></section>${mine.length?`<section class="event-list">${mine.map(eventCard).join('')}</section>`:renderContentState('empty',{title:'Записей пока нет',message:eventsState.message})}`;
+  }
+  const event=selectedEvent();
+  if(!event)return renderContentState('empty',{title:'Мероприятие не найдено',message:'Вернись к актуальному каталогу.'});
+  if(meta.id==='events.detail')return `<article class="event-detail"><span class="event-format">${event.format==='online'?'ОНЛАЙН':'ОФФЛАЙН'}</span><h2>${escapeHtml(event.title)}</h2><p>${escapeHtml(event.summary||'Описание появится после публикации организатором.')}</p><dl><div><dt>Когда</dt><dd>${escapeHtml(eventDate(event.startsAt))}</dd></div><div><dt>Где</dt><dd>${escapeHtml(event.location||'Место уточняется')}</dd></div><div><dt>Статус</dt><dd>${escapeHtml(attendanceCopy(event))}</dd></div></dl><div class="participant-preview">${event.participants.length?event.participants.map(person=>`<span title="${escapeHtml(person.name)}">${escapeHtml(person.name.slice(0,1))}</span>`).join(''):'<small>Участники пока не опубликованы</small>'}</div><div class="event-feature-actions">${eventAction(event)}</div>${!eventsState.capabilities.writes?renderContentState('disabled',{title:'Запись временно недоступна',message:'Нужны утверждённые схема регистраций и Firestore Security Rules.'}):''}</article>`;
+  const cancelling=meta.id==='events.cancellationConfirm';
+  return `<section class="inner-intro"><span class="eyebrow">${cancelling?'ОТМЕНА УЧАСТИЯ':'ПОДТВЕРЖДЕНИЕ ЗАПИСИ'}</span><h2>${escapeHtml(event.title)}</h2><p>${cancelling?'После отмены место может перейти другому участнику.':'Проверь дату, формат и условия участия перед подтверждением.'}</p></section><section class="event-confirm-card"><strong>${escapeHtml(eventDate(event.startsAt))}</strong><span>${escapeHtml(event.location||'Место уточняется')}</span>${event.registrationNote?`<p>${escapeHtml(event.registrationNote)}</p>`:''}${eventsState.actionState==='failed'?renderContentState('error',{title:'Изменение не подтверждено',message:'Текущий статус сохранён. Повтори после подключения защищённого backend-контракта.'}):''}${eventsState.capabilities.writes?`<button class="primary-button${cancelling?' destructive':''} full-width" type="button" data-event-confirm="${cancelling?'cancel':'register'}" data-event-id="${escapeHtml(event.id)}">${cancelling?'Подтвердить отмену':'Подтвердить запись'}</button>`:renderContentState('disabled',{title:'Подтверждение недоступно',message:'UI не изображает успешную запись без подтверждённого изменения на сервере.'})}</section>`;
+}
+
 function innerMarkup(meta) {
   if (meta.id.startsWith('payment.')) return paymentMarkup(meta.id);
   const homeInner=homeInnerMarkup(meta);if(homeInner)return homeInner;
+  const eventInner=eventInnerMarkup(meta);if(eventInner)return eventInner;
   const specialState = meta.id === 'path.lockedReason' ? 'locked' : meta.id === 'payment.error' ? 'error' : meta.id === 'lyova.history' ? 'empty' : 'disabled';
   return `<section class="inner-intro"><span class="eyebrow">${meta.id}</span><h2>${meta.title}</h2><p>Route зарегистрирован, связан с вкладкой «${meta.parentTab}» и готов к экранной реализации следующего пакета.</p></section>${renderContentState(specialState, specialState === 'disabled' ? { title: 'Экран подключится следующим пакетом', message: 'Foundation не изображает работу ещё не подключённой функции.' } : {})}${meta.critical ? '<button class="primary-button destructive-demo" type="button" data-confirm-demo>Проверить безопасное подтверждение</button>' : ''}`;
 }
@@ -170,6 +223,8 @@ async function bootstrap() {
     homeState={status:'loading',data:null,error:null};
     try{homeState={status:'ready',data:await loadHomeDashboard(authenticated.db,authenticated.user.uid,{telegramUser:telegram?.initDataUnsafe?.user||null}),error:null};}
     catch(error){homeState={status:'error',data:null,error};}
+    eventRepository=createEventRepository(window.MENCLUB_V2_EVENT_ADAPTER||null);
+    eventsState={...(await loadEventsExperience(eventRepository,{db:authenticated.db,uid:authenticated.user.uid})),filter:'all',selectedEventId:null,actionState:'idle'};
     const readyState=navigator.onLine ? 'ready' : 'offlineReady';
     setLifecycle(readyState);
     document.querySelector('#app').dataset.lifecycle=readyState;
@@ -227,6 +282,14 @@ bottomNav.addEventListener('click', event => {
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
+  const eventFilter=event.target.closest('[data-event-filter]');
+  if(eventFilter){eventsState.filter=eventFilter.dataset.eventFilter;render('events.list');return;}
+  const eventActionControl=event.target.closest('[data-event-action]');
+  if(eventActionControl){eventsState.selectedEventId=eventActionControl.dataset.eventId;eventsState.actionState='idle';navigate(eventActionControl.dataset.eventAction==='cancel'?'events.cancellationConfirm':'events.registrationConfirm');return;}
+  const eventConfirm=event.target.closest('[data-event-confirm]');
+  if(eventConfirm){performEventAction(eventConfirm.dataset.eventConfirm,eventConfirm.dataset.eventId);return;}
+  const eventControl=event.target.closest('[data-event-id]');
+  if(eventControl){eventsState.selectedEventId=eventControl.dataset.eventId;navigate('events.detail');return;}
   const routeControl = event.target.closest('[data-navigate]');
   if (routeControl) navigate(routeControl.dataset.navigate);
   if (event.target.closest('[data-confirm-demo]')) openConfirmation();
@@ -245,7 +308,24 @@ outlet.addEventListener('click', event => {
   const newsControl=event.target.closest('[data-news-id]');
   if(newsControl){const url=new URL(location.href);url.searchParams.set('news',newsControl.dataset.newsId);history.replaceState(null,'',url);navigate('news.detail');}
   if(event.target.closest('[data-state-action]')&&homeState.status==='error')reloadHome();
+  if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('events.'))reloadEvents();
 });
+
+async function reloadEvents(){
+  const runtime=getRuntimeContext();eventsState={...eventsState,status:'loading',items:[]};render(navigation.current);
+  const loaded=await loadEventsExperience(eventRepository,{db:runtime.fbDb,uid:runtime.firebaseUser?.uid});eventsState={...eventsState,...loaded};render(navigation.current);
+}
+async function performEventAction(action,eventId){
+  if(eventsState.actionState==='working')return;
+  const runtime=getRuntimeContext(),control=document.querySelector(`[data-event-confirm="${CSS.escape(action)}"]`);if(control)control.disabled=true;
+  eventsState.actionState='working';
+  try{
+    const result=await eventRepository[action]({db:runtime.fbDb,uid:runtime.firebaseUser?.uid,eventId});
+    if(!result.confirmed)throw new Error('Unconfirmed event action');
+    eventsState.items=eventsState.items.map(event=>event.id===eventId?result.event:event);eventsState.actionState='succeeded';
+    announcer.textContent=action==='cancel'?'Участие отменено':'Запись подтверждена';navigate('events.detail');
+  }catch(error){eventsState.actionState='failed';announcer.textContent='Изменение не подтверждено';render(navigation.current);}
+}
 
 async function reloadHome(){
   const runtime=getRuntimeContext();if(!runtime.fbDb||!runtime.firebaseUser)return;
