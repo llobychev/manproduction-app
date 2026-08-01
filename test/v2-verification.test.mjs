@@ -49,9 +49,9 @@ test('responsive Telegram shell includes safe areas and compact breakpoints', as
 });
 
 test('verification report never turns external evidence into an automated pass', () => {
-  assert.equal(AUTOMATED_ACCEPTANCE_GATES.length,15);
+  assert.equal(AUTOMATED_ACCEPTANCE_GATES.length,16);
   assert.ok(EXTERNAL_ACCEPTANCE_GATES.every(gate=>gate.status==='blocked'||gate.status==='pending'));
   const summary=verificationSummary(AUTOMATED_ACCEPTANCE_GATES.length);
-  assert.deepEqual(summary.automated,{passed:15,total:15});
+  assert.deepEqual(summary.automated,{passed:16,total:16});
   assert.equal(summary.activationReady,false);
 });
