@@ -12,7 +12,7 @@
       "label": "Новая версия в разработке",
       "status": "development",
       "entry": "./versions/v2/index.html",
-      "source": "prototype-alexey.html"
+      "source": "prototype-v2-approved.html"
     }
   }
 }
