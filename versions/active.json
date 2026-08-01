@@ -1,0 +1,18 @@
+{
+  "activeVersion": "v1",
+  "fallbackVersion": "v1",
+  "versions": {
+    "v1": {
+      "label": "Текущая стабильная версия",
+      "status": "stable",
+      "entry": "./versions/v1/index.html",
+      "sourceCommit": "abbab1139e4eeeea40f977ab4e34753ee0ace103"
+    },
+    "v2": {
+      "label": "Новая версия в разработке",
+      "status": "development",
+      "entry": "./versions/v2/index.html",
+      "source": "prototype-alexey.html"
+    }
+  }
+}
