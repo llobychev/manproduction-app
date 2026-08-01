@@ -1,0 +1,199 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function adminRecord() {
+      return get(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+    }
+
+    function approvedAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))
+        && adminRecord().data.get('status', '') == 'approved'
+        && adminRecord().data.get('role', '') in ['owner', 'admin'];
+    }
+
+    function hasAdminPermission(permission) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))
+        && adminRecord().data.get('status', '') == 'approved'
+        && adminRecord().data.get('permissions', {}).get('admin', {}).get(permission, false) == true;
+    }
+
+    function canManage(permission) {
+      return approvedAdmin() || hasAdminPermission(permission);
+    }
+
+    function onlyFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function protectedUserFieldsUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'subscriptionUntil',
+        'subscriptionPlan',
+        'discountPct',
+        'accessRole',
+        'accessStatus',
+        'isAdmin',
+        'permissions'
+      ]);
+    }
+
+    function protectedUserDataFieldsUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'habits',
+        'questsDone',
+        'challengesProgress'
+      ]);
+    }
+
+    match /users/{uid} {
+      allow read: if owns(uid) || canManage('users');
+      allow create: if owns(uid)
+        && !request.resource.data.keys().hasAny([
+          'subscriptionUntil', 'subscriptionPlan', 'discountPct', 'accessRole',
+          'accessStatus', 'isAdmin', 'permissions'
+        ]);
+      allow update: if (owns(uid) && protectedUserFieldsUnchanged()) || canManage('users');
+      allow delete: if owns(uid) || canManage('users');
+    }
+
+    match /user_data/{uid} {
+      allow read, delete: if owns(uid);
+      allow create: if owns(uid)
+        && !request.resource.data.keys().hasAny(['habits', 'questsDone', 'challengesProgress']);
+      allow update: if owns(uid) && protectedUserDataFieldsUnchanged();
+      allow read: if canManage('users');
+    }
+
+    match /cycle_data/{uid} {
+      allow read, create, update, delete: if owns(uid);
+    }
+
+    match /migration_backup/{uid} {
+      allow read, create, update, delete: if owns(uid);
+    }
+
+    match /events/{eventDocumentId} {
+      allow read: if signedIn()
+        && (resource.data.get('userId', '') == request.auth.uid || canManage('events'));
+      allow create, update: if signedIn()
+        && eventDocumentId.matches('^' + request.auth.uid + '_.+$')
+        && request.resource.data.get('userId', '') == request.auth.uid
+        && onlyFields([
+          'userId', 'userName', 'eventId', 'title', 'time', 'dateISO',
+          'recurrence', 'reminderOffset', 'tag', 'updatedAt'
+        ]);
+      allow delete: if signedIn()
+        && (eventDocumentId.matches('^' + request.auth.uid + '_.+$') || canManage('events'));
+    }
+
+    match /roulette_active_perks/{uid} {
+      allow read: if owns(uid) || canManage('demoAccess');
+      allow create, update, delete: if canManage('demoAccess');
+    }
+
+    match /leaderboard/{uid} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManage('users');
+    }
+
+    match /challenge_progress/{progressId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManage('challenges');
+    }
+
+    match /challenges/{challengeId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManage('challenges');
+
+      match /teams/{teamId} {
+        function teamPath() {
+          return /databases/$(database)/documents/challenges/$(challengeId)/teams/$(teamId);
+        }
+
+        function teamCaptain() {
+          return signedIn()
+            && exists(teamPath())
+            && get(teamPath()).data.get('captainId', '') == request.auth.uid;
+        }
+
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.get('captainId', '') == request.auth.uid
+          && onlyFields(['name', 'captainId', 'captainName', 'inviteCode', 'createdAt']);
+        allow update: if teamCaptain() || canManage('challenges');
+        allow delete: if teamCaptain() || canManage('challenges');
+
+        match /members/{uid} {
+          allow read: if signedIn();
+          allow create: if owns(uid)
+            && request.resource.data.get('userId', '') == request.auth.uid
+            && onlyFields(['userId', 'userName', 'isCaptain', 'doneCount', 'joinedAt', 'lastCheckIn'])
+            && request.resource.data.get('doneCount', 0) == 0
+            && (!request.resource.data.get('isCaptain', false)
+              || get(teamPath()).data.get('captainId', '') == request.auth.uid);
+          allow update: if canManage('challenges');
+          allow delete: if owns(uid) || teamCaptain() || canManage('challenges');
+        }
+      }
+    }
+
+    match /analytics/main/events/{eventId} {
+      allow create: if signedIn()
+        && request.resource.data.get('tgId', '') == request.auth.uid
+        && onlyFields(['tgId', 'event', 'data', 'ts']);
+      allow read: if canManage('stats');
+    }
+
+    match /news/{documentId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManage('news');
+    }
+
+    match /daily_quests/{documentId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManage('quests');
+    }
+
+    match /promo_codes/{documentId} {
+      allow read: if signedIn();
+      allow create, update, delete: if canManage('promo');
+    }
+
+    match /admin_users/{uid} {
+      allow read: if owns(uid) || approvedAdmin();
+      allow create: if owns(uid)
+        && request.resource.data.get('status', '') == 'pending'
+        && request.resource.data.get('role', '') == 'pending_role'
+        && !request.resource.data.keys().hasAny(['permissions', 'documentAccess']);
+      allow update: if owns(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uiPreferences', 'updatedAt']);
+    }
+
+    match /traffic_campaigns/{documentId} {
+      allow read, create, update, delete: if canManage('stats');
+    }
+
+    match /traffic_events/{documentId} {
+      allow read, create, update, delete: if canManage('stats');
+    }
+
+    match /admin_tasks/{documentId} {
+      allow read, create, update, delete: if canManage('tasks');
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

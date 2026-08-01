@@ -22,14 +22,15 @@ export const AUTOMATED_ACCEPTANCE_GATES = Object.freeze([
   'logout-retains-data',
   'reset-double-confirm-and-adapter-gate',
   'central-adapter-security-allowlist-empty',
+  'firestore-rules-candidate-default-deny',
   'no-browser-storage-persistence',
   'responsive-safe-area-shell',
   'v1-and-active-manifest-immutability'
 ]);
 
 export const EXTERNAL_ACCEPTANCE_GATES = Object.freeze([
-  Object.freeze({ id:'deployed-firestore-rules-source', status:'blocked', evidence:'Authoritative Rules source and deployed immutable revision are not identified.' }),
-  Object.freeze({ id:'firestore-negative-authorization-tests', status:'blocked', evidence:'Requires emulator or controlled project access plus deployed Rules source.' }),
+  Object.freeze({ id:'deployed-firestore-rules-source', status:'blocked', evidence:'A reviewed candidate source exists, but the actually deployed Rules source and immutable production revision are not identified.' }),
+  Object.freeze({ id:'firestore-negative-authorization-tests', status:'blocked', evidence:'Candidate emulator matrix is automated; the same negative matrix still requires proof against the exact deployed production revision.' }),
   Object.freeze({ id:'telegram-real-device-responsive-proof', status:'pending', evidence:'Requires owner-accessible Telegram V2 preview on target devices.' }),
   Object.freeze({ id:'paid-demo-expired-real-account-proof', status:'pending', evidence:'Requires controlled non-production account fixtures.' }),
   Object.freeze({ id:'v1-v2-v1-controlled-rollback', status:'pending', evidence:'Belongs to owner-approved Package 11 activation.' }),
