@@ -9,6 +9,7 @@ import { loadHomeDashboard, toggleDailyQuest } from './home.js';
 import { EVENT_FILTERS, createEventRepository, filterEvents, loadEventsExperience } from './events.js';
 import { chapterStatus, createPathRepository, findChapter, findPath, loadPathExperience } from './path.js';
 import { WidgetLayoutEditor, createWidgetRepository, widgetById } from './widgets.js';
+import { LYOVA_ACTIONS, LYOVA_RECOMMENDATIONS, LYOVA_TABS, LyovaSession, createLyovaActionRepository } from './lyova.js';
 
 const outlet = document.querySelector('#route-outlet');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -31,6 +32,9 @@ let pathState = { status:'loading', spheres:[], capabilities:{reads:false,writes
 let widgetRepository=createWidgetRepository();
 let widgetEditor=new WidgetLayoutEditor();
 let widgetState={status:'loading',capabilities:{reads:false,writes:false},selectedWidgetId:null,actionState:'idle'};
+let lyovaSession=new LyovaSession();
+let lyovaActions=createLyovaActionRepository();
+let pendingLyovaActionId=null;
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -53,6 +57,7 @@ function rootMarkup(meta) {
   if(meta.id==='events.list')return eventsMarkup();
   if(meta.id==='path.home')return pathHomeMarkup();
   if(meta.id==='widgets.home')return widgetsHomeMarkup();
+  if(meta.id==='lyova.chat')return lyovaMarkup('chat');
   const links = rootCards[meta.parentTab] || [];
   return `<section class="foundation-hero"><span class="eyebrow">V2 FOUNDATION</span><h2>${meta.title}</h2><p>Изолированная оболочка готова к подключению экранного пакета. Реальные пользовательские данные и бизнес-действия здесь ещё не подключены.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Безопасный режим</strong><p>V1 остаётся активной. Эта версия не выполняет Firestore-записи и не меняет production.</p></section>`;
 }
@@ -192,12 +197,24 @@ function widgetInnerMarkup(meta){
   return widgetToolMarkup(meta);
 }
 
+function lyovaTabs(active){return `<div class="lyova-tabs">${LYOVA_TABS.map(tab=>`<button type="button" data-navigate="${tab.route}" class="${tab.id===active?'active':''}">${tab.label}</button>`).join('')}</div>`;}
+function lyovaMarkup(active){
+  const header=`<section class="lyova-hero"><div class="lyova-avatar">Л</div><div><span class="eyebrow">ИИ-ИНТЕРФЕЙС MENCLUB</span><h2>Лёва</h2><p>Помогает ориентироваться в Путь, событиях и инструментах.</p></div></section>${lyovaTabs(active)}`;
+  if(active==='recommendations')return header+`<section class="lyova-list">${LYOVA_RECOMMENDATIONS.map(item=>`<button type="button" data-navigate="${item.route}"><b>${item.title}</b><span>Открыть реальный экран →</span></button>`).join('')}</section>`;
+  if(active==='history')return header+renderContentState('empty',{title:'История пока пуста',message:'Диалоги не сохраняются без отдельного утверждённого runtime/data contract.'});
+  if(active==='actions')return header+`<section class="lyova-list">${LYOVA_ACTIONS.map(item=>`<button type="button" data-lyova-action="${item.id}"><b>${item.title}</b><span>${item.effect} · сначала preview</span></button>`).join('')}</section>${!lyovaActions.capabilities.actions?renderContentState('disabled',{title:'Выполнение действий отключено',message:'Лёва ничего не записывает без подтверждённого runtime.'}):''}`;
+  const messages=lyovaSession.messages.map(item=>`<div class="lyova-message ${item.role}"><b>${item.role==='user'?'Ты':'Лёва'}</b><p>${escapeHtml(item.text)}</p>${!item.persisted?'<small>не сохранено</small>':''}</div>`).join('');
+  return header+`<section class="lyova-chat">${messages||'<div class="lyova-message assistant"><b>Лёва</b><p>Здорово. Могу открыть нужный раздел и помочь сформулировать запрос.</p><small>стартовое сообщение интерфейса</small></div>'}${lyovaSession.state==='working'?renderContentState('loading',{title:'Лёва думает'}):''}${lyovaSession.state==='failed'?renderContentState('error',{title:'Ответ не получен',message:'Сообщение осталось только в текущем интерфейсе.',actionLabel:'Повторить'}):''}${lyovaSession.state==='disabled'?renderContentState('disabled',{title:'AI runtime ещё не подключён',message:'Твоё сообщение показано локально, но ответ и история не выдумываются.'}):''}</section><form class="lyova-composer" data-lyova-form><input name="message" autocomplete="off" placeholder="Напиши Лёве…"><button type="button" disabled title="Скоро">🎙 Скоро</button><button type="submit">Отправить</button></form>`;
+}
+function lyovaInnerMarkup(meta){if(!meta.id.startsWith('lyova.'))return null;return lyovaMarkup({ 'lyova.recommendations':'recommendations','lyova.history':'history','lyova.actions':'actions','lyova.settings':'settings' }[meta.id]||'chat');}
+
 function innerMarkup(meta) {
   if (meta.id.startsWith('payment.')) return paymentMarkup(meta.id);
   const homeInner=homeInnerMarkup(meta);if(homeInner)return homeInner;
   const eventInner=eventInnerMarkup(meta);if(eventInner)return eventInner;
   const pathInner=pathInnerMarkup(meta);if(pathInner)return pathInner;
   const widgetInner=widgetInnerMarkup(meta);if(widgetInner)return widgetInner;
+  const lyovaInner=lyovaInnerMarkup(meta);if(lyovaInner)return lyovaInner;
   const specialState = meta.id === 'path.lockedReason' ? 'locked' : meta.id === 'payment.error' ? 'error' : meta.id === 'lyova.history' ? 'empty' : 'disabled';
   return `<section class="inner-intro"><span class="eyebrow">${meta.id}</span><h2>${meta.title}</h2><p>Route зарегистрирован, связан с вкладкой «${meta.parentTab}» и готов к экранной реализации следующего пакета.</p></section>${renderContentState(specialState, specialState === 'disabled' ? { title: 'Экран подключится следующим пакетом', message: 'Foundation не изображает работу ещё не подключённой функции.' } : {})}${meta.critical ? '<button class="primary-button destructive-demo" type="button" data-confirm-demo>Проверить безопасное подтверждение</button>' : ''}`;
 }
@@ -301,6 +318,7 @@ async function bootstrap() {
     widgetRepository=createWidgetRepository(window.MENCLUB_V2_WIDGET_ADAPTER||null);
     try{widgetEditor=new WidgetLayoutEditor(await widgetRepository.load({db:authenticated.db,uid:authenticated.user.uid}));widgetState={status:'ready',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'idle'};}
     catch(error){widgetState={status:'error',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'failed'};}
+    lyovaSession=new LyovaSession(window.MENCLUB_V2_LYOVA_RUNTIME||null);lyovaActions=createLyovaActionRepository(window.MENCLUB_V2_LYOVA_ACTION_ADAPTER||null);
     const readyState=navigator.onLine ? 'ready' : 'offlineReady';
     setLifecycle(readyState);
     document.querySelector('#app').dataset.lifecycle=readyState;
@@ -368,6 +386,8 @@ bottomNav.addEventListener('click', event => {
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
+  const lyovaAction=event.target.closest('[data-lyova-action]');if(lyovaAction){pendingLyovaActionId=lyovaAction.dataset.lyovaAction;openLyovaActionPreview();return;}
+  if(event.target.closest('[data-state-action]')&&navigation.current==='lyova.chat'){retryLyova();return;}
   const widgetOpen=event.target.closest('[data-widget-open]');if(widgetOpen){widgetState.selectedWidgetId=widgetOpen.dataset.widgetOpen;navigate(widgetById(widgetState.selectedWidgetId)?.route||'widgets.widget');return;}
   const widgetMove=event.target.closest('[data-widget-move]');if(widgetMove){widgetEditor.move(widgetMove.dataset.widgetId,Number(widgetMove.dataset.widgetMove));render('widgets.edit');return;}
   const widgetResize=event.target.closest('[data-widget-resize]');if(widgetResize){widgetEditor.resize(widgetResize.dataset.widgetResize);render('widgets.edit');return;}
@@ -416,6 +436,12 @@ outlet.addEventListener('click', event => {
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('path.'))reloadPath();
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('widgets.'))reloadWidgets();
 });
+outlet.addEventListener('submit',event=>{if(event.target.matches('[data-lyova-form]')){event.preventDefault();const input=event.target.elements.message,text=input.value.trim();if(text){input.value='';sendLyova(text);}}});
+
+async function sendLyova(text){try{await lyovaSession.send(text,{uid:getRuntimeContext().firebaseUser?.uid});}catch(error){}render('lyova.chat');}
+async function retryLyova(){const last=[...lyovaSession.messages].reverse().find(item=>item.role==='user');if(last)await sendLyova(last.text);}
+function openLyovaActionPreview(){const action=LYOVA_ACTIONS.find(item=>item.id===pendingLyovaActionId);if(!action||modalState)return;const dialog=createConfirmationDialog({title:action.title,body:`Предпросмотр: ${action.effect}. ${lyovaActions.capabilities.actions?'Подтверди выполнение.':'Runtime не подключён — действие выполнено не будет.'}`,primaryLabel:lyovaActions.capabilities.actions?'Подтвердить':'Понятно',critical:true});modalRoot.append(dialog);modalState={dialog,trigger:document.activeElement,releaseFocusTrap:trapDialogFocus(dialog),kind:'lyova-action'};telegramBack.sync(true);}
+async function executeLyovaAction(){if(!lyovaActions.capabilities.actions){announcer.textContent='Действие не выполнялось';closeModal();return;}const runtime=getRuntimeContext();try{await lyovaActions.execute({actionId:pendingLyovaActionId,uid:runtime.firebaseUser?.uid,db:runtime.fbDb});announcer.textContent='Действие подтверждено runtime';}catch(error){announcer.textContent='Действие не подтверждено';}closeModal();}
 
 async function reloadWidgets(){
   const runtime=getRuntimeContext();widgetState={...widgetState,status:'loading'};render(navigation.current);
@@ -482,6 +508,7 @@ modalRoot.addEventListener('click', event => {
     if(modalState?.kind==='widget-reset'){widgetEditor.reset();closeModal();render('widgets.edit');return;}
     if(modalState?.kind==='widget-discard'){const route=modalState.pendingRoute;widgetEditor.cancel();closeModal();navigate(route,{bypassWidgetGuard:true});return;}
     if(modalState?.kind==='widget-discard-back'){widgetEditor.cancel();closeModal();const previous=navigation.back();if(previous)render(previous);return;}
+    if(modalState?.kind==='lyova-action'){executeLyovaAction();return;}
     announcer.textContent = 'Демонстрация подтверждена. Запись не выполнялась.';
     closeModal();
   }
