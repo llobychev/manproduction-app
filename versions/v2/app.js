@@ -5,6 +5,7 @@ import { authenticateTelegram } from './auth.js';
 import { accessDecision, daysRemaining, ensureCurrentAccess } from './access.js';
 import { PAYMENT_PLANS, TRANSFER_CARD_DISPLAY, discountedPlan, formatRub, managerPaymentLink } from './payment.js';
 import { getRuntimeContext, resetRuntimeContext, setAccessContext, setAuthenticatedRuntime, setLifecycle } from './runtime-context.js';
+import { loadHomeDashboard, toggleDailyQuest } from './home.js';
 
 const outlet = document.querySelector('#route-outlet');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -19,6 +20,7 @@ const accessBanner = document.querySelector('#access-banner');
 const navigation = new NavigationStack(initialRoute());
 let modalState = null;
 let selectedPlan = '1m';
+let homeState = { status:'loading', data:null, error:null };
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -37,12 +39,41 @@ function initialRoute() {
 }
 
 function rootMarkup(meta) {
+  if(meta.id==='home')return homeMarkup();
   const links = rootCards[meta.parentTab] || [];
   return `<section class="foundation-hero"><span class="eyebrow">V2 FOUNDATION</span><h2>${meta.title}</h2><p>Изолированная оболочка готова к подключению экранного пакета. Реальные пользовательские данные и бизнес-действия здесь ещё не подключены.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Безопасный режим</strong><p>V1 остаётся активной. Эта версия не выполняет Firestore-записи и не меняет production.</p></section>`;
 }
 
+function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function contentBlockState(block,label){
+  if(block.state==='error')return renderContentState('error',{title:`Не удалось загрузить: ${label}`,message:'Повтори попытку позже.'});
+  if(block.state==='empty'||!block.items?.length)return renderContentState('empty',{title:`${label}: пока пусто`});
+  return '';
+}
+function homeMarkup(){
+  if(homeState.status==='loading')return renderContentState('loading',{title:'Собираем Главную',message:'Загружаем профиль, квесты, расписание и новости.'});
+  if(homeState.status==='error')return renderContentState('error',{title:'Главная не загрузилась',message:'Данные не заменяются примерами. Попробуй ещё раз.',actionLabel:'Повторить'});
+  const d=homeState.data;
+  const questItems=d.quests.items||[],questDone=questItems.filter(q=>d.quests.done[q.id]).length;
+  return `<section class="home-welcome"><span class="eyebrow">ДОБРО ПОЖАЛОВАТЬ</span><h2>Привет, ${escapeHtml(d.identity.displayName)}</h2><p>Сегодня — ещё один шаг к сильной версии себя.</p><div class="home-metrics"><div><b>${d.points}</b><span>баллов</span></div><div><b>${d.level??'—'}</b><span>уровень</span></div><div><b>${d.streak}</b><span>серия</span></div></div></section><section class="home-card path-card"><div><span class="eyebrow">ПУТЬ</span><h3>${escapeHtml(d.path.title)}</h3><p>${escapeHtml(d.path.message)}</p></div><button class="primary-button" type="button" data-navigate="path.home">Продолжить</button></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КВЕСТ ДНЯ</span><h3>${questDone} из ${questItems.length}</h3></div><button class="secondary-button" type="button" data-navigate="quest.detail">Все задания</button></div>${d.quests.state==='error'?contentBlockState(d.quests,'Квесты'):questItems.slice(0,3).map(q=>`<button class="quest-item${d.quests.done[q.id]?' done':''}" type="button" data-quest-id="${escapeHtml(q.id)}"><span>${d.quests.done[q.id]?'✓':'○'}</span><b>${escapeHtml(q.text)}</b><small>+${q.points}</small></button>`).join('')}</section><section class="home-grid"><article class="home-card"><span class="eyebrow">БЛИЖАЙШЕЕ СОБЫТИЕ</span>${renderContentState('empty',{title:'Пока не подключено',message:d.nearestEvent.message})}</article><article class="home-card"><span class="eyebrow">ЛЁВА РЕКОМЕНДУЕТ</span>${renderContentState('disabled',{title:'Без выдуманных советов',message:d.recommendation.message})}</article></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">СЕГОДНЯ</span><h3>Расписание</h3></div><button class="secondary-button" type="button" data-navigate="schedule.today">Открыть</button></div>${contentBlockState(d.schedule,'Расписание')||d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КЛУБ</span><h3>Новости</h3></div><button class="secondary-button" type="button" data-navigate="news.list">Все новости</button></div>${contentBlockState(d.news,'Новости')||d.news.items.map(item=>`<button class="news-item" type="button" data-news-id="${escapeHtml(item.id)}"><b>${escapeHtml(item.title||'Новость')}</b><span>${escapeHtml((item.body||'').slice(0,100))}</span></button>`).join('')}</section>`;
+}
+
+function homeInnerMarkup(meta){
+  const d=homeState.data;
+  if(!d)return renderContentState('loading');
+  if(meta.id==='quest.detail')return `<section class="inner-intro"><span class="eyebrow">КВЕСТ ДНЯ</span><h2>Задания на сегодня</h2><p>Награда начисляется один раз, даже если снять отметку и поставить её снова.</p></section><section class="home-card">${d.quests.items.map(q=>`<button class="quest-item${d.quests.done[q.id]?' done':''}" type="button" data-quest-id="${escapeHtml(q.id)}"><span>${d.quests.done[q.id]?'✓':'○'}</span><b>${escapeHtml(q.text)}</b><small>+${q.points}</small></button>`).join('')}</section>`;
+  if(meta.id==='schedule.today')return `<section class="inner-intro"><span class="eyebrow">СЕГОДНЯ</span><h2>Расписание</h2><p>Личное расписание из существующего V1 mirror.</p></section>${contentBlockState(d.schedule,'Расписание')||`<section class="home-card">${d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section>`}`;
+  if(meta.id==='news.list')return `<section class="inner-intro"><span class="eyebrow">КЛУБ</span><h2>Новости</h2><p>Только публикации из существующей коллекции news.</p></section>${contentBlockState(d.news,'Новости')||`<section class="home-card">${d.news.items.map(item=>`<button class="news-item" type="button" data-news-id="${escapeHtml(item.id)}"><b>${escapeHtml(item.title||'Новость')}</b><span>${escapeHtml((item.body||'').slice(0,180))}</span></button>`).join('')}</section>`}`;
+  if(meta.id==='news.detail'){
+    const params=new URLSearchParams(location.search),item=d.news.items.find(news=>news.id===params.get('news'))||d.news.items[0];
+    return item?`<article class="inner-intro"><span class="eyebrow">НОВОСТЬ</span><h2>${escapeHtml(item.title||'Новость')}</h2><p>${escapeHtml(item.body||'')}</p></article>`:renderContentState('empty',{title:'Новость не найдена'});
+  }
+  return null;
+}
+
 function innerMarkup(meta) {
   if (meta.id.startsWith('payment.')) return paymentMarkup(meta.id);
+  const homeInner=homeInnerMarkup(meta);if(homeInner)return homeInner;
   const specialState = meta.id === 'path.lockedReason' ? 'locked' : meta.id === 'payment.error' ? 'error' : meta.id === 'lyova.history' ? 'empty' : 'disabled';
   return `<section class="inner-intro"><span class="eyebrow">${meta.id}</span><h2>${meta.title}</h2><p>Route зарегистрирован, связан с вкладкой «${meta.parentTab}» и готов к экранной реализации следующего пакета.</p></section>${renderContentState(specialState, specialState === 'disabled' ? { title: 'Экран подключится следующим пакетом', message: 'Foundation не изображает работу ещё не подключённой функции.' } : {})}${meta.critical ? '<button class="primary-button destructive-demo" type="button" data-confirm-demo>Проверить безопасное подтверждение</button>' : ''}`;
 }
@@ -136,6 +167,9 @@ async function bootstrap() {
     renderLifecycle('loadingCoreData');
     const access = await ensureCurrentAccess(authenticated.db, authenticated.user.uid);
     setAccessContext(access);
+    homeState={status:'loading',data:null,error:null};
+    try{homeState={status:'ready',data:await loadHomeDashboard(authenticated.db,authenticated.user.uid,{telegramUser:telegram?.initDataUnsafe?.user||null}),error:null};}
+    catch(error){homeState={status:'error',data:null,error};}
     const readyState=navigator.onLine ? 'ready' : 'offlineReady';
     setLifecycle(readyState);
     document.querySelector('#app').dataset.lifecycle=readyState;
@@ -206,7 +240,27 @@ outlet.addEventListener('click', event => {
     const telegram=window.Telegram?.WebApp;
     if (telegram?.openTelegramLink) telegram.openTelegramLink(link); else location.href=link;
   }
+  const questControl=event.target.closest('[data-quest-id]');
+  if(questControl)handleQuestToggle(questControl.dataset.questId);
+  const newsControl=event.target.closest('[data-news-id]');
+  if(newsControl){const url=new URL(location.href);url.searchParams.set('news',newsControl.dataset.newsId);history.replaceState(null,'',url);navigate('news.detail');}
+  if(event.target.closest('[data-state-action]')&&homeState.status==='error')reloadHome();
 });
+
+async function reloadHome(){
+  const runtime=getRuntimeContext();if(!runtime.fbDb||!runtime.firebaseUser)return;
+  homeState={status:'loading',data:null,error:null};render(navigation.current);
+  try{homeState={status:'ready',data:await loadHomeDashboard(runtime.fbDb,runtime.firebaseUser.uid,{telegramUser:window.Telegram?.WebApp?.initDataUnsafe?.user||null}),error:null};}
+  catch(error){homeState={status:'error',data:null,error};}
+  render(navigation.current);
+}
+async function handleQuestToggle(questId){
+  const runtime=getRuntimeContext(),quest=homeState.data?.quests.items.find(item=>item.id===questId);
+  if(!runtime.fbDb||!runtime.firebaseUser||!quest)return;
+  const controls=[...document.querySelectorAll(`[data-quest-id="${CSS.escape(questId)}"]`)];controls.forEach(button=>button.disabled=true);
+  try{const result=await toggleDailyQuest(runtime.fbDb,runtime.firebaseUser.uid,quest);homeState.data.quests.done=result.quests.done;homeState.data.quests.awarded=result.quests.awarded;homeState.data.points=result.points;announcer.textContent=result.reward?`Квест выполнен. Начислено ${result.reward} баллов`:'Статус квеста обновлён';render(navigation.current);}
+  catch(error){announcer.textContent='Не удалось обновить квест';controls.forEach(button=>button.disabled=false);}
+}
 modalRoot.addEventListener('click', event => {
   if (event.target.closest('[data-dialog-cancel]')) closeModal();
   if (event.target.closest('[data-dialog-confirm]')) {
