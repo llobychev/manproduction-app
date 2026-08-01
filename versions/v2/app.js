@@ -7,6 +7,7 @@ import { PAYMENT_PLANS, TRANSFER_CARD_DISPLAY, discountedPlan, formatRub, manage
 import { getRuntimeContext, resetRuntimeContext, setAccessContext, setAuthenticatedRuntime, setLifecycle } from './runtime-context.js';
 import { loadHomeDashboard, toggleDailyQuest } from './home.js';
 import { EVENT_FILTERS, createEventRepository, filterEvents, loadEventsExperience } from './events.js';
+import { chapterStatus, createPathRepository, findChapter, findPath, loadPathExperience } from './path.js';
 
 const outlet = document.querySelector('#route-outlet');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -24,6 +25,8 @@ let selectedPlan = '1m';
 let homeState = { status:'loading', data:null, error:null };
 let eventRepository = createEventRepository();
 let eventsState = { status:'loading', items:[], capabilities:{reads:false,writes:false}, filter:'all', selectedEventId:null, actionState:'idle', message:'' };
+let pathRepository = createPathRepository();
+let pathState = { status:'loading', spheres:[], capabilities:{reads:false,writes:false}, selectedSphereId:'finance', selectedPathId:'finance.foundation', selectedChapterId:null, actionState:'idle' };
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -44,6 +47,7 @@ function initialRoute() {
 function rootMarkup(meta) {
   if(meta.id==='home')return homeMarkup();
   if(meta.id==='events.list')return eventsMarkup();
+  if(meta.id==='path.home')return pathHomeMarkup();
   const links = rootCards[meta.parentTab] || [];
   return `<section class="foundation-hero"><span class="eyebrow">V2 FOUNDATION</span><h2>${meta.title}</h2><p>Изолированная оболочка готова к подключению экранного пакета. Реальные пользовательские данные и бизнес-действия здесь ещё не подключены.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Безопасный режим</strong><p>V1 остаётся активной. Эта версия не выполняет Firestore-записи и не меняет production.</p></section>`;
 }
@@ -59,7 +63,7 @@ function homeMarkup(){
   if(homeState.status==='error')return renderContentState('error',{title:'Главная не загрузилась',message:'Данные не заменяются примерами. Попробуй ещё раз.',actionLabel:'Повторить'});
   const d=homeState.data;
   const questItems=d.quests.items||[],questDone=questItems.filter(q=>d.quests.done[q.id]).length;
-  return `<section class="home-welcome"><span class="eyebrow">ДОБРО ПОЖАЛОВАТЬ</span><h2>Привет, ${escapeHtml(d.identity.displayName)}</h2><p>Сегодня — ещё один шаг к сильной версии себя.</p><div class="home-metrics"><div><b>${d.points}</b><span>баллов</span></div><div><b>${d.level??'—'}</b><span>уровень</span></div><div><b>${d.streak}</b><span>серия</span></div></div></section><section class="home-card path-card"><div><span class="eyebrow">ПУТЬ</span><h3>${escapeHtml(d.path.title)}</h3><p>${escapeHtml(d.path.message)}</p></div><button class="primary-button" type="button" data-navigate="path.home">Продолжить</button></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КВЕСТ ДНЯ</span><h3>${questDone} из ${questItems.length}</h3></div><button class="secondary-button" type="button" data-navigate="quest.detail">Все задания</button></div>${d.quests.state==='error'?contentBlockState(d.quests,'Квесты'):questItems.slice(0,3).map(q=>`<button class="quest-item${d.quests.done[q.id]?' done':''}" type="button" data-quest-id="${escapeHtml(q.id)}"><span>${d.quests.done[q.id]?'✓':'○'}</span><b>${escapeHtml(q.text)}</b><small>+${q.points}</small></button>`).join('')}</section><section class="home-grid"><article class="home-card"><span class="eyebrow">БЛИЖАЙШЕЕ СОБЫТИЕ</span>${homeNearestEventMarkup(d.nearestEvent)}</article><article class="home-card"><span class="eyebrow">ЛЁВА РЕКОМЕНДУЕТ</span>${renderContentState('disabled',{title:'Без выдуманных советов',message:d.recommendation.message})}</article></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">СЕГОДНЯ</span><h3>Расписание</h3></div><button class="secondary-button" type="button" data-navigate="schedule.today">Открыть</button></div>${contentBlockState(d.schedule,'Расписание')||d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КЛУБ</span><h3>Новости</h3></div><button class="secondary-button" type="button" data-navigate="news.list">Все новости</button></div>${contentBlockState(d.news,'Новости')||d.news.items.map(item=>`<button class="news-item" type="button" data-news-id="${escapeHtml(item.id)}"><b>${escapeHtml(item.title||'Новость')}</b><span>${escapeHtml((item.body||'').slice(0,100))}</span></button>`).join('')}</section>`;
+  return `<section class="home-welcome"><span class="eyebrow">ДОБРО ПОЖАЛОВАТЬ</span><h2>Привет, ${escapeHtml(d.identity.displayName)}</h2><p>Сегодня — ещё один шаг к сильной версии себя.</p><div class="home-metrics"><div><b>${d.points}</b><span>баллов</span></div><div><b>${d.level??'—'}</b><span>уровень</span></div><div><b>${d.streak}</b><span>серия</span></div></div></section>${homePathCard(d.path)}<section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КВЕСТ ДНЯ</span><h3>${questDone} из ${questItems.length}</h3></div><button class="secondary-button" type="button" data-navigate="quest.detail">Все задания</button></div>${d.quests.state==='error'?contentBlockState(d.quests,'Квесты'):questItems.slice(0,3).map(q=>`<button class="quest-item${d.quests.done[q.id]?' done':''}" type="button" data-quest-id="${escapeHtml(q.id)}"><span>${d.quests.done[q.id]?'✓':'○'}</span><b>${escapeHtml(q.text)}</b><small>+${q.points}</small></button>`).join('')}</section><section class="home-grid"><article class="home-card"><span class="eyebrow">БЛИЖАЙШЕЕ СОБЫТИЕ</span>${homeNearestEventMarkup(d.nearestEvent)}</article><article class="home-card"><span class="eyebrow">ЛЁВА РЕКОМЕНДУЕТ</span>${renderContentState('disabled',{title:'Без выдуманных советов',message:d.recommendation.message})}</article></section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">СЕГОДНЯ</span><h3>Расписание</h3></div><button class="secondary-button" type="button" data-navigate="schedule.today">Открыть</button></div>${contentBlockState(d.schedule,'Расписание')||d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">КЛУБ</span><h3>Новости</h3></div><button class="secondary-button" type="button" data-navigate="news.list">Все новости</button></div>${contentBlockState(d.news,'Новости')||d.news.items.map(item=>`<button class="news-item" type="button" data-news-id="${escapeHtml(item.id)}"><b>${escapeHtml(item.title||'Новость')}</b><span>${escapeHtml((item.body||'').slice(0,100))}</span></button>`).join('')}</section>`;
 }
 
 function homeInnerMarkup(meta){
@@ -78,6 +82,11 @@ function homeInnerMarkup(meta){
 function eventDate(value){
   if(!value)return 'Дата уточняется';
   return value.toLocaleString('ru-RU',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Irkutsk'});
+}
+function homePathCard(fallback){
+  if(pathState.status!=='ready')return `<section class="home-card path-card"><div><span class="eyebrow">ПУТЬ</span><h3>${escapeHtml(fallback.title)}</h3><p>${escapeHtml(fallback.message)}</p></div><button class="primary-button" type="button" data-navigate="path.home">Открыть</button></section>`;
+  const next=pathState.continuation;
+  return `<section class="home-card path-card"><div><span class="eyebrow">ПУТЬ · ${pathState.totalProgress}%</span><h3>${escapeHtml(next?.chapter.title||'Карта жизни')}</h3><p>${escapeHtml(next?`${next.sphere.title} · ${next.path.name}`:'Все доступные главы завершены')}</p></div><button class="primary-button" type="button" ${next?`data-path-chapter="${escapeHtml(next.chapter.id)}"`:'data-navigate="path.home"'}>${next?'Продолжить':'Открыть'}</button></section>`;
 }
 function homeNearestEventMarkup(fallback){
   const nearest=eventsState.status==='ready'?filterEvents(eventsState.items,'upcoming')[0]:null;
@@ -123,10 +132,38 @@ function eventInnerMarkup(meta){
   return `<section class="inner-intro"><span class="eyebrow">${cancelling?'ОТМЕНА УЧАСТИЯ':'ПОДТВЕРЖДЕНИЕ ЗАПИСИ'}</span><h2>${escapeHtml(event.title)}</h2><p>${cancelling?'После отмены место может перейти другому участнику.':'Проверь дату, формат и условия участия перед подтверждением.'}</p></section><section class="event-confirm-card"><strong>${escapeHtml(eventDate(event.startsAt))}</strong><span>${escapeHtml(event.location||'Место уточняется')}</span>${event.registrationNote?`<p>${escapeHtml(event.registrationNote)}</p>`:''}${eventsState.actionState==='failed'?renderContentState('error',{title:'Изменение не подтверждено',message:'Текущий статус сохранён. Повтори после подключения защищённого backend-контракта.'}):''}${eventsState.capabilities.writes?`<button class="primary-button${cancelling?' destructive':''} full-width" type="button" data-event-confirm="${cancelling?'cancel':'register'}" data-event-id="${escapeHtml(event.id)}">${cancelling?'Подтвердить отмену':'Подтвердить запись'}</button>`:renderContentState('disabled',{title:'Подтверждение недоступно',message:'UI не изображает успешную запись без подтверждённого изменения на сервере.'})}</section>`;
 }
 
+function selectedPathInfo(){return findPath(pathState.selectedPathId)||findPath('finance.foundation');}
+function selectedChapterInfo(){return findChapter(pathState.selectedChapterId);}
+function pathHomeMarkup(){
+  if(pathState.status==='loading')return renderContentState('loading',{title:'Собираем карту Пути'});
+  if(pathState.status==='error')return renderContentState('error',{title:'Путь не загрузился',message:'Прогресс не заменяется демонстрационными значениями.',actionLabel:'Повторить'});
+  const next=pathState.continuation;
+  return `<section class="path-hero"><span class="eyebrow">КАРТА ЖИЗНИ</span><h2>Твой Путь · ${pathState.totalProgress}%</h2><p>${pathState.totalCompleted} из ${pathState.totalChapters} глав · ${pathState.progress.xp} XP</p>${next?`<button class="primary-button full-width" type="button" data-path-chapter="${escapeHtml(next.chapter.id)}">Продолжить: ${escapeHtml(next.chapter.title)}</button>`:''}</section><section class="path-spheres">${pathState.spheres.map(sphere=>`<button type="button" data-path-sphere="${sphere.id}"><span>${sphere.icon}</span><strong>${escapeHtml(sphere.title)}</strong><small>${sphere.progress}% · ${sphere.completed}/${sphere.total}</small><i><b style="width:${sphere.progress}%"></b></i></button>`).join('')}</section><section class="path-shortcuts"><button class="secondary-button" type="button" data-navigate="path.history">История</button><button class="secondary-button" type="button" data-navigate="path.bookmarks">Закладки</button></section>${!pathState.capabilities.writes?renderContentState('stale',{title:'Прогресс только для чтения',message:'V1 не сохранял mcPathState. Запись включится после утверждения schema и Security Rules.'}):''}`;
+}
+function pathRows(items,emptyTitle){
+  return items.length?`<section class="path-chapter-list">${items.map(item=>`<button type="button" data-path-chapter="${escapeHtml(item.chapter.id)}"><span>${item.chapter.boss?'👑':item.chapter.number}</span><b>${escapeHtml(item.chapter.title)}</b><small>${escapeHtml(item.sphere.title)} · ${escapeHtml(item.path.name)}</small></button>`).join('')}</section>`:renderContentState('empty',{title:emptyTitle});
+}
+function pathInnerMarkup(meta){
+  if(!meta.id.startsWith('path.'))return null;
+  if(pathState.status!=='ready')return pathHomeMarkup();
+  if(meta.id==='path.history')return `<section class="inner-intro"><span class="eyebrow">ИСТОРИЯ</span><h2>Пройденные главы</h2><p>Только подтверждённый прогресс.</p></section>${pathRows(pathState.history,'История пока пуста')}`;
+  if(meta.id==='path.bookmarks')return `<section class="inner-intro"><span class="eyebrow">ЗАКЛАДКИ</span><h2>Сохранённые уроки</h2><p>Вернись к важным главам.</p></section>${pathRows(pathState.bookmarked,'Закладок пока нет')}`;
+  const info=selectedPathInfo(),sphere=pathState.spheres.find(item=>item.id===(pathState.selectedSphereId||info.sphere.id))||info.sphere;
+  if(meta.id==='path.sphere')return `<section class="path-region-hero"><span>${sphere.icon}</span><div><span class="eyebrow">СФЕРА</span><h2>${escapeHtml(sphere.title)}</h2><p>${escapeHtml(sphere.description)}</p></div></section><section class="path-route-list">${sphere.paths.map(item=>`<button type="button" data-path-id="${item.id}"><b>${escapeHtml(item.name)}</b><span>${item.chapters.length} глав</span></button>`).join('')}</section>`;
+  if(meta.id==='path.chapter')return `<section class="inner-intro"><span class="eyebrow">${escapeHtml(info.sphere.title)}</span><h2>${escapeHtml(info.path.name)}</h2><p>${escapeHtml(info.path.recommendation)}</p></section><section class="path-chapter-list">${info.path.chapters.map((chapter,index)=>{const status=chapterStatus(info.path,index,pathState.progress);return `<button type="button" data-path-chapter="${chapter.id}" class="${status}"><span>${status==='completed'?'✓':status==='locked'?'🔒':chapter.boss?'👑':chapter.number}</span><b>${escapeHtml(chapter.title)}</b><small>${status==='completed'?'Пройдено':status==='locked'?'Сначала предыдущая глава':`~${chapter.durationMinutes} мин · +${chapter.xp} XP`}</small></button>`;}).join('')}</section><section class="path-bridges">${info.path.bridges.map(value=>`<span>${escapeHtml(value)}</span>`).join('')}</section>`;
+  const selected=selectedChapterInfo();
+  if(!selected)return renderContentState('empty',{title:'Глава не найдена'});
+  const status=chapterStatus(selected.path,selected.chapter.number-1,pathState.progress);
+  if(meta.id==='path.lockedReason'||status==='locked')return `<section class="inner-intro"><span class="eyebrow">ПОСЛЕДОВАТЕЛЬНЫЙ ПУТЬ</span><h2>${escapeHtml(selected.chapter.title)}</h2><p>Эта глава откроется после завершения предыдущей: ${escapeHtml(selected.path.chapters[selected.chapter.number-2]?.title||'текущей главы')}.</p></section>${renderContentState('locked',{title:'Глава пока закрыта',message:'Пройди маршрут по порядку — подтверждённый прогресс не обходится.'})}`;
+  const bookmarked=pathState.progress.bookmarks.includes(selected.chapter.id),done=status==='completed';
+  return `<article class="path-lesson"><span class="eyebrow">${escapeHtml(selected.sphere.title)} · ${escapeHtml(selected.path.name)}</span><h2>${escapeHtml(selected.chapter.title)}</h2><p>Практическая глава продвинутой Карты жизни. Содержание и ответы будут подключены через отдельный content adapter без потери структуры V1.</p><div class="path-lesson-meta"><span>~${selected.chapter.durationMinutes} мин</span><span>+${selected.chapter.xp} XP</span><span>${done?'Пройдено':'Доступно'}</span></div>${pathState.capabilities.writes?`<button class="secondary-button full-width" type="button" data-path-bookmark="${selected.chapter.id}">${bookmarked?'Убрать из закладок':'В закладки'}</button>`:''}${done?'':pathState.capabilities.writes?`<button class="primary-button full-width" type="button" data-path-complete="${selected.chapter.id}">Завершить главу</button>`:renderContentState('disabled',{title:'Завершение пока недоступно',message:'Награда, прогресс и закладки появятся только после подтверждённой серверной записи.'})}</article>`;
+}
+
 function innerMarkup(meta) {
   if (meta.id.startsWith('payment.')) return paymentMarkup(meta.id);
   const homeInner=homeInnerMarkup(meta);if(homeInner)return homeInner;
   const eventInner=eventInnerMarkup(meta);if(eventInner)return eventInner;
+  const pathInner=pathInnerMarkup(meta);if(pathInner)return pathInner;
   const specialState = meta.id === 'path.lockedReason' ? 'locked' : meta.id === 'payment.error' ? 'error' : meta.id === 'lyova.history' ? 'empty' : 'disabled';
   return `<section class="inner-intro"><span class="eyebrow">${meta.id}</span><h2>${meta.title}</h2><p>Route зарегистрирован, связан с вкладкой «${meta.parentTab}» и готов к экранной реализации следующего пакета.</p></section>${renderContentState(specialState, specialState === 'disabled' ? { title: 'Экран подключится следующим пакетом', message: 'Foundation не изображает работу ещё не подключённой функции.' } : {})}${meta.critical ? '<button class="primary-button destructive-demo" type="button" data-confirm-demo>Проверить безопасное подтверждение</button>' : ''}`;
 }
@@ -225,6 +262,8 @@ async function bootstrap() {
     catch(error){homeState={status:'error',data:null,error};}
     eventRepository=createEventRepository(window.MENCLUB_V2_EVENT_ADAPTER||null);
     eventsState={...(await loadEventsExperience(eventRepository,{db:authenticated.db,uid:authenticated.user.uid})),filter:'all',selectedEventId:null,actionState:'idle'};
+    pathRepository=createPathRepository(window.MENCLUB_V2_PATH_ADAPTER||null);
+    pathState={...(await loadPathExperience(pathRepository,{db:authenticated.db,uid:authenticated.user.uid})),selectedSphereId:'finance',selectedPathId:'finance.foundation',selectedChapterId:null,actionState:'idle'};
     const readyState=navigator.onLine ? 'ready' : 'offlineReady';
     setLifecycle(readyState);
     document.querySelector('#app').dataset.lifecycle=readyState;
@@ -282,6 +321,16 @@ bottomNav.addEventListener('click', event => {
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
+  const pathSphere=event.target.closest('[data-path-sphere]');
+  if(pathSphere){pathState.selectedSphereId=pathSphere.dataset.pathSphere;const sphere=pathState.spheres.find(item=>item.id===pathState.selectedSphereId);pathState.selectedPathId=sphere?.paths[0]?.id||pathState.selectedPathId;navigate('path.sphere');return;}
+  const pathRoute=event.target.closest('[data-path-id]');
+  if(pathRoute){pathState.selectedPathId=pathRoute.dataset.pathId;pathState.selectedSphereId=findPath(pathState.selectedPathId)?.sphere.id||pathState.selectedSphereId;navigate('path.chapter');return;}
+  const pathChapter=event.target.closest('[data-path-chapter]');
+  if(pathChapter){pathState.selectedChapterId=pathChapter.dataset.pathChapter;const info=findChapter(pathState.selectedChapterId);if(info){pathState.selectedPathId=info.path.id;pathState.selectedSphereId=info.sphere.id;navigate(chapterStatus(info.path,info.chapter.number-1,pathState.progress)==='locked'?'path.lockedReason':'path.lesson');}return;}
+  const pathBookmark=event.target.closest('[data-path-bookmark]');
+  if(pathBookmark){performPathBookmark(pathBookmark.dataset.pathBookmark);return;}
+  const pathComplete=event.target.closest('[data-path-complete]');
+  if(pathComplete){performPathCompletion(pathComplete.dataset.pathComplete);return;}
   const eventFilter=event.target.closest('[data-event-filter]');
   if(eventFilter){eventsState.filter=eventFilter.dataset.eventFilter;render('events.list');return;}
   const eventActionControl=event.target.closest('[data-event-action]');
@@ -309,7 +358,25 @@ outlet.addEventListener('click', event => {
   if(newsControl){const url=new URL(location.href);url.searchParams.set('news',newsControl.dataset.newsId);history.replaceState(null,'',url);navigate('news.detail');}
   if(event.target.closest('[data-state-action]')&&homeState.status==='error')reloadHome();
   if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('events.'))reloadEvents();
+  if(event.target.closest('[data-state-action]')&&navigation.current.startsWith('path.'))reloadPath();
 });
+
+async function reloadPath(){
+  const runtime=getRuntimeContext();pathState={...pathState,status:'loading'};render(navigation.current);
+  const loaded=await loadPathExperience(pathRepository,{db:runtime.fbDb,uid:runtime.firebaseUser?.uid});pathState={...pathState,...loaded};render(navigation.current);
+}
+async function performPathCompletion(chapterId){
+  if(pathState.actionState==='working')return;pathState.actionState='working';
+  const runtime=getRuntimeContext();
+  try{const result=await pathRepository.complete({db:runtime.fbDb,uid:runtime.firebaseUser?.uid,chapterId},pathState.progress);pathState={...pathState,...(await loadPathExperience({load:async()=>result.progress,capabilities:pathRepository.capabilities})),selectedChapterId:chapterId,actionState:'succeeded'};announcer.textContent=result.reward?`Глава завершена. +${result.reward} XP`:'Глава уже была завершена';render('path.lesson');}
+  catch(error){pathState.actionState='failed';announcer.textContent='Прогресс не подтверждён';render(navigation.current);}
+}
+async function performPathBookmark(chapterId){
+  if(pathState.actionState==='working')return;pathState.actionState='working';
+  const runtime=getRuntimeContext();
+  try{const result=await pathRepository.toggleBookmark({db:runtime.fbDb,uid:runtime.firebaseUser?.uid,chapterId});pathState={...pathState,...(await loadPathExperience({load:async()=>result.progress,capabilities:pathRepository.capabilities})),selectedChapterId:chapterId,actionState:'succeeded'};announcer.textContent='Закладки обновлены';render(navigation.current);}
+  catch(error){pathState.actionState='failed';announcer.textContent='Закладка не подтверждена';render(navigation.current);}
+}
 
 async function reloadEvents(){
   const runtime=getRuntimeContext();eventsState={...eventsState,status:'loading',items:[]};render(navigation.current);
