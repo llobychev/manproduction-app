@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { ADAPTER_SECURITY_CONTRACT_VERSION, V2_ADAPTER_DOMAINS, adapterSecurityProof, createV2AdapterRegistry } from '../versions/v2/adapter-registry.js';
+import { ADAPTER_SECURITY_CONTRACT_VERSION, APPROVED_SECURITY_REVISIONS, V2_ADAPTER_DOMAINS, createV2AdapterRegistry } from '../versions/v2/adapter-registry.js';
+
+const proof=rulesRevision=>({contractVersion:ADAPTER_SECURITY_CONTRACT_VERSION,rulesRevision,ownerScoped:true,serverValidated:true,backwardCompatibleV1:true,rollbackReady:true});
 
 test('all V2 adapter domains fail closed when no registry is provided', () => {
   const registry=createV2AdapterRegistry();
@@ -14,14 +16,22 @@ test('partial or stale security proof cannot activate an adapter', () => {
   const partial=createV2AdapterRegistry({path:{adapter,security:{contractVersion:ADAPTER_SECURITY_CONTRACT_VERSION,rulesRevision:'abcdef123'}}});
   assert.equal(partial.adapter('path'),null);
   assert.match(partial.audit.path.reason,/proof-missing/);
-  const stale=createV2AdapterRegistry({path:{adapter,security:{...adapterSecurityProof('abcdef123'),contractVersion:99}}});
+  const stale=createV2AdapterRegistry({path:{adapter,security:{...proof('abcdef123'),contractVersion:99}}});
   assert.equal(stale.adapter('path'),null);
   assert.equal(stale.audit.path.reason,'contract-version-mismatch');
 });
 
-test('complete immutable proof activates only its named domain', () => {
+test('a self-asserted revision remains blocked while the production allowlist is empty', () => {
   const adapter={load:async()=>({})};
-  const registry=createV2AdapterRegistry({path:{adapter,security:adapterSecurityProof('rules/2026-08-01.1')}});
+  const registry=createV2AdapterRegistry({path:{adapter,security:proof('rules/2026-08-01.1')}});
+  assert.deepEqual(APPROVED_SECURITY_REVISIONS,{});
+  assert.equal(registry.adapter('path'),null);
+  assert.equal(registry.audit.path.reason,'rules-revision-unapproved');
+});
+
+test('a reviewed compile-time revision activates only its named domain', () => {
+  const adapter={load:async()=>({})};
+  const registry=createV2AdapterRegistry({path:{adapter,security:proof('rules/2026-08-01.1')}},{path:'rules/2026-08-01.1'});
   assert.equal(registry.adapter('path'),adapter);
   assert.equal(registry.audit.path.accepted,true);
   assert.equal(registry.audit.path.rulesRevision,'rules/2026-08-01.1');

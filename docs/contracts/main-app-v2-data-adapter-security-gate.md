@@ -20,7 +20,7 @@ All V2 adapters must be supplied through one `window.MENCLUB_V2_ADAPTERS` regist
 - `security.backwardCompatibleV1: true`;
 - `security.rollbackReady: true`.
 
-Missing, partial, stale or unknown-domain entries are rejected and the domain remains fail closed. Legacy individual `window.MENCLUB_V2_*_ADAPTER` globals are not an activation path.
+The claimed revision must also match the domain's exact compile-time allowlist entry. The production allowlist is intentionally empty until a deployed policy revision is identified and tested; a self-asserted browser value cannot approve itself. Missing, partial, stale, unapproved or unknown-domain entries are rejected and the domain remains fail closed. Legacy individual `window.MENCLUB_V2_*_ADAPTER` globals are not an activation path.
 
 ## Domain inventory
 

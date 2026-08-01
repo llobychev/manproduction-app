@@ -6,7 +6,7 @@ Implemented client-side security gate from application main `a40cc297f2244ce7319
 
 - full V2 read/write surface inventory;
 - centralized adapter registry for Events, Path, Widgets, Profile and Lyova;
-- immutable proof envelope with Rules/backend revision, ownership, server validation, V1 compatibility and rollback requirements;
+- immutable proof envelope plus compile-time allowlist for an exact Rules/backend revision, ownership, server validation, V1 compatibility and rollback requirements;
 - rejection of missing, partial, stale and legacy individual adapter injection;
 - explicit documentation of the two preserved V1-compatible client write paths;
 - logical additive schemas and per-domain server/rules requirements.
