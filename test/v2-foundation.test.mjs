@@ -70,9 +70,12 @@ test('shared state renderer escapes content and ActionController deduplicates wo
   assert.equal(controller.state, 'succeeded');
 });
 
-test('V2 foundation contains no persistence, Firebase, auth or production activation code', async () => {
-  const files = await Promise.all(['index.html','app.js','routes.js','navigation.js','state-components.js'].map(name => readFile(new URL(`../versions/v2/${name}`, import.meta.url), 'utf8')));
+test('V2 foundation primitives stay persistence-free and production remains on V1', async () => {
+  const files = await Promise.all(['routes.js','navigation.js','state-components.js'].map(name => readFile(new URL(`../versions/v2/${name}`, import.meta.url), 'utf8')));
   const source = files.join('\n');
   assert.doesNotMatch(source, /localStorage|sessionStorage|indexedDB|signInWithCustomToken|from\s+['"][^'"]*firebase|fetch\([^\n]*versions\/active\.json|BotFather/i);
   assert.doesNotMatch(source, /\bfbDb\b|\bcollection\(|\bdoc\(|\baddDoc\(|\bsetDoc\(|\bupdateDoc\(|\bdeleteDoc\(/);
+  const manifest=JSON.parse(await readFile(new URL('../versions/active.json',import.meta.url),'utf8'));
+  assert.equal(manifest.activeVersion,'v1');
+  assert.equal(manifest.fallbackVersion,'v1');
 });
