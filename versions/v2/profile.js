@@ -12,6 +12,11 @@ const date = value => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+const httpsUrl = value => {
+  const normalized = text(value);
+  return /^https:\/\//i.test(normalized) ? normalized : '';
+};
+
 export const PUBLIC_PROFILE_DEFAULTS = Object.freeze({
   displayName: true,
   avatar: true,
@@ -89,7 +94,7 @@ export function normalizeProfile({ user = {}, userData = {}, access = null, tele
   const username = text(user.tgUsername || user.username || telegramUser?.username).replace(/^@/, '');
   const visibility = safeVisibility(user.publicProfile?.visibility);
   const level = number(user.level);
-  const points = number(userData.habits?.points || user.points);
+  const points = number(userData.habits?.points ?? user.points);
   const publicProfile = user.publicProfile && typeof user.publicProfile === 'object' ? user.publicProfile : {};
   return Object.freeze({
     identity:Object.freeze({
@@ -98,7 +103,7 @@ export function normalizeProfile({ user = {}, userData = {}, access = null, tele
       last,
       initials:initials(first, last, displayName),
       username,
-      avatarUrl:text(user.avatarUrl || user.photoUrl || telegramUser?.photo_url)
+      avatarUrl:httpsUrl(user.avatarUrl || user.photoUrl || telegramUser?.photo_url)
     }),
     level,
     title:text(user.levelTitle, level ? `Уровень ${level}` : 'Участник клуба'),
@@ -116,7 +121,7 @@ export function normalizeProfile({ user = {}, userData = {}, access = null, tele
     visibility,
     selectedAchievements:selectedList(publicProfile.achievements),
     selectedMoments:selectedList(publicProfile.moments),
-    selectedSocialLinks:selectedList(publicProfile.socialLinks).filter(link => /^https:\/\//i.test(text(link.url))),
+    selectedSocialLinks:selectedList(publicProfile.socialLinks).filter(link => link.visible === true && httpsUrl(link.url)).map(link => ({ ...link, url:httpsUrl(link.url) })),
     capabilities:Object.freeze({
       reads:true,
       profileWrites:false,

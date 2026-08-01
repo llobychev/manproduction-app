@@ -34,7 +34,7 @@ test('normalization reuses V1 fields and does not invent contacts', () => {
 });
 
 test('public view hides values unless explicitly visible', () => {
-  const profile=normalizeProfile({user:{fullName:'Участник',tgUsername:'secret',points:900},userData:{personal:{city:'Иркутск'}}});
+  const profile=normalizeProfile({user:{fullName:'Участник',tgUsername:'secret',points:900,avatarUrl:'javascript:alert(1)',publicProfile:{socialLinks:[{url:'https://example.com/private'},{url:'https://example.com/visible',visible:true}]}},userData:{personal:{city:'Иркутск'}}});
   const view=publicProfileView(profile);
   assert.equal(view.identity.username,null);
   assert.equal(view.city,null);
@@ -42,6 +42,14 @@ test('public view hides values unless explicitly visible', () => {
   assert.ok(visibilitySummary(profile.visibility).includes('имя'));
   assert.ok(!JSON.stringify(view).includes('secret'));
   assert.ok(!JSON.stringify(view).includes('Иркутск'));
+  assert.equal(view.identity.avatarUrl,'');
+  assert.equal(view.socialLinks.length,1);
+  assert.equal(view.socialLinks[0].url,'https://example.com/visible');
+});
+
+test('an authoritative zero points value is not replaced by a legacy fallback', () => {
+  const profile=normalizeProfile({user:{points:900},userData:{habits:{points:0}}});
+  assert.equal(profile.points,0);
 });
 
 test('profile writes, share and reset fail closed without an approved adapter', async () => {
