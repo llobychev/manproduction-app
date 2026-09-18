@@ -2461,6 +2461,7 @@ function launchApp(){
   syncLeaderboardPoints();
   loadClubUsernames(function(){renderContacts();});
   handleStartParam();
+  openRequestedMenClubTool();
   initDemoMode();
   trackEvent('app_open',{});
 }
