@@ -14,3 +14,41 @@
 
 .onboarding-card{min-height:calc(100% - 4px);display:grid;grid-template-rows:auto auto 1fr auto auto;gap:18px;padding:22px;border:1px solid var(--line);border-radius:28px;background:radial-gradient(circle at 80% 12%,rgba(201,168,76,.2),transparent 30%),linear-gradient(160deg,#15243a,#0b121d);box-shadow:var(--shadow)}
 .onboarding-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.onboarding-progress i{height:4px;border-radius:4px;background:#2b3544}.onboarding-progress i.active{background:var(--gold)}.onboarding-count{justify-self:end;color:var(--muted);font-size:10px}.onboarding-visual{align-self:center;justify-self:center;width:148px;height:148px;display:grid;place-items:center;border-radius:42px;background:radial-gradient(circle at 35% 25%,#f0d77e,var(--gold) 45%,#73581d);color:#111827;font-size:62px;font-weight:950;box-shadow:0 24px 60px rgba(0,0,0,.35)}.onboarding-copy h2{font-size:30px;line-height:1.08;margin:9px 0}.onboarding-copy p{margin:0;color:var(--muted);font-size:15px;line-height:1.55}.onboarding-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.onboarding-actions button{width:100%}
+
+
+/* ===== V0.1 VISUAL RECONSTRUCTION: preserve the compact V1 shell =====
+   Product structure is V0.1; density, typography, demo banner and loading
+   deliberately inherit the established MenClub visual language. */
+.app-shell{max-width:none;background:#0f0f0f}
+.app-header{gap:9px;padding:calc(10px + env(safe-area-inset-top)) 16px 9px;background:#0f0f0f;border-bottom:.5px solid rgba(255,255,255,.10);backdrop-filter:none}
+.brand-mark{font-size:9px;font-weight:600;letter-spacing:.10em}
+.app-header h1{font-size:16px;font-weight:700;margin:2px 0 0}
+.app-header p{font-size:9px;margin:2px 0 0;color:#777}
+.icon-button{min-width:32px;min-height:32px;font-size:14px;border-radius:50%;background:#242424;border:.5px solid rgba(255,255,255,.12)}
+.route-outlet{padding:12px 16px 18px}
+.foundation-hero,.inner-intro,.widgets-hero,.widget-tool,.widget-form,.path-hero,.path-region-hero,.path-lesson,.lyova-hero,.home-welcome,.home-card,.events-hero,.event-feature,.event-detail,.event-confirm-card,.profile-hero{border-radius:14px;padding:14px;border-width:.5px;box-shadow:none;background:#242424}
+.foundation-hero h2,.inner-intro h2,.widgets-hero h2,.widget-tool h2,.path-hero h2,.path-region-hero h2,.path-lesson h2,.events-hero h2,.event-feature h2,.event-detail h2{font-size:18px;margin:5px 0 6px}
+.foundation-hero p,.inner-intro p,.widgets-hero p,.widget-tool p,.path-hero p,.path-region-hero p,.path-lesson p,.state-card p,.foundation-note p,.home-welcome p,.home-card p{font-size:11px;line-height:1.45}
+.eyebrow{font-size:9px;letter-spacing:.10em}
+.primary-button,.secondary-button{min-height:36px;border-radius:10px;padding:8px 12px;font-size:12px}
+.route-grid{gap:7px;margin-top:9px}.route-card{min-height:62px;border-radius:12px;padding:10px}.route-card strong{font-size:12px}.route-card span{font-size:8px;margin-top:5px}
+.foundation-note,.state-card{margin-top:9px;padding:13px;border-radius:12px}.state-card{padding:18px 14px}.state-card h2{font-size:14px;margin:8px 0 5px}
+.widget-filters{gap:6px;padding:1px 0 8px}.widget-filters button{padding:7px 10px;font-size:10px}
+.widget-stack{gap:7px}.widget-card{border-radius:12px;padding:11px;gap:8px}.widget-card.size-medium{min-height:82px}.widget-card.size-large{min-height:116px}.widget-card-head{gap:9px}.widget-card-head>span{width:34px;height:34px;border-radius:10px;font-size:18px}.widget-card-head div{gap:2px}.widget-card-head strong{font-size:13px}.widget-card-head small,.widget-card>i{font-size:9px}
+.widgets-hero>div{gap:6px;margin-top:9px}
+.lyova-avatar{width:46px;height:46px;font-size:21px}.lyova-hero{gap:11px}.lyova-hero h2{font-size:18px}.lyova-hero p{font-size:10px}.lyova-tabs{margin:8px 0;gap:5px}.lyova-tabs button{padding:7px 10px;font-size:10px}
+.path-flow{gap:5px;margin:10px 0 3px}.path-flow span{padding:6px 8px;font-size:9px}
+.bottom-nav{padding:6px 5px calc(5px + env(safe-area-inset-bottom));background:#181818;border-top:.5px solid rgba(255,255,255,.10)}
+.bottom-nav button{min-height:44px;border-radius:10px;gap:2px}.bottom-nav button span{font-size:18px}.bottom-nav button small{font-size:8px}.bottom-nav button.active{background:transparent;color:var(--gold)}
+.bottom-nav .lyova-nav span{width:34px;height:34px;margin-top:-17px;border-width:3px;box-shadow:none}
+.access-banner{height:36px;min-height:36px;position:relative;overflow:hidden;background:#1f1015;border:0;border-bottom:.5px solid rgba(210,80,100,.30);color:#f5b0b8;font-size:11px;font-weight:400;white-space:nowrap;text-align:left;padding:0}
+.access-banner .demo-marquee{display:inline-block;white-space:nowrap;animation:menclub-demo-marquee 18s linear infinite;padding-left:100%}
+@keyframes menclub-demo-marquee{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+.lifecycle-overlay{padding:20px;background:#0f0f0f}
+.lifecycle-card{max-width:300px;text-align:center}
+.lifecycle-card .state-card{border:0;background:transparent;padding:10px;margin:0;box-shadow:none}
+.lifecycle-card .state-card h2{font-size:14px;font-weight:600;margin:10px 0 4px}
+.lifecycle-card .state-card p{font-size:10px;color:#777}
+.lifecycle-card .spinner{width:22px;height:22px;border-width:2px}
+.lifecycle-card .fallback-link{font-size:10px;margin-top:10px}
+@media (min-width:700px){body{padding:0}.app-shell{height:100%;border-radius:0;border:0;box-shadow:none}}
