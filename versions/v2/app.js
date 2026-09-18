@@ -392,6 +392,32 @@ function renderLifecycle(state, error) {
   lifecycleRoot.innerHTML = `<section class="lifecycle-card">${renderContentState(failed?'error':'loading',{title:copy[0],message:copy[1]})}${state==='authError'?'<button class="primary-button full-width" type="button" data-auth-retry>Повторить</button>':''}${failed?'<a class="fallback-link" href="../v1/index.html">Открыть V1 Stable</a>':''}</section>`;
 }
 
+function createLegacyReadAdapters(db, uid) {
+  const loadUserData = async () => {
+    const doc=await db.collection('user_data').doc(uid).get();
+    return doc.exists ? (doc.data()||{}) : {};
+  };
+  return Object.freeze({
+    path:Object.freeze({
+      async load(){
+        const d=await loadUserData();
+        const goals=Array.isArray(d.goals)?d.goals:[];
+        const completedChapterIds=[];
+        // V0.1 does not invent chapter completion from legacy goals.
+        // Goals remain available to the Path UI through the legacy payload.
+        return {completedChapterIds,rewardedChapterIds:[],bookmarks:[],xp:Number(d.habits?.points)||0,mc:0,legacyGoals:goals,updatedAt:null};
+      }
+    }),
+    widgets:Object.freeze({
+      async load(){
+        // V1 never had a persisted widget-layout schema. Keep the approved
+        // default layout and expose it as a real read adapter without writes.
+        return {};
+      }
+    })
+  });
+}
+
 async function bootstrap() {
   resetRuntimeContext();
   renderLifecycle('booting');
@@ -410,9 +436,10 @@ async function bootstrap() {
     catch(error){homeState={status:'error',data:null,error};}
     eventRepository=createEventRepository(adapterRegistry.adapter('events'));
     eventsState={...(await loadEventsExperience(eventRepository,{db:authenticated.db,uid:authenticated.user.uid})),filter:'all',selectedEventId:null,actionState:'idle'};
-    pathRepository=createPathRepository(adapterRegistry.adapter('path'));
+    const legacyAdapters=createLegacyReadAdapters(authenticated.db,authenticated.user.uid);
+    pathRepository=createPathRepository(adapterRegistry.adapter('path')||legacyAdapters.path);
     pathState={...(await loadPathExperience(pathRepository,{db:authenticated.db,uid:authenticated.user.uid})),selectedSphereId:'finance',selectedPathId:'finance.foundation',selectedChapterId:null,actionState:'idle'};
-    widgetRepository=createWidgetRepository(adapterRegistry.adapter('widgets'));
+    widgetRepository=createWidgetRepository(adapterRegistry.adapter('widgets')||legacyAdapters.widgets);
     try{widgetEditor=new WidgetLayoutEditor(await widgetRepository.load({db:authenticated.db,uid:authenticated.user.uid}));widgetState={status:'ready',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'idle'};}
     catch(error){widgetState={status:'error',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'failed'};}
     lyovaSession=new LyovaSession(adapterRegistry.adapter('lyovaRuntime'));lyovaActions=createLyovaActionRepository(adapterRegistry.adapter('lyovaActions'));
