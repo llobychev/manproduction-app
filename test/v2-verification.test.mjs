@@ -77,5 +77,5 @@ test('V0.1 includes five-card onboarding presentation and direct preview launche
   assert.match(app,/\[.*'ВИДЖЕТЫ'.*\]/);
   assert.match(app,/data-intro-next/);
   assert.match(styles,/\.onboarding-card/);
-  assert.match(launcher,/versions\/v2\/index\.html/);
+  assert.match(launcher,/app\.html\?version=v2/);
 });
