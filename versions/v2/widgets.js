@@ -46,7 +46,7 @@ export class WidgetLayoutEditor{
 
 export function createWidgetRepository(adapter=null){
   const reads=typeof adapter?.load==='function',writes=reads&&typeof adapter?.save==='function';
-  return Object.freeze({capabilities:Object.freeze({reads,writes}),async load(context){return normalizeWidgetLayout(reads?await adapter.load(context):{});},async save(context,layout){if(!writes)throw Object.assign(new Error('Widget layout requires approved Firestore schema and Rules'),{code:'widget-writes-disabled'});const result=await adapter.save({...context,layoutVersion:1,items:normalizeWidgetLayout({items:layout})});if(!result?.confirmed||!result.layout)throw Object.assign(new Error('Widget layout was not confirmed'),{code:'widget-write-unconfirmed'});return normalizeWidgetLayout(result.layout);}});
+  return Object.freeze({capabilities:Object.freeze({reads,writes}),async load(context){return normalizeWidgetLayout(reads?await adapter.load(context):{items:DEFAULT_WIDGET_LAYOUT});},async save(context,layout){if(!writes)throw Object.assign(new Error('Widget layout requires approved Firestore schema and Rules'),{code:'widget-writes-disabled'});const result=await adapter.save({...context,layoutVersion:1,items:normalizeWidgetLayout({items:layout})});if(!result?.confirmed||!result.layout)throw Object.assign(new Error('Widget layout was not confirmed'),{code:'widget-write-unconfirmed'});return normalizeWidgetLayout(result.layout);}});
 }
 
 export function widgetById(widgetId){return catalogById.get(widgetId)||null;}
