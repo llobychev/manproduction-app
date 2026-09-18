@@ -9,8 +9,11 @@ test('V0.1 widget catalog keeps legacy modules and adds core dashboard direction
   assert.equal(widgetById('finance').route,'widgets.finance');
   assert.equal(widgetById('finance').legacyRoute,'fin');
   assert.equal(widgetById('finance').dataSource,'user_data.finance');
+  assert.equal(widgetById('finance').category,'finance');
   assert.equal(widgetById('tasks').route,'schedule.today');
   assert.equal(widgetById('calendar').route,'schedule.today');
+  assert.equal(widgetById('tasks').dataSource,'user_data.schedules + events');
+  assert.equal(widgetById('calendar').dataSource,'user_data.schedules + events');
   assert.equal(DEFAULT_WIDGET_LAYOUT.length,WIDGET_CATALOG.length);
   assert.deepEqual(DEFAULT_WIDGET_LAYOUT.filter(item=>!item.hidden).map(item=>item.widgetId),['finance','tasks','calendar']);
 });
@@ -40,4 +43,11 @@ test('repository is fail-closed, uses V0.1 defaults without adapter and requires
 test('widget module contains no local or physical persistence',async()=>{
   const source=await readFile(new URL('../versions/v2/widgets.js',import.meta.url),'utf8');
   assert.doesNotMatch(source,/localStorage|sessionStorage|indexedDB|\.collection\(/);
+});
+
+
+test('V0.1 dashboard exposes direction filters without persisting filter state',async()=>{
+  const source=await readFile(new URL('../versions/v2/app.js',import.meta.url),'utf8');
+  for(const id of ['all','finance','tasks','calendar','relationships','earnings'])assert.match(source,new RegExp(`id:'${id}'`));
+  assert.match(source,/data-widget-filter/);
 });
