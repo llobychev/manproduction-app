@@ -33,7 +33,7 @@ let pathRepository = createPathRepository();
 let pathState = { status:'loading', spheres:[], capabilities:{reads:false,writes:false}, selectedSphereId:'finance', selectedPathId:'finance.foundation', selectedChapterId:null, actionState:'idle' };
 let widgetRepository=createWidgetRepository();
 let widgetEditor=new WidgetLayoutEditor();
-let widgetState={status:'loading',capabilities:{reads:false,writes:false},selectedWidgetId:null,actionState:'idle'};
+let widgetState={status:'loading',capabilities:{reads:false,writes:false},selectedWidgetId:null,actionState:'idle',filter:'all'};
 let lyovaSession=new LyovaSession();
 let lyovaActions=createLyovaActionRepository();
 let pendingLyovaActionId=null;
@@ -189,10 +189,27 @@ function widgetCard(item,editing=false){
   if(editing)return `<article class="widget-card editing size-${item.size}"><div class="widget-drag">••• ПЕРЕТАЩИ</div><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(item.size)}</small></div></div><div class="widget-controls"><button type="button" data-widget-move="-1" data-widget-id="${widget.id}" aria-label="Выше">↑</button><button type="button" data-widget-move="1" data-widget-id="${widget.id}" aria-label="Ниже">↓</button><button type="button" data-widget-resize="${widget.id}">Размер</button><button type="button" data-widget-hide="${widget.id}">Скрыть</button></div></article>`;
   return `<button class="widget-card size-${item.size}" type="button" data-widget-open="${widget.id}"><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(widgetMetric(widget))}</small></div></div><i>Открыть →</i></button>`;
 }
+const WIDGET_FILTERS=Object.freeze([
+  {id:'all',label:'Все'},
+  {id:'finance',label:'Финансы'},
+  {id:'tasks',label:'Дела'},
+  {id:'calendar',label:'Календарь'},
+  {id:'relationships',label:'Отношения'},
+  {id:'earnings',label:'Заработок'}
+]);
+function visibleDashboardWidgets(){
+  const items=widgetEditor.visible();
+  if(widgetState.filter==='all')return items;
+  return items.filter(item=>widgetById(item.widgetId)?.category===widgetState.filter);
+}
+function widgetFiltersMarkup(){
+  return `<div class="widget-filters" role="group" aria-label="Направления виджетов">${WIDGET_FILTERS.map(filter=>`<button type="button" data-widget-filter="${filter.id}" class="${widgetState.filter===filter.id?'active':''}">${filter.label}</button>`).join('')}</div>`;
+}
 function widgetsHomeMarkup(){
   if(widgetState.status==='loading')return renderContentState('loading',{title:'Загружаем рабочую панель'});
   if(widgetState.status==='error')return renderContentState('error',{title:'Виджеты не загрузились',actionLabel:'Повторить'});
-  return `<section class="widgets-hero"><span class="eyebrow">МОЙ ЭКРАН</span><h2>Виджеты</h2><p>Собери свой экран из нужных тебе данных и инструментов.</p><div><button class="secondary-button" type="button" data-navigate="widgets.edit">Изменить</button><button class="primary-button" type="button" data-navigate="widgets.gallery">+ Добавить</button></div></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item)).join('')}</section>`;
+  const visible=visibleDashboardWidgets();
+  return `<section class="widgets-hero"><span class="eyebrow">МОЙ ЭКРАН</span><h2>Виджеты</h2><p>Собери свой экран из нужных тебе данных и инструментов.</p><div><button class="secondary-button" type="button" data-navigate="widgets.edit">Изменить</button><button class="primary-button" type="button" data-navigate="widgets.gallery">+ Добавить</button></div></section>${widgetFiltersMarkup()}${visible.length?`<section class="widget-stack">${visible.map(item=>widgetCard(item)).join('')}</section>`:renderContentState('empty',{title:'На экране пока нет виджетов этого направления',message:'Добавь нужный виджет через галерею.'})}`;
 }
 function widgetToolMarkup(meta){
   if(meta.id==='widgets.contactNew')return `<section class="inner-intro"><span class="eyebrow">КОНТАКТЫ</span><h2>Новый контакт</h2><p>Deep link new_contact приводит прямо сюда.</p></section><section class="widget-form"><input placeholder="Имя" disabled><input placeholder="Telegram" disabled><textarea placeholder="Заметка" disabled></textarea>${renderContentState('disabled',{title:'Сохранение пока отключено',message:'Форма не сообщает об успехе без подтверждённой записи.'})}</section>`;
@@ -461,6 +478,7 @@ outlet.addEventListener('click', event => {
   if(event.target.closest('[data-profile-reset-second]')){performDataReset();return;}
   const lyovaAction=event.target.closest('[data-lyova-action]');if(lyovaAction){pendingLyovaActionId=lyovaAction.dataset.lyovaAction;openLyovaActionPreview();return;}
   if(event.target.closest('[data-state-action]')&&navigation.current==='lyova.chat'){retryLyova();return;}
+  const widgetFilter=event.target.closest('[data-widget-filter]');if(widgetFilter){widgetState.filter=widgetFilter.dataset.widgetFilter||'all';render();return;}
   const widgetOpen=event.target.closest('[data-widget-open]');if(widgetOpen){widgetState.selectedWidgetId=widgetOpen.dataset.widgetOpen;navigate(widgetById(widgetState.selectedWidgetId)?.route||'widgets.widget');return;}
   const widgetMove=event.target.closest('[data-widget-move]');if(widgetMove){widgetEditor.move(widgetMove.dataset.widgetId,Number(widgetMove.dataset.widgetMove));render('widgets.edit');return;}
   const widgetResize=event.target.closest('[data-widget-resize]');if(widgetResize){widgetEditor.resize(widgetResize.dataset.widgetResize);render('widgets.edit');return;}
