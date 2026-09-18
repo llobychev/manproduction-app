@@ -41,6 +41,14 @@ let profileRepository=createProfileRepository();
 let profileState={status:'loading',data:null,capabilities:profileRepository.capabilities,actionState:'idle'};
 let publicProfileDraft={...PUBLIC_PROFILE_DEFAULTS};
 const adapterRegistry=createV2AdapterRegistry(window.MENCLUB_V2_ADAPTERS||{});
+const INTRO_CARDS=Object.freeze([
+ ['M','MENCLUB','Твоя жизнь — главный экран','Система вокруг реальных ситуаций, целей и действий.'],
+ ['🦁','ЛЁВА','Начни с того, что происходит','Расскажи ситуацию своими словами. Лёва помогает найти следующий шаг.'],
+ ['🧭','ПУТЬ','Понимай, куда идёшь','Где ты сейчас → цель → действия → прогресс.'],
+ ['▦','ВИДЖЕТЫ','Собери свой центр управления','Финансы, дела, календарь и другие механики — под рукой.'],
+ ['→','НАЧИНАЕМ','Что происходит прямо сейчас?','После знакомства ты попадёшь к Лёве — основной точке входа MenClub.']
+]);
+let introState={visible:false,index:0};
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -318,6 +326,13 @@ function paymentMarkup(routeId) {
   return renderContentState(routeId === 'payment.error' ? 'error' : 'stale');
 }
 
+function introMarkup(){
+ const c=INTRO_CARDS[introState.index],last=introState.index===INTRO_CARDS.length-1;
+ return `<section class="onboarding-card"><div class="onboarding-progress">${INTRO_CARDS.map((_,i)=>'<i class="'+(i<=introState.index?'active':'')+'"></i>').join('')}</div><span class="onboarding-count">${introState.index+1} / 5</span><div class="onboarding-visual">${c[0]}</div><div class="onboarding-copy"><span class="eyebrow">${c[1]}</span><h2>${c[2]}</h2><p>${c[3]}</p></div><div class="onboarding-actions">${introState.index?'<button class="secondary-button" data-intro-back>Назад</button>':'<span></span>'}<button class="primary-button" data-intro-next>${last?'К Лёве':'Дальше'}</button></div></section>`;
+}
+function showIntro(){introState={visible:true,index:0};headerBack.hidden=true;bottomNav.hidden=true;accessBanner.hidden=true;headerTitle.textContent='Знакомство';headerSubtitle.textContent='5 коротких карточек';outlet.innerHTML=introMarkup();}
+function finishIntro(){introState.visible=false;syncAccessBanner();render('lyova.chat');}
+
 function render(routeId, options = {}) {
   const meta = resolveRoute(routeId);
   const decision = accessDecision(meta.id, getRuntimeContext().access);
@@ -408,7 +423,7 @@ async function bootstrap() {
     document.querySelector('#app').dataset.lifecycle=readyState;
     renderLifecycle(null);
     syncAccessBanner();
-    render(navigation.current);
+    if(new URLSearchParams(location.search).get('intro')==='1')showIntro();else render(navigation.current);
   } catch (error) {
     console.warn('V2 bootstrap failed:', error?.code || error?.name || 'unknown');
     renderLifecycle(error?.code ? 'authError' : 'fatalError', error);
@@ -470,6 +485,8 @@ bottomNav.addEventListener('click', event => {
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
+  if(event.target.closest('[data-intro-back]')){introState.index=Math.max(0,introState.index-1);outlet.innerHTML=introMarkup();return;}
+  if(event.target.closest('[data-intro-next]')){if(introState.index<4){introState.index++;outlet.innerHTML=introMarkup();}else finishIntro();return;}
   if(event.target.closest('[data-profile-preview]')){navigate('profile.publicPreview');return;}
   if(event.target.closest('[data-profile-share]')){announcer.textContent='Member-safe ссылка пока недоступна';return;}
   if(event.target.closest('[data-profile-help]')){const telegram=window.Telegram?.WebApp,link='https://t.me/job_bylobychevinsibir?text='+encodeURIComponent('Здравствуй! Нужна помощь по MenClub.');if(telegram?.openTelegramLink)telegram.openTelegramLink(link);else location.href=link;return;}
