@@ -177,10 +177,17 @@ function pathInnerMarkup(meta){
   return `<article class="path-lesson"><span class="eyebrow">${escapeHtml(selected.sphere.title)} · ${escapeHtml(selected.path.name)}</span><h2>${escapeHtml(selected.chapter.title)}</h2><p>Практическая глава продвинутой Карты жизни. Содержание и ответы будут подключены через отдельный content adapter без потери структуры V1.</p><div class="path-lesson-meta"><span>~${selected.chapter.durationMinutes} мин</span><span>+${selected.chapter.xp} XP</span><span>${done?'Пройдено':'Доступно'}</span></div>${pathState.capabilities.writes?`<button class="secondary-button full-width" type="button" data-path-bookmark="${selected.chapter.id}">${bookmarked?'Убрать из закладок':'В закладки'}</button>`:''}${done?'':pathState.capabilities.writes?`<button class="primary-button full-width" type="button" data-path-complete="${selected.chapter.id}">Завершить главу</button>`:renderContentState('disabled',{title:'Завершение пока недоступно',message:'Награда, прогресс и закладки появятся только после подтверждённой серверной записи.'})}</article>`;
 }
 
+function widgetMetric(widget){
+  const schedule=homeState.data?.schedule?.items||[];
+  if(widget.id==='tasks')return schedule.length ? `${schedule.length} сегодня` : 'Сегодня свободно';
+  if(widget.id==='calendar')return schedule[0]?.time ? `${schedule[0].time} · ${schedule[0].title||'Ближайшее'}` : 'Нет ближайших событий';
+  if(widget.id==='finance')return 'Открыть учёт';
+  return widget.description;
+}
 function widgetCard(item,editing=false){
   const widget=widgetById(item.widgetId);if(!widget)return '';
   if(editing)return `<article class="widget-card editing size-${item.size}"><div class="widget-drag">••• ПЕРЕТАЩИ</div><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(item.size)}</small></div></div><div class="widget-controls"><button type="button" data-widget-move="-1" data-widget-id="${widget.id}" aria-label="Выше">↑</button><button type="button" data-widget-move="1" data-widget-id="${widget.id}" aria-label="Ниже">↓</button><button type="button" data-widget-resize="${widget.id}">Размер</button><button type="button" data-widget-hide="${widget.id}">Скрыть</button></div></article>`;
-  return `<button class="widget-card size-${item.size}" type="button" data-widget-open="${widget.id}"><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(widget.description)}</small></div></div><i>Открыть →</i></button>`;
+  return `<button class="widget-card size-${item.size}" type="button" data-widget-open="${widget.id}"><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(widgetMetric(widget))}</small></div></div><i>Открыть →</i></button>`;
 }
 function widgetsHomeMarkup(){
   if(widgetState.status==='loading')return renderContentState('loading',{title:'Загружаем рабочую панель'});
