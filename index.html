@@ -4599,12 +4599,11 @@ function switchTab(tab){
 function openRequestedMenClubTool(){
   try{
     var requested=new URLSearchParams(window.location.search).get('mc_open');
-    if(requested==='fin'){
-      var main=document.getElementById('main-app');
-      if(main&&!main.classList.contains('active'))return false;
-      switchTab('fin');
-      return true;
-    }
+    var main=document.getElementById('main-app');
+    if(main&&!main.classList.contains('active'))return false;
+    if(requested==='fin'){switchTab('fin');return true;}
+    if(requested==='goals'){switchTab('goals');renderGoalsScreen();return true;}
+    if(requested==='schedule'){switchTab('home');renderCalendar();renderSchedule();return true;}
   }catch(err){console.warn('openRequestedMenClubTool error:',err);}
   return false;
 }
