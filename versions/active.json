@@ -10,7 +10,7 @@
     },
     "v2": {
       "label": "MenClub V0.1 Preview",
-      "status": "preview",
+      "status": "development",
       "entry": "./versions/v2/index.html",
       "source": "reconstruct-v0.1-lyova-path-widgets"
     }
