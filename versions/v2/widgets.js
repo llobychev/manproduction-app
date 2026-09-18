@@ -1,4 +1,6 @@
 export const WIDGET_CATALOG = Object.freeze([
+  Object.freeze({id:'tasks',title:'Дела',icon:'✅',description:'Сегодня, ближайшие и просроченные дела',route:'schedule.today',sizes:['small','medium','large']}),
+  Object.freeze({id:'calendar',title:'Календарь',icon:'📅',description:'Даты, дела и ближайшие события',route:'schedule.today',sizes:['small','medium','large']}),
   Object.freeze({id:'mind',title:'Разум',icon:'🧠',description:'Дневники, цели и мышление',route:'widgets.mind',sizes:['medium','large']}),
   Object.freeze({id:'contacts',title:'Контакты',icon:'🤝',description:'Люди, связи и заметки',route:'widgets.contacts',sizes:['small','medium','large']}),
   Object.freeze({id:'finance',title:'Финансы',icon:'💰',description:'Доходы, расходы и цели',route:'widgets.finance',sizes:['small','medium','large']}),
