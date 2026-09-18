@@ -203,7 +203,7 @@ function widgetToolMarkup(meta){
   const widget=widgetById(widgetId);
   if(!widget)return null;
   if(widget.id==='tasks'||widget.id==='calendar')return homeInnerMarkup(resolveRoute('schedule.today'));
-  if(widget.id==='finance')return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ФИНАНСЫ</span><h2>Финансовый учёт</h2><p>Используем уже существующий раздел MenClub и данные user_data.finance. Новую финансовую систему не создаём.</p></div></section><a class="primary-button full-width legacy-tool-link" href="../../index.html?open=fin#fin">Открыть существующие Финансы</a>`;
+  if(widget.id==='finance')return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ФИНАНСЫ</span><h2>Финансовый учёт</h2><p>Используем уже существующий раздел MenClub и данные user_data.finance. Новую финансовую систему не создаём.</p></div></section><button class="primary-button full-width" type="button" data-legacy-open="fin">Открыть существующие Финансы</button>`;
   const action=widget.id==='contacts'?'<button class="primary-button full-width" type="button" data-navigate="widgets.contactNew">+ Новый контакт</button>':widget.id==='events'?'<button class="primary-button full-width" type="button" data-navigate="events.list">Открыть мероприятия</button>':'';
   return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ИНСТРУМЕНТ MENCLUB</span><h2>${escapeHtml(widget.title)}</h2><p>${escapeHtml(widget.description)}.</p></div></section>${action}${renderContentState(widget.id==='media'?'empty':'disabled',{title:widget.id==='media'?'Медиа пока пусто':'Данные пока не подключены',message:'Экран не подменяет реальные данные примерами.'})}`;
 }
@@ -461,6 +461,7 @@ outlet.addEventListener('click', event => {
   if(event.target.closest('[data-profile-reset-second]')){performDataReset();return;}
   const lyovaAction=event.target.closest('[data-lyova-action]');if(lyovaAction){pendingLyovaActionId=lyovaAction.dataset.lyovaAction;openLyovaActionPreview();return;}
   if(event.target.closest('[data-state-action]')&&navigation.current==='lyova.chat'){retryLyova();return;}
+  const legacyOpen=event.target.closest('[data-legacy-open]');if(legacyOpen){const target=legacyOpen.dataset.legacyOpen;if(target==='fin'){location.href='../../index.html?mc_open=fin';}return;}
   const widgetOpen=event.target.closest('[data-widget-open]');if(widgetOpen){widgetState.selectedWidgetId=widgetOpen.dataset.widgetOpen;navigate(widgetById(widgetState.selectedWidgetId)?.route||'widgets.widget');return;}
   const widgetMove=event.target.closest('[data-widget-move]');if(widgetMove){widgetEditor.move(widgetMove.dataset.widgetId,Number(widgetMove.dataset.widgetMove));render('widgets.edit');return;}
   const widgetResize=event.target.closest('[data-widget-resize]');if(widgetResize){widgetEditor.resize(widgetResize.dataset.widgetResize);render('widgets.edit');return;}
