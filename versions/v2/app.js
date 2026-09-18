@@ -202,7 +202,7 @@ function widgetToolMarkup(meta){
   }[meta.id]||widgetState.selectedWidgetId;
   const widget=widgetById(widgetId);
   if(!widget)return null;
-  if(widget.id==='tasks'||widget.id==='calendar')return homeInnerMarkup(resolveRoute('schedule.today'));
+  if(widget.id==='tasks'||widget.id==='calendar')return `${homeInnerMarkup(resolveRoute('schedule.today'))}<button class="primary-button full-width" type="button" data-legacy-open="schedule">Открыть полный календарь и дела</button>`;
   if(widget.id==='finance')return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ФИНАНСЫ</span><h2>Финансовый учёт</h2><p>Используем уже существующий раздел MenClub и данные user_data.finance. Новую финансовую систему не создаём.</p></div></section><button class="primary-button full-width" type="button" data-legacy-open="fin">Открыть существующие Финансы</button>`;
   const action=widget.id==='contacts'?'<button class="primary-button full-width" type="button" data-navigate="widgets.contactNew">+ Новый контакт</button>':widget.id==='events'?'<button class="primary-button full-width" type="button" data-navigate="events.list">Открыть мероприятия</button>':'';
   return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ИНСТРУМЕНТ MENCLUB</span><h2>${escapeHtml(widget.title)}</h2><p>${escapeHtml(widget.description)}.</p></div></section>${action}${renderContentState(widget.id==='media'?'empty':'disabled',{title:widget.id==='media'?'Медиа пока пусто':'Данные пока не подключены',message:'Экран не подменяет реальные данные примерами.'})}`;
