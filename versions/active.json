@@ -1,5 +1,5 @@
 {
-  "activeVersion": "v1",
+  "activeVersion": "v2",
   "fallbackVersion": "v1",
   "versions": {
     "v1": {
@@ -9,8 +9,8 @@
       "sourceCommit": "abbab1139e4eeeea40f977ab4e34753ee0ace103"
     },
     "v2": {
-      "label": "Новая версия в разработке",
-      "status": "development",
+      "label": "V0.1 live test",
+      "status": "testing",
       "entry": "./versions/v2/index.html",
       "source": "prototype-v2-approved.html"
     }
