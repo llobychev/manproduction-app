@@ -68,6 +68,8 @@ const definitions = [
   route('widgets.contacts', 'widgets', 'Контакты'),
   route('widgets.contactNew', 'widgets', 'Новый контакт'),
   route('widgets.finance', 'widgets', 'Финансы'),
+  route('widgets.relationships', 'widgets', 'Отношения'),
+  route('widgets.earnings', 'widgets', 'Заработок'),
   route('widgets.habits', 'widgets', 'Привычки'),
   route('widgets.health', 'widgets', 'Здоровье'),
   route('widgets.events', 'widgets', 'Мероприятия'),

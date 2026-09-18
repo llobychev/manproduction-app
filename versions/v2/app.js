@@ -33,7 +33,7 @@ let pathRepository = createPathRepository();
 let pathState = { status:'loading', spheres:[], capabilities:{reads:false,writes:false}, selectedSphereId:'finance', selectedPathId:'finance.foundation', selectedChapterId:null, actionState:'idle' };
 let widgetRepository=createWidgetRepository();
 let widgetEditor=new WidgetLayoutEditor();
-let widgetState={status:'loading',capabilities:{reads:false,writes:false},selectedWidgetId:null,actionState:'idle'};
+let widgetState={status:'loading',capabilities:{reads:false,writes:false},selectedWidgetId:null,actionState:'idle',filter:'all'};
 let lyovaSession=new LyovaSession();
 let lyovaActions=createLyovaActionRepository();
 let pendingLyovaActionId=null;
@@ -41,6 +41,14 @@ let profileRepository=createProfileRepository();
 let profileState={status:'loading',data:null,capabilities:profileRepository.capabilities,actionState:'idle'};
 let publicProfileDraft={...PUBLIC_PROFILE_DEFAULTS};
 const adapterRegistry=createV2AdapterRegistry(window.MENCLUB_V2_ADAPTERS||{});
+const INTRO_CARDS=Object.freeze([
+ ['M','MENCLUB','Твоя жизнь — главный экран','Система вокруг реальных ситуаций, целей и действий.'],
+ ['🦁','ЛЁВА','Начни с того, что происходит','Расскажи ситуацию своими словами. Лёва помогает найти следующий шаг.'],
+ ['🧭','ПУТЬ','Понимай, куда идёшь','Где ты сейчас → цель → действия → прогресс.'],
+ ['▦','ВИДЖЕТЫ','Собери свой центр управления','Финансы, дела, календарь и другие механики — под рукой.'],
+ ['→','НАЧИНАЕМ','Что происходит прямо сейчас?','После знакомства ты попадёшь к Лёве — основной точке входа MenClub.']
+]);
+let introState={visible:false,index:0};
 
 const rootCards = Object.freeze({
   home: [['notifications.list', 'Уведомления'], ['quest.detail', 'Задание дня'], ['schedule.today', 'Расписание'], ['news.list', 'Новости']],
@@ -55,7 +63,8 @@ function initialRoute() {
   const params = new URLSearchParams(location.search);
   const deepLink = resolveDeepLink(params.get('startapp') || params.get('start_param'));
   const hashRoute = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  return deepLink || (ROUTES[hashRoute] ? hashRoute : 'home');
+  const legacyRoots = new Set(['home','events.list','profile.cabinet']);
+  return deepLink || (ROUTES[hashRoute] && !legacyRoots.has(hashRoute) ? hashRoute : 'lyova.chat');
 }
 
 function rootMarkup(meta) {
@@ -66,7 +75,7 @@ function rootMarkup(meta) {
   if(meta.id==='lyova.chat')return lyovaMarkup('chat');
   if(meta.id==='profile.cabinet')return profileCabinetMarkup();
   const links = rootCards[meta.parentTab] || [];
-  return `<section class="foundation-hero"><span class="eyebrow">V2 FOUNDATION</span><h2>${meta.title}</h2><p>Изолированная оболочка готова к подключению экранного пакета. Реальные пользовательские данные и бизнес-действия здесь ещё не подключены.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Безопасный режим</strong><p>V1 остаётся активной. Эта версия не выполняет Firestore-записи и не меняет production.</p></section>`;
+  return `<section class="foundation-hero"><span class="eyebrow">MENCLUB</span><h2>${meta.title}</h2><p>Этот раздел сохранён из прежней структуры и пока не вынесен в основной экран V0.1.</p></section><section class="route-grid">${links.map(([routeId, label]) => `<button class="route-card" type="button" data-navigate="${routeId}"><strong>${label}</strong><span>${routeId}</span></button>`).join('')}</section><section class="foundation-note"><strong>Предпросмотр V0.1</strong><p>Рабочая V1 остаётся активной. Старые данные и механики не удаляются.</p></section>`;
 }
 
 function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
@@ -87,7 +96,7 @@ function homeInnerMarkup(meta){
   const d=homeState.data;
   if(!d)return renderContentState('loading');
   if(meta.id==='quest.detail')return `<section class="inner-intro"><span class="eyebrow">КВЕСТ ДНЯ</span><h2>Задания на сегодня</h2><p>Награда начисляется один раз, даже если снять отметку и поставить её снова.</p></section><section class="home-card">${d.quests.items.map(q=>`<button class="quest-item${d.quests.done[q.id]?' done':''}" type="button" data-quest-id="${escapeHtml(q.id)}"><span>${d.quests.done[q.id]?'✓':'○'}</span><b>${escapeHtml(q.text)}</b><small>+${q.points}</small></button>`).join('')}</section>`;
-  if(meta.id==='schedule.today')return `<section class="inner-intro"><span class="eyebrow">СЕГОДНЯ</span><h2>Расписание</h2><p>Личное расписание из существующего V1 mirror.</p></section>${contentBlockState(d.schedule,'Расписание')||`<section class="home-card">${d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section>`}`;
+  if(meta.id==='schedule.today')return `<section class="inner-intro"><span class="eyebrow">СЕГОДНЯ</span><h2>Дела и календарь</h2><p>Твои существующие дела и события на сегодня.</p></section>${contentBlockState(d.schedule,'Расписание')||`<section class="home-card">${d.schedule.items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Событие')}</span></div>`).join('')}</section>`}`;
   if(meta.id==='news.list')return `<section class="inner-intro"><span class="eyebrow">КЛУБ</span><h2>Новости</h2><p>Только публикации из существующей коллекции news.</p></section>${contentBlockState(d.news,'Новости')||`<section class="home-card">${d.news.items.map(item=>`<button class="news-item" type="button" data-news-id="${escapeHtml(item.id)}"><b>${escapeHtml(item.title||'Новость')}</b><span>${escapeHtml((item.body||'').slice(0,180))}</span></button>`).join('')}</section>`}`;
   if(meta.id==='news.detail'){
     const params=new URLSearchParams(location.search),item=d.news.items.find(news=>news.id===params.get('news'))||d.news.items[0];
@@ -155,7 +164,7 @@ function pathHomeMarkup(){
   if(pathState.status==='loading')return renderContentState('loading',{title:'Собираем карту Пути'});
   if(pathState.status==='error')return renderContentState('error',{title:'Путь не загрузился',message:'Прогресс не заменяется демонстрационными значениями.',actionLabel:'Повторить'});
   const next=pathState.continuation;
-  return `<section class="path-hero"><span class="eyebrow">КАРТА ЖИЗНИ</span><h2>Твой Путь · ${pathState.totalProgress}%</h2><p>${pathState.totalCompleted} из ${pathState.totalChapters} глав · ${pathState.progress.xp} XP</p>${next?`<button class="primary-button full-width" type="button" data-path-chapter="${escapeHtml(next.chapter.id)}">Продолжить: ${escapeHtml(next.chapter.title)}</button>`:''}</section><section class="path-spheres">${pathState.spheres.map(sphere=>`<button type="button" data-path-sphere="${sphere.id}"><span>${sphere.icon}</span><strong>${escapeHtml(sphere.title)}</strong><small>${sphere.progress}% · ${sphere.completed}/${sphere.total}</small><i><b style="width:${sphere.progress}%"></b></i></button>`).join('')}</section><section class="path-shortcuts"><button class="secondary-button" type="button" data-navigate="path.history">История</button><button class="secondary-button" type="button" data-navigate="path.bookmarks">Закладки</button></section>${!pathState.capabilities.writes?renderContentState('stale',{title:'Прогресс только для чтения',message:'V1 не сохранял mcPathState. Запись включится после утверждения schema и Security Rules.'}):''}`;
+  return `<section class="path-hero"><span class="eyebrow">ТВОЙ ПУТЬ</span><h2>Где ты → куда идёшь</h2><p>Цели превращаются в конкретные действия. Старый учебный прогресс сохранён ниже и не удаляется.</p><div class="path-flow"><span>Сейчас</span><b>→</b><span>Цель</span><b>→</b><span>Действия</span><b>→</b><span>Прогресс</span></div><section class="foundation-note"><strong>Цели сохранены</strong><p>Существующие цели и шаги остаются источником для Пути. V1 не изменяется.</p></section>${next?`<button class="primary-button full-width" type="button" data-path-chapter="${escapeHtml(next.chapter.id)}">Следующий шаг: ${escapeHtml(next.chapter.title)}</button>`:''}</section><section class="home-card"><div class="home-card-head"><div><span class="eyebrow">ДЕЛА, СВЯЗАННЫЕ С ПУТЁМ</span><h3>Сегодня</h3></div><button class="secondary-button" type="button" data-navigate="schedule.today">Открыть дела</button></div>${homeState.data?.schedule?.items?.length?homeState.data.schedule.items.slice(0,3).map(item=>`<div class="schedule-item"><time>${escapeHtml(item.time||'—')}</time><span>${escapeHtml(item.title||'Дело')}</span></div>`).join(''):'<p>На сегодня связанных действий пока нет.</p>'}</section><section class="path-spheres">${pathState.spheres.map(sphere=>`<button type="button" data-path-sphere="${sphere.id}"><span>${sphere.icon}</span><strong>${escapeHtml(sphere.title)}</strong><small>${sphere.progress}% · ${sphere.completed}/${sphere.total}</small><i><b style="width:${sphere.progress}%"></b></i></button>`).join('')}</section><section class="path-shortcuts"><button class="secondary-button" type="button" data-navigate="path.history">История</button><button class="secondary-button" type="button" data-navigate="path.bookmarks">Закладки</button></section>${!pathState.capabilities.writes?renderContentState('stale',{title:'Старый прогресс сохранён',message:'Новые цели и действия подключаем поверх существующих данных, не меняя их схему без проверки.'}):''}`;
 }
 function pathRows(items,emptyTitle){
   return items.length?`<section class="path-chapter-list">${items.map(item=>`<button type="button" data-path-chapter="${escapeHtml(item.chapter.id)}"><span>${item.chapter.boss?'👑':item.chapter.number}</span><b>${escapeHtml(item.chapter.title)}</b><small>${escapeHtml(item.sphere.title)} · ${escapeHtml(item.path.name)}</small></button>`).join('')}</section>`:renderContentState('empty',{title:emptyTitle});
@@ -176,42 +185,68 @@ function pathInnerMarkup(meta){
   return `<article class="path-lesson"><span class="eyebrow">${escapeHtml(selected.sphere.title)} · ${escapeHtml(selected.path.name)}</span><h2>${escapeHtml(selected.chapter.title)}</h2><p>Практическая глава продвинутой Карты жизни. Содержание и ответы будут подключены через отдельный content adapter без потери структуры V1.</p><div class="path-lesson-meta"><span>~${selected.chapter.durationMinutes} мин</span><span>+${selected.chapter.xp} XP</span><span>${done?'Пройдено':'Доступно'}</span></div>${pathState.capabilities.writes?`<button class="secondary-button full-width" type="button" data-path-bookmark="${selected.chapter.id}">${bookmarked?'Убрать из закладок':'В закладки'}</button>`:''}${done?'':pathState.capabilities.writes?`<button class="primary-button full-width" type="button" data-path-complete="${selected.chapter.id}">Завершить главу</button>`:renderContentState('disabled',{title:'Завершение пока недоступно',message:'Награда, прогресс и закладки появятся только после подтверждённой серверной записи.'})}</article>`;
 }
 
+function widgetMetric(widget){
+  const schedule=homeState.data?.schedule?.items||[];
+  if(widget.id==='tasks')return schedule.length ? `${schedule.length} сегодня` : 'Сегодня свободно';
+  if(widget.id==='calendar')return schedule[0]?.time ? `${schedule[0].time} · ${schedule[0].title||'Ближайшее'}` : 'Нет ближайших событий';
+  if(widget.id==='finance')return 'Твой существующий финансовый учёт';
+  return widget.description;
+}
 function widgetCard(item,editing=false){
   const widget=widgetById(item.widgetId);if(!widget)return '';
   if(editing)return `<article class="widget-card editing size-${item.size}"><div class="widget-drag">••• ПЕРЕТАЩИ</div><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(item.size)}</small></div></div><div class="widget-controls"><button type="button" data-widget-move="-1" data-widget-id="${widget.id}" aria-label="Выше">↑</button><button type="button" data-widget-move="1" data-widget-id="${widget.id}" aria-label="Ниже">↓</button><button type="button" data-widget-resize="${widget.id}">Размер</button><button type="button" data-widget-hide="${widget.id}">Скрыть</button></div></article>`;
-  return `<button class="widget-card size-${item.size}" type="button" data-widget-open="${widget.id}"><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(widget.description)}</small></div></div><i>Открыть →</i></button>`;
+  return `<button class="widget-card size-${item.size}" type="button" data-widget-open="${widget.id}"><div class="widget-card-head"><span>${widget.icon}</span><div><b>${escapeHtml(widget.title)}</b><small>${escapeHtml(widgetMetric(widget))}</small></div></div><i>Открыть →</i></button>`;
+}
+const WIDGET_FILTERS=Object.freeze([
+  {id:'all',label:'Все'},
+  {id:'finance',label:'Финансы'},
+  {id:'tasks',label:'Дела'},
+  {id:'calendar',label:'Календарь'},
+  {id:'relationships',label:'Отношения'},
+  {id:'earnings',label:'Заработок'}
+]);
+function visibleDashboardWidgets(){
+  const items=widgetEditor.visible();
+  if(widgetState.filter==='all')return items;
+  return items.filter(item=>widgetById(item.widgetId)?.category===widgetState.filter);
+}
+function widgetFiltersMarkup(){
+  return `<div class="widget-filters" role="group" aria-label="Направления виджетов">${WIDGET_FILTERS.map(filter=>`<button type="button" data-widget-filter="${filter.id}" class="${widgetState.filter===filter.id?'active':''}">${filter.label}</button>`).join('')}</div>`;
 }
 function widgetsHomeMarkup(){
   if(widgetState.status==='loading')return renderContentState('loading',{title:'Загружаем рабочую панель'});
   if(widgetState.status==='error')return renderContentState('error',{title:'Виджеты не загрузились',actionLabel:'Повторить'});
-  return `<section class="widgets-hero"><span class="eyebrow">РАБОЧАЯ ПАНЕЛЬ</span><h2>Виджеты</h2><p>Инструменты в утверждённой вертикальной компоновке.</p><div><button class="secondary-button" type="button" data-navigate="widgets.edit">Изменить</button><button class="primary-button" type="button" data-navigate="widgets.gallery">+ Добавить</button></div></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item)).join('')}</section>`;
+  const visible=visibleDashboardWidgets();
+  return `<section class="widgets-hero"><span class="eyebrow">МОЙ ЭКРАН</span><h2>Виджеты</h2><p>Собери свой экран из нужных тебе данных и инструментов.</p><div><button class="secondary-button" type="button" data-navigate="widgets.edit">Изменить</button><button class="primary-button" type="button" data-navigate="widgets.gallery">+ Добавить</button></div></section>${widgetFiltersMarkup()}${visible.length?`<section class="widget-stack">${visible.map(item=>widgetCard(item)).join('')}</section>`:renderContentState('empty',{title:'На экране пока нет виджетов этого направления',message:'Добавь нужный виджет через галерею.'})}`;
 }
 function widgetToolMarkup(meta){
-  if(meta.id==='widgets.contactNew')return `<section class="inner-intro"><span class="eyebrow">КОНТАКТЫ</span><h2>Новый контакт</h2><p>Deep link new_contact приводит прямо сюда.</p></section><section class="widget-form"><input placeholder="Имя" disabled><input placeholder="Telegram" disabled><textarea placeholder="Заметка" disabled></textarea>${renderContentState('disabled',{title:'Сохранение подключится через V1 adapter',message:'Форма не сообщает об успехе без подтверждённой записи.'})}</section>`;
+  if(meta.id==='widgets.contactNew')return `<section class="inner-intro"><span class="eyebrow">КОНТАКТЫ</span><h2>Новый контакт</h2><p>Deep link new_contact приводит прямо сюда.</p></section><section class="widget-form"><input placeholder="Имя" disabled><input placeholder="Telegram" disabled><textarea placeholder="Заметка" disabled></textarea>${renderContentState('disabled',{title:'Сохранение пока отключено',message:'Форма не сообщает об успехе без подтверждённой записи.'})}</section>`;
   if(meta.id==='widgets.quickActions')return `<section class="inner-intro"><span class="eyebrow">БЫСТРЫЕ ДЕЙСТВИЯ</span><h2>Что сделать?</h2><p>Каждая активная кнопка ведёт в реальный маршрут.</p></section><section class="quick-action-grid"><button data-navigate="widgets.contactNew">Новый контакт</button><button data-navigate="widgets.finance">Финансы</button><button data-navigate="events.list">Мероприятия</button><button data-navigate="widgets.notes">Заметка</button></section>`;
   const widgetId={
-    'widgets.mind':'mind','widgets.contacts':'contacts','widgets.finance':'finance','widgets.habits':'habits','widgets.health':'health','widgets.events':'events','widgets.notes':'notes','widgets.media':'media'
+    'widgets.mind':'mind','widgets.contacts':'contacts','widgets.finance':'finance','widgets.relationships':'relationships','widgets.earnings':'earnings','widgets.habits':'habits','widgets.health':'health','widgets.events':'events','widgets.notes':'notes','widgets.media':'media'
   }[meta.id]||widgetState.selectedWidgetId;
   const widget=widgetById(widgetId);
   if(!widget)return null;
+  if(widget.id==='tasks'||widget.id==='calendar')return `${homeInnerMarkup(resolveRoute('schedule.today'))}`;
+  if(widget.id==='finance')return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ФИНАНСЫ</span><h2>Финансовый учёт</h2><p>Используем уже существующий раздел MenClub и данные user_data.finance. Новую финансовую систему не создаём.</p></div></section><section class="foundation-note"><strong>Финансы сохранены</strong><p>V0.1 использует существующий источник user_data.finance. Переход в старый экран включим только через изолированный совместимый адаптер, не меняя V1.</p></section>`;
   const action=widget.id==='contacts'?'<button class="primary-button full-width" type="button" data-navigate="widgets.contactNew">+ Новый контакт</button>':widget.id==='events'?'<button class="primary-button full-width" type="button" data-navigate="events.list">Открыть мероприятия</button>':'';
-  return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ИНСТРУМЕНТ V1</span><h2>${escapeHtml(widget.title)}</h2><p>${escapeHtml(widget.description)}. Существующая бизнес-логика будет подключена через совместимый adapter в Package 9.</p></div></section>${action}${renderContentState(widget.id==='media'?'empty':'disabled',{title:widget.id==='media'?'Медиа пока пусто':'Данные пока не подключены',message:'Экран не подменяет реальные данные примерами.'})}`;
+  return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ИНСТРУМЕНТ MENCLUB</span><h2>${escapeHtml(widget.title)}</h2><p>${escapeHtml(widget.description)}.</p></div></section>${action}${renderContentState(widget.id==='media'?'empty':'disabled',{title:widget.id==='media'?'Медиа пока пусто':'Данные пока не подключены',message:'Экран не подменяет реальные данные примерами.'})}`;
 }
 function widgetInnerMarkup(meta){
   if(!meta.id.startsWith('widgets.'))return null;
-  if(meta.id==='widgets.edit')return `<section class="inner-intro"><span class="eyebrow">РЕДАКТОР</span><h2>Настрой панель</h2><p>Порядок, размер и видимость изменяются в черновике до сохранения.</p></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item,true)).join('')}</section><div class="widget-edit-actions"><button class="secondary-button" type="button" data-widget-reset>Сбросить</button><button class="secondary-button" type="button" data-widget-cancel>Отмена</button><button class="primary-button" type="button" data-widget-save ${widgetState.capabilities.writes?'':'disabled'}>Сохранить</button></div>${!widgetState.capabilities.writes?renderContentState('stale',{title:'Сохранение пока отключено',message:'Layout сохраняется только в Firestore после schema/security approval. Черновик можно проверить и отменить.'}):''}`;
+  if(meta.id==='widgets.edit')return `<section class="inner-intro"><span class="eyebrow">РЕДАКТОР</span><h2>Настрой панель</h2><p>Порядок, размер и видимость изменяются в черновике до сохранения.</p></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item,true)).join('')}</section><div class="widget-edit-actions"><button class="secondary-button" type="button" data-widget-reset>Сбросить</button><button class="secondary-button" type="button" data-widget-cancel>Отмена</button><button class="primary-button" type="button" data-widget-save ${widgetState.capabilities.writes?'':'disabled'}>Сохранить</button></div>${!widgetState.capabilities.writes?renderContentState('stale',{title:'Сохранение пока отключено',message:'Пока можно менять экран в режиме предпросмотра. Постоянное сохранение подключим только к существующим данным без создания новой схемы.'}):''}`;
   if(meta.id==='widgets.gallery')return `<section class="inner-intro"><span class="eyebrow">ГАЛЕРЕЯ</span><h2>Скрытые виджеты</h2><p>Восстанови модуль в рабочую панель.</p></section>${widgetEditor.hidden().length?`<section class="widget-gallery">${widgetEditor.hidden().map(item=>{const widget=widgetById(item.widgetId);return `<button type="button" data-widget-restore="${widget.id}"><span>${widget.icon}</span><b>${escapeHtml(widget.title)}</b><small>Восстановить</small></button>`;}).join('')}</section>`:renderContentState('empty',{title:'Все виджеты на панели'})}`;
   return widgetToolMarkup(meta);
 }
 
 function lyovaTabs(active){return `<div class="lyova-tabs">${LYOVA_TABS.map(tab=>`<button type="button" data-navigate="${tab.route}" class="${tab.id===active?'active':''}">${tab.label}</button>`).join('')}</div>`;}
 function lyovaMarkup(active){
-  const header=`<section class="lyova-hero"><div class="lyova-avatar">Л</div><div><span class="eyebrow">ИИ-ИНТЕРФЕЙС MENCLUB</span><h2>Лёва</h2><p>Помогает ориентироваться в Путь, событиях и инструментах.</p></div></section>${lyovaTabs(active)}`;
+  const header=`<section class="lyova-hero"><div class="lyova-avatar">Л</div><div><span class="eyebrow">ИИ-ИНТЕРФЕЙС MENCLUB</span><h2>Лёва</h2><p>Разбирает, что происходит, и связывает это с твоим Путём, делами и виджетами.</p></div></section>${lyovaTabs(active)}`;
   if(active==='recommendations')return header+`<section class="lyova-list">${LYOVA_RECOMMENDATIONS.map(item=>`<button type="button" data-navigate="${item.route}"><b>${item.title}</b><span>Открыть реальный экран →</span></button>`).join('')}</section>`;
   if(active==='history')return header+renderContentState('empty',{title:'История пока пуста',message:'Диалоги не сохраняются без отдельного утверждённого runtime/data contract.'});
   if(active==='actions')return header+`<section class="lyova-list">${LYOVA_ACTIONS.map(item=>`<button type="button" data-lyova-action="${item.id}"><b>${item.title}</b><span>${item.effect} · сначала preview</span></button>`).join('')}</section>${!lyovaActions.capabilities.actions?renderContentState('disabled',{title:'Выполнение действий отключено',message:'Лёва ничего не записывает без подтверждённого runtime.'}):''}`;
   const messages=lyovaSession.messages.map(item=>`<div class="lyova-message ${item.role}"><b>${item.role==='user'?'Ты':'Лёва'}</b><p>${escapeHtml(item.text)}</p>${!item.persisted?'<small>не сохранено</small>':''}</div>`).join('');
-  return header+`<section class="lyova-chat">${messages||'<div class="lyova-message assistant"><b>Лёва</b><p>Здорово. Могу открыть нужный раздел и помочь сформулировать запрос.</p><small>стартовое сообщение интерфейса</small></div>'}${lyovaSession.state==='working'?renderContentState('loading',{title:'Лёва думает'}):''}${lyovaSession.state==='failed'?renderContentState('error',{title:'Ответ не получен',message:'Сообщение осталось только в текущем интерфейсе.',actionLabel:'Повторить'}):''}${lyovaSession.state==='disabled'?renderContentState('disabled',{title:'AI runtime ещё не подключён',message:'Твоё сообщение показано локально, но ответ и история не выдумываются.'}):''}</section><form class="lyova-composer" data-lyova-form><input name="message" autocomplete="off" placeholder="Напиши Лёве…"><button type="button" disabled title="Скоро">🎙 Скоро</button><button type="submit">Отправить</button></form>`;
+  return header+`<section class="lyova-chat">${messages||'<div class="lyova-message assistant"><b>Лёва</b><p>Здорово. Могу открыть нужный раздел и помочь сформулировать запрос.</p><small>стартовое сообщение интерфейса</small></div>'}${lyovaSession.state==='working'?renderContentState('loading',{title:'Лёва думает'}):''}${lyovaSession.state==='failed'?renderContentState('error',{title:'Ответ не получен',message:'Сообщение осталось только в текущем интерфейсе.',actionLabel:'Повторить'}):''}${lyovaSession.state==='disabled'?renderContentState('disabled',{title:'AI runtime ещё не подключён',message:'Твоё сообщение показано локально, но ответ и история не выдумываются.'}):''}</section><form class="lyova-composer" data-lyova-form><input name="message" autocomplete="off" placeholder="Что происходит?"><button type="button" disabled title="Скоро">🎙 Скоро</button><button type="submit">Отправить</button></form>`;
 }
 function lyovaInnerMarkup(meta){if(!meta.id.startsWith('lyova.'))return null;return lyovaMarkup({ 'lyova.recommendations':'recommendations','lyova.history':'history','lyova.actions':'actions','lyova.settings':'settings' }[meta.id]||'chat');}
 
@@ -291,6 +326,13 @@ function paymentMarkup(routeId) {
   return renderContentState(routeId === 'payment.error' ? 'error' : 'stale');
 }
 
+function introMarkup(){
+ const c=INTRO_CARDS[introState.index],last=introState.index===INTRO_CARDS.length-1;
+ return `<section class="onboarding-card"><div class="onboarding-progress">${INTRO_CARDS.map((_,i)=>'<i class="'+(i<=introState.index?'active':'')+'"></i>').join('')}</div><span class="onboarding-count">${introState.index+1} / 5</span><div class="onboarding-visual">${c[0]}</div><div class="onboarding-copy"><span class="eyebrow">${c[1]}</span><h2>${c[2]}</h2><p>${c[3]}</p></div><div class="onboarding-actions">${introState.index?'<button class="secondary-button" data-intro-back>Назад</button>':'<span></span>'}<button class="primary-button" data-intro-next>${last?'К Лёве':'Дальше'}</button></div></section>`;
+}
+function showIntro(){introState={visible:true,index:0};headerBack.hidden=true;bottomNav.hidden=true;accessBanner.hidden=true;headerTitle.textContent='Знакомство';headerSubtitle.textContent='5 коротких карточек';outlet.innerHTML=introMarkup();}
+function finishIntro(){introState.visible=false;syncAccessBanner();render('lyova.chat');}
+
 function render(routeId, options = {}) {
   const meta = resolveRoute(routeId);
   const decision = accessDecision(meta.id, getRuntimeContext().access);
@@ -301,8 +343,8 @@ function render(routeId, options = {}) {
   const root = ROOT_ROUTES[meta.parentTab] === meta.id;
   document.querySelector('#app').dataset.lifecycle = navigator.onLine ? 'ready' : 'offlineReady';
   headerTitle.textContent = meta.title;
-  headerBrand.textContent = root && meta.id === 'home' ? 'MENCLUB' : 'MENCLUB V2';
-  headerSubtitle.textContent = root ? 'Development foundation' : meta.id;
+  headerBrand.textContent = 'MENCLUB';
+  headerSubtitle.textContent = meta.id === 'lyova.chat' ? 'Что происходит?' : (root ? '' : meta.id);
   headerBack.hidden = !navigation.canGoBack();
   bottomNav.hidden = !meta.bottomNavVisible;
   bottomNav.querySelectorAll('[data-route]').forEach(button => {
@@ -381,7 +423,7 @@ async function bootstrap() {
     document.querySelector('#app').dataset.lifecycle=readyState;
     renderLifecycle(null);
     syncAccessBanner();
-    render(navigation.current);
+    if(new URLSearchParams(location.search).get('intro')==='1')showIntro();else render(navigation.current);
   } catch (error) {
     console.warn('V2 bootstrap failed:', error?.code || error?.name || 'unknown');
     renderLifecycle(error?.code ? 'authError' : 'fatalError', error);
@@ -443,6 +485,8 @@ bottomNav.addEventListener('click', event => {
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
+  if(event.target.closest('[data-intro-back]')){introState.index=Math.max(0,introState.index-1);outlet.innerHTML=introMarkup();return;}
+  if(event.target.closest('[data-intro-next]')){if(introState.index<4){introState.index++;outlet.innerHTML=introMarkup();}else finishIntro();return;}
   if(event.target.closest('[data-profile-preview]')){navigate('profile.publicPreview');return;}
   if(event.target.closest('[data-profile-share]')){announcer.textContent='Member-safe ссылка пока недоступна';return;}
   if(event.target.closest('[data-profile-help]')){const telegram=window.Telegram?.WebApp,link='https://t.me/job_bylobychevinsibir?text='+encodeURIComponent('Здравствуй! Нужна помощь по MenClub.');if(telegram?.openTelegramLink)telegram.openTelegramLink(link);else location.href=link;return;}
@@ -451,6 +495,7 @@ outlet.addEventListener('click', event => {
   if(event.target.closest('[data-profile-reset-second]')){performDataReset();return;}
   const lyovaAction=event.target.closest('[data-lyova-action]');if(lyovaAction){pendingLyovaActionId=lyovaAction.dataset.lyovaAction;openLyovaActionPreview();return;}
   if(event.target.closest('[data-state-action]')&&navigation.current==='lyova.chat'){retryLyova();return;}
+  const widgetFilter=event.target.closest('[data-widget-filter]');if(widgetFilter){widgetState.filter=widgetFilter.dataset.widgetFilter||'all';render();return;}
   const widgetOpen=event.target.closest('[data-widget-open]');if(widgetOpen){widgetState.selectedWidgetId=widgetOpen.dataset.widgetOpen;navigate(widgetById(widgetState.selectedWidgetId)?.route||'widgets.widget');return;}
   const widgetMove=event.target.closest('[data-widget-move]');if(widgetMove){widgetEditor.move(widgetMove.dataset.widgetId,Number(widgetMove.dataset.widgetMove));render('widgets.edit');return;}
   const widgetResize=event.target.closest('[data-widget-resize]');if(widgetResize){widgetEditor.resize(widgetResize.dataset.widgetResize);render('widgets.edit');return;}

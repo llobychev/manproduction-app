@@ -1,7 +1,7 @@
 import { ROOT_ROUTES, isRootRoute, resolveRoute } from './routes.js';
 
 export class NavigationStack {
-  constructor(initialRoute = 'home') {
+  constructor(initialRoute = 'lyova.chat') {
     this.current = resolveRoute(initialRoute).id;
     this.stack = [];
     this.tabScroll = new Map();

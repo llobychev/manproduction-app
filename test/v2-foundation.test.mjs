@@ -15,7 +15,7 @@ test('every V2 route exposes mandatory UI Contract metadata', () => {
   }
 });
 
-test('root tabs and new_contact deep link preserve the frozen mapping', () => {
+test('legacy route registry remains available while V0.1 uses a reduced visible shell', () => {
   assert.deepEqual(ROOT_ROUTES, { home:'home', lyova:'lyova.chat', events:'events.list', path:'path.home', widgets:'widgets.home', profile:'profile.cabinet' });
   assert.equal(DEEP_LINKS.new_contact, 'widgets.contactNew');
   assert.equal(ROUTES['widgets.contactNew'].parentTab, 'widgets');
@@ -33,11 +33,9 @@ test('system state registries match the frozen contract', () => {
 });
 
 test('navigation handles inner back stack, parent roots and repeated tab tap', () => {
-  const navigation = new NavigationStack('home');
-  navigation.navigate('news.list');
-  navigation.navigate('news.detail');
-  assert.equal(navigation.back(), 'news.list');
-  assert.equal(navigation.back(), 'home');
+  const navigation = new NavigationStack('lyova.chat');
+  navigation.navigate('lyova.history');
+  assert.equal(navigation.back(), 'lyova.chat');
   navigation.navigate('widgets.home', { currentScroll: 42 });
   assert.equal(navigation.current, 'widgets.home');
   assert.equal(navigation.navigate('widgets.home').repeated, true);
