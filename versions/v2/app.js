@@ -55,7 +55,8 @@ function initialRoute() {
   const params = new URLSearchParams(location.search);
   const deepLink = resolveDeepLink(params.get('startapp') || params.get('start_param'));
   const hashRoute = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  return deepLink || (ROUTES[hashRoute] ? hashRoute : 'lyova.chat');
+  const legacyRoots = new Set(['home','events.list','profile.cabinet']);
+  return deepLink || (ROUTES[hashRoute] && !legacyRoots.has(hashRoute) ? hashRoute : 'lyova.chat');
 }
 
 function rootMarkup(meta) {
@@ -184,7 +185,7 @@ function widgetCard(item,editing=false){
 function widgetsHomeMarkup(){
   if(widgetState.status==='loading')return renderContentState('loading',{title:'Загружаем рабочую панель'});
   if(widgetState.status==='error')return renderContentState('error',{title:'Виджеты не загрузились',actionLabel:'Повторить'});
-  return `<section class="widgets-hero"><span class="eyebrow">РАБОЧАЯ ПАНЕЛЬ</span><h2>Виджеты</h2><p>Инструменты в утверждённой вертикальной компоновке.</p><div><button class="secondary-button" type="button" data-navigate="widgets.edit">Изменить</button><button class="primary-button" type="button" data-navigate="widgets.gallery">+ Добавить</button></div></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item)).join('')}</section>`;
+  return `<section class="widgets-hero"><span class="eyebrow">МОЙ ЭКРАН</span><h2>Виджеты</h2><p>Собери свой экран из нужных тебе данных и инструментов.</p><div><button class="secondary-button" type="button" data-navigate="widgets.edit">Изменить</button><button class="primary-button" type="button" data-navigate="widgets.gallery">+ Добавить</button></div></section><section class="widget-stack">${widgetEditor.visible().map(item=>widgetCard(item)).join('')}</section>`;
 }
 function widgetToolMarkup(meta){
   if(meta.id==='widgets.contactNew')return `<section class="inner-intro"><span class="eyebrow">КОНТАКТЫ</span><h2>Новый контакт</h2><p>Deep link new_contact приводит прямо сюда.</p></section><section class="widget-form"><input placeholder="Имя" disabled><input placeholder="Telegram" disabled><textarea placeholder="Заметка" disabled></textarea>${renderContentState('disabled',{title:'Сохранение подключится через V1 adapter',message:'Форма не сообщает об успехе без подтверждённой записи.'})}</section>`;
@@ -194,6 +195,7 @@ function widgetToolMarkup(meta){
   }[meta.id]||widgetState.selectedWidgetId;
   const widget=widgetById(widgetId);
   if(!widget)return null;
+  if(widget.id==='tasks'||widget.id==='calendar')return homeInnerMarkup(resolveRoute('schedule.today'));
   const action=widget.id==='contacts'?'<button class="primary-button full-width" type="button" data-navigate="widgets.contactNew">+ Новый контакт</button>':widget.id==='events'?'<button class="primary-button full-width" type="button" data-navigate="events.list">Открыть мероприятия</button>':'';
   return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ИНСТРУМЕНТ V1</span><h2>${escapeHtml(widget.title)}</h2><p>${escapeHtml(widget.description)}. Существующая бизнес-логика будет подключена через совместимый adapter в Package 9.</p></div></section>${action}${renderContentState(widget.id==='media'?'empty':'disabled',{title:widget.id==='media'?'Медиа пока пусто':'Данные пока не подключены',message:'Экран не подменяет реальные данные примерами.'})}`;
 }
@@ -301,8 +303,8 @@ function render(routeId, options = {}) {
   const root = ROOT_ROUTES[meta.parentTab] === meta.id;
   document.querySelector('#app').dataset.lifecycle = navigator.onLine ? 'ready' : 'offlineReady';
   headerTitle.textContent = meta.title;
-  headerBrand.textContent = root && meta.id === 'home' ? 'MENCLUB' : 'MENCLUB V2';
-  headerSubtitle.textContent = root ? 'Development foundation' : meta.id;
+  headerBrand.textContent = 'MENCLUB';
+  headerSubtitle.textContent = meta.id === 'lyova.chat' ? 'Что происходит?' : (root ? '' : meta.id);
   headerBack.hidden = !navigation.canGoBack();
   bottomNav.hidden = !meta.bottomNavVisible;
   bottomNav.querySelectorAll('[data-route]').forEach(button => {
