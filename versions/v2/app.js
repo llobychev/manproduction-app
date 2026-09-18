@@ -366,10 +366,10 @@ function syncAccessBanner() {
   const access = getRuntimeContext().access;
   if (access?.accessClass === 'demoActive') {
     const days = daysRemaining(access.until);
-    accessBanner.textContent = `Демо-доступ: осталось ${days} дн. · Открыть тарифы`;
+    accessBanner.innerHTML = `<span class="demo-marquee">⏳ Демо-доступ закончится через ${days} дн. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⏳ Демо-доступ закончится через ${days} дн. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
     accessBanner.hidden = false;
   } else if (access?.accessClass === 'demoExpired') {
-    accessBanner.textContent = 'Демо завершено · Выбрать тариф';
+    accessBanner.innerHTML = '<span class="demo-marquee">⏳ Демо-доступ завершён &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Открыть тарифы &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
     accessBanner.hidden = false;
   } else accessBanner.hidden = true;
 }
@@ -388,7 +388,8 @@ function renderLifecycle(state, error) {
   }[state];
   if (!copy) { lifecycleRoot.hidden = true; lifecycleRoot.innerHTML = ''; return; }
   lifecycleRoot.hidden = false;
-  lifecycleRoot.innerHTML = `<section class="lifecycle-card">${renderContentState(state==='authError'||state==='fatalError'?'error':'loading',{title:copy[0],message:copy[1]})}${state==='authError'?'<button class="primary-button full-width" type="button" data-auth-retry>Повторить</button>':''}<a class="fallback-link" href="../v1/index.html">Открыть V1 Stable</a></section>`;
+  const failed=state==='authError'||state==='fatalError';
+  lifecycleRoot.innerHTML = `<section class="lifecycle-card">${renderContentState(failed?'error':'loading',{title:copy[0],message:copy[1]})}${state==='authError'?'<button class="primary-button full-width" type="button" data-auth-retry>Повторить</button>':''}${failed?'<a class="fallback-link" href="../v1/index.html">Открыть V1 Stable</a>':''}</section>`;
 }
 
 async function bootstrap() {
