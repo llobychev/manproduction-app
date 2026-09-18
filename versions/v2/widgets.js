@@ -4,6 +4,8 @@ export const WIDGET_CATALOG = Object.freeze([
   Object.freeze({id:'mind',title:'Разум',icon:'🧠',description:'Дневники, цели и мышление',route:'widgets.mind',sizes:['medium','large']}),
   Object.freeze({id:'contacts',title:'Контакты',icon:'🤝',description:'Люди, связи и заметки',route:'widgets.contacts',sizes:['small','medium','large']}),
   Object.freeze({id:'finance',title:'Финансы',icon:'💰',description:'Доходы, расходы и цели',route:'widgets.finance',sizes:['small','medium','large']}),
+  Object.freeze({id:'relationships',title:'Отношения',icon:'🤝',description:'Знакомства, общение и отношения',route:'widgets.relationships',sizes:['small','medium','large']}),
+  Object.freeze({id:'earnings',title:'Заработок',icon:'📈',description:'Работа, дополнительный доход и рост заработка',route:'widgets.earnings',sizes:['small','medium','large']}),
   Object.freeze({id:'habits',title:'Привычки',icon:'✅',description:'Ритм и ежедневные действия',route:'widgets.habits',sizes:['small','medium']}),
   Object.freeze({id:'health',title:'Здоровье',icon:'❤️',description:'Самочувствие, сон и активность',route:'widgets.health',sizes:['small','medium']}),
   Object.freeze({id:'events',title:'Мероприятия',icon:'🗓️',description:'Клубные события и записи',route:'widgets.events',sizes:['small','medium']}),
