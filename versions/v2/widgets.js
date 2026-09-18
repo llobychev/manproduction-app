@@ -15,7 +15,8 @@ export const WIDGET_CATALOG = Object.freeze([
 ]);
 
 const DEFAULT_VISIBLE_WIDGETS = new Set(['finance','tasks','calendar']);
-export const DEFAULT_WIDGET_LAYOUT = Object.freeze(WIDGET_CATALOG.map((widget,index)=>Object.freeze({widgetId:widget.id,order:index,size:widget.sizes[0],hidden:!DEFAULT_VISIBLE_WIDGETS.has(widget.id),settingsVersion:1})));
+const DEFAULT_ORDER = Object.freeze(['finance','tasks','calendar',...WIDGET_CATALOG.map(widget=>widget.id).filter(id=>!DEFAULT_VISIBLE_WIDGETS.has(id))]);
+export const DEFAULT_WIDGET_LAYOUT = Object.freeze(DEFAULT_ORDER.map((widgetId,index)=>{const widget=widgetById(widgetId);return Object.freeze({widgetId,order:index,size:widget.sizes[0],hidden:!DEFAULT_VISIBLE_WIDGETS.has(widgetId),settingsVersion:1});}));
 
 const catalogById=new Map(WIDGET_CATALOG.map(item=>[item.id,item]));
 const clone=layout=>layout.map(item=>({...item}));
