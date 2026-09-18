@@ -7,6 +7,7 @@ test('V0.1 widget catalog keeps legacy modules and adds core dashboard direction
   const ids=WIDGET_CATALOG.map(item=>item.id);
   for(const id of ['finance','tasks','calendar','relationships','earnings','media']) assert.ok(ids.includes(id),id);
   assert.equal(widgetById('finance').route,'widgets.finance');
+  assert.equal(widgetById('finance').legacyRoute,'fin');
   assert.equal(widgetById('tasks').route,'schedule.today');
   assert.equal(widgetById('calendar').route,'schedule.today');
   assert.equal(DEFAULT_WIDGET_LAYOUT.length,WIDGET_CATALOG.length);
