@@ -16,7 +16,7 @@ test('V0.1 widget catalog keeps legacy modules and adds core dashboard direction
 test('editor performs reorder, resize, hide, restore, reset and cancel',()=>{
   const editor=new WidgetLayoutEditor();
   assert.equal(editor.dirty,false);
-  editor.move('calendar',-1);assert.equal(editor.visible()[0].widgetId,'calendar');
+  editor.move('calendar',-1);assert.deepEqual(editor.visible().map(item=>item.widgetId),['finance','calendar','tasks']);
   const before=editor.draft.find(item=>item.widgetId==='finance').size;editor.resize('finance');assert.notEqual(editor.draft.find(item=>item.widgetId==='finance').size,before);
   editor.hide('finance');assert.ok(editor.hidden().some(item=>item.widgetId==='finance'));editor.restore('finance');assert.ok(editor.visible().some(item=>item.widgetId==='finance'));
   assert.equal(editor.dirty,true);editor.cancel();assert.equal(editor.dirty,false);editor.hide('finance');editor.reset();assert.deepEqual(editor.visible().map(item=>item.widgetId),['finance','tasks','calendar']);
