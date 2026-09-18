@@ -14,7 +14,8 @@ export const WIDGET_CATALOG = Object.freeze([
   Object.freeze({id:'quickActions',title:'Быстрые действия',icon:'⚡',description:'Переходы к частым действиям',route:'widgets.quickActions',sizes:['medium','large']})
 ]);
 
-export const DEFAULT_WIDGET_LAYOUT = Object.freeze(WIDGET_CATALOG.map((widget,index)=>Object.freeze({widgetId:widget.id,order:index,size:widget.sizes[0],hidden:false,settingsVersion:1})));
+const DEFAULT_VISIBLE_WIDGETS = new Set(['finance','tasks','calendar']);
+export const DEFAULT_WIDGET_LAYOUT = Object.freeze(WIDGET_CATALOG.map((widget,index)=>Object.freeze({widgetId:widget.id,order:index,size:widget.sizes[0],hidden:!DEFAULT_VISIBLE_WIDGETS.has(widget.id),settingsVersion:1})));
 
 const catalogById=new Map(WIDGET_CATALOG.map(item=>[item.id,item]));
 const clone=layout=>layout.map(item=>({...item}));
