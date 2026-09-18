@@ -191,7 +191,7 @@ function widgetToolMarkup(meta){
   if(meta.id==='widgets.contactNew')return `<section class="inner-intro"><span class="eyebrow">КОНТАКТЫ</span><h2>Новый контакт</h2><p>Deep link new_contact приводит прямо сюда.</p></section><section class="widget-form"><input placeholder="Имя" disabled><input placeholder="Telegram" disabled><textarea placeholder="Заметка" disabled></textarea>${renderContentState('disabled',{title:'Сохранение подключится через V1 adapter',message:'Форма не сообщает об успехе без подтверждённой записи.'})}</section>`;
   if(meta.id==='widgets.quickActions')return `<section class="inner-intro"><span class="eyebrow">БЫСТРЫЕ ДЕЙСТВИЯ</span><h2>Что сделать?</h2><p>Каждая активная кнопка ведёт в реальный маршрут.</p></section><section class="quick-action-grid"><button data-navigate="widgets.contactNew">Новый контакт</button><button data-navigate="widgets.finance">Финансы</button><button data-navigate="events.list">Мероприятия</button><button data-navigate="widgets.notes">Заметка</button></section>`;
   const widgetId={
-    'widgets.mind':'mind','widgets.contacts':'contacts','widgets.finance':'finance','widgets.habits':'habits','widgets.health':'health','widgets.events':'events','widgets.notes':'notes','widgets.media':'media'
+    'widgets.mind':'mind','widgets.contacts':'contacts','widgets.finance':'finance','widgets.relationships':'relationships','widgets.earnings':'earnings','widgets.habits':'habits','widgets.health':'health','widgets.events':'events','widgets.notes':'notes','widgets.media':'media'
   }[meta.id]||widgetState.selectedWidgetId;
   const widget=widgetById(widgetId);
   if(!widget)return null;
