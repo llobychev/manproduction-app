@@ -55,3 +55,12 @@ test('verification report never turns external evidence into an automated pass',
   assert.deepEqual(summary.automated,{passed:16,total:16});
   assert.equal(summary.activationReady,false);
 });
+
+
+test('launcher exposes V0.1 preview explicitly while default activation remains manifest-controlled', async () => {
+  const launcher=await read('app.html');
+  assert.match(launcher,/app\.html\?version=v2/);
+  assert.match(launcher,/Открыть V0\.1 Preview/);
+  assert.match(launcher,/fetch\('\.\/versions\/active\.json/);
+  assert.match(launcher,/catch\(function\(\)\{go\('v1'\);\}\)/);
+});
