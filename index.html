@@ -4595,6 +4595,19 @@ function switchTab(tab){
   trackEvent('tab_switch',{tab:tab});
 }
 
+function openRequestedMenClubTool(){
+  try{
+    var requested=new URLSearchParams(window.location.search).get('mc_open');
+    if(requested==='fin'){
+      var main=document.getElementById('main-app');
+      if(main&&!main.classList.contains('active'))return false;
+      switchTab('fin');
+      return true;
+    }
+  }catch(err){console.warn('openRequestedMenClubTool error:',err);}
+  return false;
+}
+
 function showToast(msg){
   var t=document.getElementById('toast');
   if(!t){
