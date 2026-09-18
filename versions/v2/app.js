@@ -55,7 +55,7 @@ function initialRoute() {
   const params = new URLSearchParams(location.search);
   const deepLink = resolveDeepLink(params.get('startapp') || params.get('start_param'));
   const hashRoute = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  return deepLink || (ROUTES[hashRoute] ? hashRoute : 'home');
+  return deepLink || (ROUTES[hashRoute] ? hashRoute : 'lyova.chat');
 }
 
 function rootMarkup(meta) {
