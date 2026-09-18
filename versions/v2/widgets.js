@@ -15,17 +15,16 @@ export const WIDGET_CATALOG = Object.freeze([
 ]);
 
 const DEFAULT_VISIBLE_WIDGETS = new Set(['finance','tasks','calendar']);
-const DEFAULT_ORDER = Object.freeze(['finance','tasks','calendar',...WIDGET_CATALOG.map(widget=>widget.id).filter(id=>!DEFAULT_VISIBLE_WIDGETS.has(id))]);
-export const DEFAULT_WIDGET_LAYOUT = Object.freeze(DEFAULT_ORDER.map((widgetId,index)=>{const widget=widgetById(widgetId);return Object.freeze({widgetId,order:index,size:widget.sizes[0],hidden:!DEFAULT_VISIBLE_WIDGETS.has(widgetId),settingsVersion:1});}));
-
 const catalogById=new Map(WIDGET_CATALOG.map(item=>[item.id,item]));
+const DEFAULT_ORDER = Object.freeze(['finance','tasks','calendar',...WIDGET_CATALOG.map(widget=>widget.id).filter(id=>!DEFAULT_VISIBLE_WIDGETS.has(id))]);
+export const DEFAULT_WIDGET_LAYOUT = Object.freeze(DEFAULT_ORDER.map((widgetId,index)=>{const widget=catalogById.get(widgetId);return Object.freeze({widgetId,order:index,size:widget.sizes[0],hidden:!DEFAULT_VISIBLE_WIDGETS.has(widgetId),settingsVersion:1});}));
 const clone=layout=>layout.map(item=>({...item}));
 const signature=layout=>JSON.stringify(layout.map(({widgetId,order,size,hidden})=>({widgetId,order,size,hidden})));
 
 export function normalizeWidgetLayout(value){
   const supplied=new Map((Array.isArray(value?.items)?value.items:[]).filter(item=>catalogById.has(item?.widgetId)).map(item=>[item.widgetId,item]));
   return WIDGET_CATALOG.map((widget,index)=>{
-    const item=supplied.get(widget.id)||DEFAULT_WIDGET_LAYOUT[index];
+    const item=supplied.get(widget.id)||DEFAULT_WIDGET_LAYOUT.find(value=>value.widgetId===widget.id);
     return {widgetId:widget.id,order:Number.isFinite(Number(item.order))?Number(item.order):index,size:widget.sizes.includes(item.size)?item.size:widget.sizes[0],hidden:Boolean(item.hidden),settingsVersion:1};
   }).sort((a,b)=>a.order-b.order).map((item,index)=>({...item,order:index}));
 }
