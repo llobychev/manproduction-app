@@ -9,10 +9,10 @@
       "sourceCommit": "abbab1139e4eeeea40f977ab4e34753ee0ace103"
     },
     "v2": {
-      "label": "Новая версия в разработке",
-      "status": "development",
+      "label": "MenClub V0.1 Preview",
+      "status": "preview",
       "entry": "./versions/v2/index.html",
-      "source": "prototype-v2-approved.html"
+      "source": "reconstruct-v0.1-lyova-path-widgets"
     }
   }
 }
