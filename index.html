@@ -2461,7 +2461,6 @@ function launchApp(){
   syncLeaderboardPoints();
   loadClubUsernames(function(){renderContacts();});
   handleStartParam();
-  openRequestedMenClubTool();
   initDemoMode();
   trackEvent('app_open',{});
 }
@@ -4594,18 +4593,6 @@ function switchTab(tab){
   if(tab==='path'){mcPathShowCore();}
   if(tab==='profile'){updateHomeRankDisplay();updateProfilePlanBadge();renderSocialLinks();}
   trackEvent('tab_switch',{tab:tab});
-}
-
-function openRequestedMenClubTool(){
-  try{
-    var requested=new URLSearchParams(window.location.search).get('mc_open');
-    var main=document.getElementById('main-app');
-    if(main&&!main.classList.contains('active'))return false;
-    if(requested==='fin'){switchTab('fin');return true;}
-    if(requested==='goals'){switchTab('goals');renderGoalsScreen();return true;}
-    if(requested==='schedule'){switchTab('home');renderCalendar();renderSchedule();return true;}
-  }catch(err){console.warn('openRequestedMenClubTool error:',err);}
-  return false;
 }
 
 function showToast(msg){
