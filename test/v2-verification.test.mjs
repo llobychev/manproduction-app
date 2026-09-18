@@ -64,3 +64,18 @@ test('launcher exposes V0.1 preview explicitly while default activation remains 
   assert.match(launcher,/fetch\('\.\/versions\/active\.json/);
   assert.match(launcher,/catch\(function\(\)\{go\('v1'\);\}\)/);
 });
+
+
+test('V0.1 includes five-card onboarding presentation and direct preview launcher', async () => {
+  const app=await read('versions/v2/app.js');
+  const styles=await read('versions/v2/styles.css');
+  const launcher=await read('app.html');
+  assert.match(app,/INTRO_CARDS=Object\.freeze/);
+  assert.match(app,/\[.*'MENCLUB'.*\]/);
+  assert.match(app,/\[.*'ЛЁВА'.*\]/);
+  assert.match(app,/\[.*'ПУТЬ'.*\]/);
+  assert.match(app,/\[.*'ВИДЖЕТЫ'.*\]/);
+  assert.match(app,/data-intro-next/);
+  assert.match(styles,/\.onboarding-card/);
+  assert.match(launcher,/versions\/v2\/index\.html/);
+});
