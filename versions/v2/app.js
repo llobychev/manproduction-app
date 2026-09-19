@@ -185,11 +185,25 @@ function pathInnerMarkup(meta){
   return `<article class="path-lesson"><span class="eyebrow">${escapeHtml(selected.sphere.title)} · ${escapeHtml(selected.path.name)}</span><h2>${escapeHtml(selected.chapter.title)}</h2><p>Практическая глава продвинутой Карты жизни. Содержание и ответы будут подключены через отдельный content adapter без потери структуры V1.</p><div class="path-lesson-meta"><span>~${selected.chapter.durationMinutes} мин</span><span>+${selected.chapter.xp} XP</span><span>${done?'Пройдено':'Доступно'}</span></div>${pathState.capabilities.writes?`<button class="secondary-button full-width" type="button" data-path-bookmark="${selected.chapter.id}">${bookmarked?'Убрать из закладок':'В закладки'}</button>`:''}${done?'':pathState.capabilities.writes?`<button class="primary-button full-width" type="button" data-path-complete="${selected.chapter.id}">Завершить главу</button>`:renderContentState('disabled',{title:'Завершение пока недоступно',message:'Награда, прогресс и закладки появятся только после подтверждённой серверной записи.'})}</article>`;
 }
 
+function moneyRub(value){return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.abs(Number(value)||0))+' ₽';}
+function legacyFinanceSummary(){
+  const rows=homeState.data?.legacy?.finance||[];
+  let income=0,expense=0;
+  for(const row of rows){const amount=Number(row?.amount)||0;if(row?.type==='income')income+=amount;else expense+=amount;}
+  return {rows,income,expense,balance:income-expense};
+}
+function legacyContactsCount(){
+  const c=homeState.data?.legacy?.contacts||{};
+  return (Array.isArray(c.men)?c.men.length:0)+(Array.isArray(c.women)?c.women.length:0);
+}
 function widgetMetric(widget){
-  const schedule=homeState.data?.schedule?.items||[];
+  const schedule=homeState.data?.schedule?.items||[],legacy=homeState.data?.legacy||{};
   if(widget.id==='tasks')return schedule.length ? `${schedule.length} сегодня` : 'Сегодня свободно';
   if(widget.id==='calendar')return schedule[0]?.time ? `${schedule[0].time} · ${schedule[0].title||'Ближайшее'}` : 'Нет ближайших событий';
-  if(widget.id==='finance')return 'Твой существующий финансовый учёт';
+  if(widget.id==='finance'){const f=legacyFinanceSummary();return f.rows.length?`Баланс ${moneyRub(f.balance)} · ${f.rows.length} операций`:'Операций пока нет';}
+  if(widget.id==='contacts')return `${legacyContactsCount()} контактов`;
+  if(widget.id==='habits')return `${Array.isArray(legacy.habits?.active)?legacy.habits.active.length:0} активных привычек`;
+  if(widget.id==='mind')return `${Array.isArray(legacy.goals)?legacy.goals.length:0} целей`;
   return widget.description;
 }
 function widgetCard(item,editing=false){
@@ -228,7 +242,11 @@ function widgetToolMarkup(meta){
   const widget=widgetById(widgetId);
   if(!widget)return null;
   if(widget.id==='tasks'||widget.id==='calendar')return `${homeInnerMarkup(resolveRoute('schedule.today'))}`;
-  if(widget.id==='finance')return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ФИНАНСЫ</span><h2>Финансовый учёт</h2><p>Используем уже существующий раздел MenClub и данные user_data.finance. Новую финансовую систему не создаём.</p></div></section><section class="foundation-note"><strong>Финансы сохранены</strong><p>V0.1 использует существующий источник user_data.finance. Переход в старый экран включим только через изолированный совместимый адаптер, не меняя V1.</p></section>`;
+  if(widget.id==='finance'){const f=legacyFinanceSummary();return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ФИНАНСЫ</span><h2>Финансовый учёт</h2><p>Твои существующие данные из user_data.finance.</p></div></section><section class="profile-metrics"><div><b>${moneyRub(f.income)}</b><span>доходы</span></div><div><b>${moneyRub(f.expense)}</b><span>расходы</span></div><div><b>${moneyRub(f.balance)}</b><span>баланс</span></div></section>${f.rows.length?`<section class="home-card">${f.rows.slice(-8).reverse().map(row=>`<div class="schedule-item"><time>${escapeHtml(row.date||row.dateISO||'—')}</time><span>${escapeHtml(row.note||row.category||row.title||'Операция')} · ${row.type==='income'?'+':'−'}${moneyRub(row.amount)}</span></div>`).join('')}</section>`:renderContentState('empty',{title:'Финансовых операций пока нет'})}`;}
+  if(widget.id==='contacts'){const d=homeState.data?.legacy?.contacts||{},men=Array.isArray(d.men)?d.men:[],women=Array.isArray(d.women)?d.women:[],all=[...men,...women];return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">КОНТАКТЫ</span><h2>Люди и связи</h2><p>Существующие контакты V1. Ничего не дублируется.</p></div></section>${all.length?`<section class="home-card">${all.slice(0,20).map(person=>`<div class="schedule-item"><time>👤</time><span>${escapeHtml(person.name||person.fullName||person.username||'Контакт')}</span></div>`).join('')}</section>`:renderContentState('empty',{title:'Контактов пока нет'})}<button class="primary-button full-width" type="button" data-navigate="widgets.contactNew">+ Новый контакт</button>`;}
+  if(widget.id==='habits'){const items=Array.isArray(homeState.data?.legacy?.habits?.active)?homeState.data.legacy.habits.active:[];return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ПРИВЫЧКИ</span><h2>Текущий ритм</h2><p>Активные привычки из существующих данных V1.</p></div></section>${items.length?`<section class="home-card">${items.map(item=>`<div class="schedule-item"><time>${escapeHtml(item.icon||'✓')}</time><span>${escapeHtml(item.name||'Привычка')} · ${Array.isArray(item.doneDates)?item.doneDates.length:0} отметок</span></div>`).join('')}</section>`:renderContentState('empty',{title:'Активных привычек пока нет'})}`;}
+  if(widget.id==='mind'){const goals=homeState.data?.legacy?.goals||[];return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ЦЕЛИ</span><h2>Твои цели</h2><p>Существующая структура V1: цель → шаги → срок.</p></div></section>${goals.length?`<section class="home-card">${goals.map(goal=>{const steps=Array.isArray(goal.steps)?goal.steps:[],done=steps.filter(step=>step.done).length;return `<div class="schedule-item"><time>${done}/${steps.length}</time><span>${escapeHtml(goal.title||'Цель')}${goal.deadline?` · до ${escapeHtml(goal.deadline)}`:''}</span></div>`;}).join('')}</section>`:renderContentState('empty',{title:'Целей пока нет'})}`;}
+  
   const action=widget.id==='contacts'?'<button class="primary-button full-width" type="button" data-navigate="widgets.contactNew">+ Новый контакт</button>':widget.id==='events'?'<button class="primary-button full-width" type="button" data-navigate="events.list">Открыть мероприятия</button>':'';
   return `<section class="widget-tool"><span>${widget.icon}</span><div><span class="eyebrow">ИНСТРУМЕНТ MENCLUB</span><h2>${escapeHtml(widget.title)}</h2><p>${escapeHtml(widget.description)}.</p></div></section>${action}${renderContentState(widget.id==='media'?'empty':'disabled',{title:widget.id==='media'?'Медиа пока пусто':'Данные пока не подключены',message:'Экран не подменяет реальные данные примерами.'})}`;
 }
