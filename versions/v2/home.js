@@ -74,7 +74,16 @@ export async function loadHomeDashboard(db, uid, { now = new Date(), telegramUse
     points:Number(habits.points)||Number(user.points)||0,
     level:Number(user.level)||null,
     streak,
-    path:{state:'disabled',title:'Путь',message:'Точный прогресс подключится к единому Path adapter в Package 5.'},
+    legacy:Object.freeze({
+      finance:Array.isArray(userData.finance)?userData.finance:[],
+      goals:Array.isArray(userData.goals)?userData.goals:[],
+      contacts:userData.contacts&&typeof userData.contacts==='object'?userData.contacts:{men:[],women:[]},
+      habits:userData.habits&&typeof userData.habits==='object'?userData.habits:{active:[],points:0},
+      debts:Array.isArray(userData.debts)?userData.debts:[],
+      savings:Array.isArray(userData.savings)?userData.savings:[],
+      recurringPayments:Array.isArray(userData.recurringPayments)?userData.recurringPayments:[]
+    }),
+    path:{state:'ready',title:'Путь',message:'Используются существующие цели и действия V1 без изменения их схемы.'},
     quests:{state:questsResult.state,items:questsResult.value,done:questsDone.done||{},awarded:questsDone.awarded||{},date:questsDone.date},
     schedule:{state:eventsResult.state,items:normalizeSchedule(userData,eventsResult.value,now)},
     nearestEvent:{state:'empty',message:'Каталог клубных событий получит отдельный schema/security contract.'},
