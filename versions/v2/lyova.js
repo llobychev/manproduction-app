@@ -1,5 +1,5 @@
 export const LYOVA_TABS=Object.freeze([{id:'chat',route:'lyova.chat',label:'Чат'},{id:'recommendations',route:'lyova.recommendations',label:'Рекомендации'},{id:'history',route:'lyova.history',label:'История'},{id:'actions',route:'lyova.actions',label:'Действия'}]);
-export const LYOVA_RECOMMENDATIONS=Object.freeze([{id:'path',title:'Продолжить Путь',route:'path.home'},{id:'tasks',title:'Что у меня сегодня',route:'schedule.today'},{id:'widgets',title:'Открыть виджеты',route:'widgets.home'}]);
+export const LYOVA_RECOMMENDATIONS=Object.freeze([{id:'tasks',title:'Что у меня сегодня',route:'schedule.today'},{id:'widgets',title:'Открыть виджеты',route:'widgets.home'}]);
 export const LYOVA_ACTIONS=Object.freeze([{id:'plan-day',title:'Собрать план дня',effect:'Создание задач и расписания'},{id:'note',title:'Сохранить мысль',effect:'Запись в личные заметки'}]);
 
 export class LyovaSession{
