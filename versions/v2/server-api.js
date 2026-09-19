@@ -36,6 +36,7 @@ export function createMainAppServerApi({ firebaseUser, fetchImpl = fetch, baseUr
   return Object.freeze({
     uid:String(firebaseUser.uid),
     ensureDemo:() => request('/app/v2/access/ensure-demo'),
-    setDailyQuest:(questId, done) => request(`/app/v2/quests/${encodeURIComponent(questId)}/state`, { done:Boolean(done) })
+    setDailyQuest:(questId, done) => request(`/app/v2/quests/${encodeURIComponent(questId)}/state`, { done:Boolean(done) }),
+    executeConfirmedAction:(proposal) => request('/app/v2/actions/execute', { confirmed:true, proposal })
   });
 }
