@@ -44,8 +44,7 @@ const adapterRegistry=createV2AdapterRegistry(window.MENCLUB_V2_ADAPTERS||{});
 const INTRO_CARDS=Object.freeze([
  ['M','MENCLUB','Твоя жизнь — главный экран','Система вокруг реальных ситуаций, целей и действий.'],
  ['🦁','ЛЁВА','Начни с того, что происходит','Расскажи ситуацию своими словами. Лёва помогает найти следующий шаг.'],
- ['🧭','ПУТЬ','Понимай, куда идёшь','Где ты сейчас → цель → действия → прогресс.'],
- ['▦','ВИДЖЕТЫ','Собери свой центр управления','Финансы, дела, календарь и другие механики — под рукой.'],
+['▦','ВИДЖЕТЫ','Собери свой центр управления','Финансы, дела, календарь и другие механики — под рукой.'],
  ['→','НАЧИНАЕМ','Что происходит прямо сейчас?','После знакомства ты попадёшь к Лёве — основной точке входа MenClub.']
 ]);
 let introState={visible:false,index:0};
@@ -460,7 +459,15 @@ async function bootstrap() {
     widgetRepository=createWidgetRepository(adapterRegistry.adapter('widgets')||legacyAdapters.widgets);
     try{widgetEditor=new WidgetLayoutEditor(await widgetRepository.load({db:authenticated.db,uid:authenticated.user.uid}));widgetState={status:'ready',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'idle'};}
     catch(error){widgetState={status:'error',capabilities:widgetRepository.capabilities,selectedWidgetId:null,actionState:'failed'};}
-    lyovaSession=new LyovaSession(adapterRegistry.adapter('lyovaRuntime'));lyovaActions=createLyovaActionRepository(adapterRegistry.adapter('lyovaActions'));
+    lyovaSession=new LyovaSession(adapterRegistry.adapter('lyovaRuntime'));
+    const approvedLyovaActions=adapterRegistry.adapter('lyovaActions')||Object.freeze({
+      async execute(context){
+        const proposal=context?.proposal||context;
+        const result=await authenticated.serverApi.executeConfirmedAction(proposal);
+        return {confirmed:result?.confirmed===true,result};
+      }
+    });
+    lyovaActions=createLyovaActionRepository(approvedLyovaActions);
     profileRepository=createProfileRepository(adapterRegistry.adapter('profile'));
     try{const data=await loadProfileExperience(authenticated.db,authenticated.user.uid,{access,telegramUser:telegram?.initDataUnsafe?.user||null});profileState={status:'ready',data,capabilities:profileRepository.capabilities,actionState:'idle'};publicProfileDraft={...data.visibility};}
     catch(error){profileState={status:'error',data:null,capabilities:profileRepository.capabilities,actionState:'failed'};}
