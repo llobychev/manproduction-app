@@ -1,4 +1,4 @@
-export const MAIN_APP_API_BASE = 'https://llobychev-manproduction-networking-server-0fdf.twc1.net';
+export const MAIN_APP_API_BASE = 'https://llobychev-project-control.twc1.net';
 
 export class MainAppApiError extends Error {
   constructor(code, message, status = 0, cause) {
