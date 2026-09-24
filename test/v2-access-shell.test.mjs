@@ -73,3 +73,12 @@ test('runtime context rejects database initialization without authenticated user
   assert.throws(()=>setAuthenticatedRuntime({user:null,db:{}}));
   assert.equal(getRuntimeContext().fbDb,null);
 });
+
+
+test('V0.1 shell keeps first-run intro and public navigation constrained to Lyova Path Widgets', async () => {
+  const source=await import('node:fs/promises').then(({readFile})=>readFile(new URL('../versions/v2/app.js',import.meta.url),'utf8'));
+  assert.match(source,/V01_PUBLIC_ROUTES=.*lyova\.chat.*path\.home.*widgets\.home/);
+  assert.match(source,/introParam==='1'\|\|access\.newlyGranted/);
+  assert.match(source,/navigate\(button\.dataset\.route,\{publicEntry:true\}\)/);
+  assert.match(source,/navigate\(publicV01Route\(hashRoute\),\{publicEntry:true\}\)/);
+});
