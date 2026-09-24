@@ -41,6 +41,9 @@ let profileRepository=createProfileRepository();
 let profileState={status:'loading',data:null,capabilities:profileRepository.capabilities,actionState:'idle'};
 let publicProfileDraft={...PUBLIC_PROFILE_DEFAULTS};
 const adapterRegistry=createV2AdapterRegistry(window.MENCLUB_V2_ADAPTERS||{});
+const V01_PUBLIC_ROUTES=Object.freeze(new Set(['lyova.chat','path.home','widgets.home']));
+function publicV01Route(routeId){return V01_PUBLIC_ROUTES.has(routeId)?routeId:'lyova.chat';}
+
 const INTRO_CARDS=Object.freeze([
  ['M','MENCLUB','Твоя жизнь — главный экран','Система вокруг реальных ситуаций, целей и действий.'],
  ['🦁','ЛЁВА','Начни с того, что происходит','Расскажи ситуацию своими словами. Лёва помогает найти следующий шаг.'],
@@ -63,8 +66,7 @@ function initialRoute() {
   const params = new URLSearchParams(location.search);
   const deepLink = resolveDeepLink(params.get('startapp') || params.get('start_param'));
   const hashRoute = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  const legacyRoots = new Set(['home','events.list','profile.cabinet']);
-  return deepLink || (ROUTES[hashRoute] && !legacyRoots.has(hashRoute) ? hashRoute : 'lyova.chat');
+  return publicV01Route(deepLink || hashRoute);
 }
 
 function rootMarkup(meta) {
@@ -422,7 +424,8 @@ async function bootstrap() {
     document.querySelector('#app').dataset.lifecycle=readyState;
     renderLifecycle(null);
     syncAccessBanner();
-    if(new URLSearchParams(location.search).get('intro')==='1')showIntro();else render(navigation.current);
+    const introParam=new URLSearchParams(location.search).get('intro');
+    if(introParam==='1'||access.newlyGranted)showIntro();else render(publicV01Route(navigation.current));
   } catch (error) {
     console.warn('V2 bootstrap failed:', error?.code || error?.name || 'unknown');
     renderLifecycle(error?.code ? 'authError' : 'fatalError', error);
@@ -430,6 +433,7 @@ async function bootstrap() {
 }
 
 function navigate(routeId, options={}) {
+  if(options.publicEntry)routeId=publicV01Route(routeId);
   if(!options.bypassWidgetGuard&&navigation.current==='widgets.edit'&&widgetEditor.dirty&&routeId!=='widgets.edit'){openWidgetDiscardConfirmation(routeId);return;}
   closeModal();
   const outcome = navigation.navigate(routeId, { currentScroll: outlet.scrollTop });
@@ -480,7 +484,7 @@ const telegramBack = createTelegramBackButtonBoundary(window, goBack);
 
 bottomNav.addEventListener('click', event => {
   const button = event.target.closest('[data-route]');
-  if (button) navigate(button.dataset.route);
+  if (button) navigate(button.dataset.route,{publicEntry:true});
 });
 headerBack.addEventListener('click', goBack);
 outlet.addEventListener('click', event => {
@@ -635,7 +639,7 @@ window.addEventListener('keydown', event => {
 });
 window.addEventListener('hashchange', () => {
   const hashRoute = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  if (ROUTES[hashRoute] && hashRoute !== navigation.current) navigate(hashRoute);
+  if (hashRoute !== navigation.current) navigate(publicV01Route(hashRoute),{publicEntry:true});
 });
 window.addEventListener('online', () => render(navigation.current));
 window.addEventListener('offline', () => render(navigation.current));
